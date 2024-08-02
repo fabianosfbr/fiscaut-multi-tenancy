@@ -23,4 +23,8 @@ class Tenant extends BaseTenant implements TenantWithDatabase
             'cnpj',
         ];
     }
+
+    protected $hidden = [
+        'password',
+    ];
 }

@@ -3,8 +3,10 @@
 namespace Database\Seeders;
 
 use App\Models\User;
+use App\Models\Tenant\Client;
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use App\Models\Tenant;
+use App\Models\Tenant\Organization;
 use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
@@ -24,11 +26,26 @@ class DatabaseSeeder extends Seeder
 
         $tenant1 = Tenant::create([
             'name' => 'Foo',
-            'email' => 'foo@email.com',
-            'password' => bcrypt('asdfasdf'),
+            'email' => 'email@email.com',
+            'password' => bcrypt('Mudar@1234*'),
             'razao_social' => 'Foo Ltd.',
             'cnpj' => '11111111111111',
         ]);
         $tenant1->domains()->create(['domain' => 'foo.localhost']);
+
+        $tenant1->run(function ($tenant) use ($tenant1) {
+            $user = Client::create($tenant->only('name', 'email', 'password'));
+
+            //    $organization = Organization::create([
+            //        'razao_social' => $tenant1->razao_social,
+            //        'cnpj' => $tenant1->cnpj,
+            //    ]);
+
+
+            $user->organizations()->create([
+                'razao_social' => $tenant1->razao_social,
+                'cnpj' => $tenant1->cnpj,
+            ]);
+        });
     }
 }
