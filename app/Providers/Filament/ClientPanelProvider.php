@@ -6,6 +6,9 @@ use Filament\Pages;
 use Filament\Panel;
 use Filament\Widgets;
 use Filament\PanelProvider;
+use App\Models\Tenant\Issuer;
+use Filament\Facades\Filament;
+use Filament\Navigation\MenuItem;
 use Filament\Support\Colors\Color;
 use App\Models\Tenant\Organization;
 use Filament\Http\Middleware\Authenticate;
@@ -18,7 +21,6 @@ use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\AuthenticateSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 use App\Filament\App\Pages\Tenancy\EditOrganizationPage;
-use App\Models\Tenant\Issuer;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Stancl\Tenancy\Middleware\InitializeTenancyByDomain;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
@@ -50,6 +52,15 @@ class ClientPanelProvider extends PanelProvider
 
             ->tenant(Organization::class)
             ->tenantProfile(EditOrganizationPage::class)
+            ->tenantMenuItems([
+                'profile' => MenuItem::make()
+                //->visible(fn (): bool => auth()->user()->can('manage-organization'))
+                ->label('Gerenciar empresa'),
+                'register' => MenuItem::make()
+                    ->label('Adicionar empresa')
+                    ->url(fn (): string => '/app/'.Filament::getTenant()->id.'/new-organization'), // @phpstan-ignore-line,
+
+            ])
 
             ->viteTheme('resources/css/filament/client/theme.css')
             ->discoverResources(in: app_path('Filament/Client/Resources'), for: 'App\\Filament\\Client\\Resources')

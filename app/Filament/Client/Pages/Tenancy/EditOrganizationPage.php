@@ -20,7 +20,7 @@ class EditOrganizationPage extends EditTenantProfile  implements HasForms
 {
 
     use InteractsWithForms;
-    protected static string $view = 'filament.app.pages.tenancy.edit-organization';
+    protected static string $view = 'filament.client.pages.tenancy.edit-organization';
 
     protected static ?string $slug = 'manager-organization';
 

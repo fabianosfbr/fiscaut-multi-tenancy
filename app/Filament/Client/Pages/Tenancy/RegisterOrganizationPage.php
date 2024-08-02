@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Filament\App\Pages\Tenancy;
+namespace App\Filament\Client\Pages\Tenancy;
 
 use Closure;
 use Filament\Forms\Form;
@@ -23,17 +23,15 @@ use Filament\Forms\Components\FileUpload;
 
 class RegisterOrganizationPage extends Page
 {
-    protected static ?string $navigationIcon = 'heroicon-o-document-text';
-
     protected static ?string $slug = 'new-organization';
 
     protected static bool $shouldRegisterNavigation = false;
 
     protected static ?string $title = 'Adicionar organização';
 
-    protected static string $view = 'filament.app.pages.tenancy.register-organization-page';
-
     public ?array $data = [];
+
+    protected static string $view = 'filament.client.pages.tenancy.register-organization-page';
 
     public function form(Form $form): Form
     {
@@ -44,8 +42,6 @@ class RegisterOrganizationPage extends Page
             ])
             ->statePath('data');
     }
-
-
 
     public function create(): void
     {
@@ -82,7 +78,7 @@ class RegisterOrganizationPage extends Page
             ->body('Agora é necessário completar os dados da empresa')
             ->send();
 
-        redirect(route('filament.app.tenant.profile', ['tenant' => $organization->id]));
+        redirect(route('filament.client.tenant.profile', ['tenant' => $organization->id]));
     }
 
     public function returnAction(): Action
@@ -90,7 +86,7 @@ class RegisterOrganizationPage extends Page
         return Action::make('return')
             ->label('Cancelar')
             ->color('warning')
-            ->url(route('filament.app.pages.dashboard', ['tenant' => Filament::getTenant()?->id])); // @phpstan-ignore-line
+            ->url(route('filament.client.pages.dashboard', ['tenant' => Filament::getTenant()?->id])); // @phpstan-ignore-line
     }
 
     public function saveAction(): Action
