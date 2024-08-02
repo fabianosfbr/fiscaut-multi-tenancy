@@ -47,7 +47,7 @@ class Organization extends Model implements HasName, HasCurrentTenantLabel
         return $this->hasMany(CategoryTag::class);
     }
 
-    public function categoryTagsDefault(): HasMany
+    public function categoriaEtiquetaPadraos(): HasMany
     {
         return $this->hasMany(CategoriaEtiquetaPadrao::class);
     }

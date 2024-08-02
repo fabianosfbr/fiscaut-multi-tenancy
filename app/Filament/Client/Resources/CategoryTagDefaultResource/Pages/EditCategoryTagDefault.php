@@ -1,14 +1,14 @@
 <?php
 
-namespace App\Filament\Client\Resources\CategoryTagResource\Pages;
+namespace App\Filament\Client\Resources\CategoryTagDefaultResource\Pages;
 
-use App\Filament\Client\Resources\CategoryTagResource;
+use App\Filament\Client\Resources\CategoryTagDefaultResource;
 use Filament\Actions;
 use Filament\Resources\Pages\EditRecord;
 
-class EditCategoryTag extends EditRecord
+class EditCategoryTagDefault extends EditRecord
 {
-    protected static string $resource = CategoryTagResource::class;
+    protected static string $resource = CategoryTagDefaultResource::class;
 
     protected function getHeaderActions(): array
     {

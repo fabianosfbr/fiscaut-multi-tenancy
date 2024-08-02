@@ -12,10 +12,21 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('categoria_etiqueta_padrao', function (Blueprint $table) {
-            $table->bigIncrements('id');
+            $table->uuid('id')->primary();
+
+            $table->uuid('organization_id');
             $table->integer('order');
             $table->string('name', 100);
             $table->string('color', 100);
+            $table->integer('grupo')->nullable();
+            $table->integer('conta_contabil')->nullable();
+            $table->boolean('is_enable')->default(true);
+            $table->boolean('is_difal')->default(false);
+            $table->boolean('is_devolucao')->default(false);
+
+
+            $table->foreign('organization_id')->references('id')->on('organizations')->onDelete('cascade');
+
         });
     }
 

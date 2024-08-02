@@ -12,12 +12,12 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('etiqueta_padrao', function (Blueprint $table) {
-            $table->bigIncrements('id');
-            $table->unsignedBigInteger('category_id');
-            $table->foreign('category_id')->references('id')->on('categoria_etiqueta_padrao')->onDelete('cascade');
+            $table->uuid('id')->primary();
+            $table->uuid('category_id');
             $table->string('code', 50)->nullable();
             $table->string('name', 100)->nullable();
-            $table->string('color', 100)->nullable();
+            $table->boolean('is_enable')->default(true);
+            $table->foreign('category_id')->references('id')->on('categoria_etiqueta_padrao')->onDelete('cascade');
         });
     }
 

@@ -16,7 +16,6 @@ return new class extends Migration
             $table->uuid('category_id');
             $table->string('name', 125);
             $table->string('code', 50)->nullable();
-            $table->string('color', 100)->nullable();
             $table->boolean('is_enable')->default(true);
 
             $table->foreign('category_id')->references('id')->on('category_tags')->onDelete('cascade');

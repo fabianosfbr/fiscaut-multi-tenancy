@@ -21,6 +21,7 @@ return new class extends Migration
             $table->integer('grupo')->nullable();
             $table->integer('conta_contabil')->nullable();
             $table->boolean('is_enable')->default(true);
+            $table->boolean('is_devolucao')->default(false);
             $table->timestamps();
 
             $table->foreign('organization_id')->references('id')->on('organizations')->onDelete('cascade');
