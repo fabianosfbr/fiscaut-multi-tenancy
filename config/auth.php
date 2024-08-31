@@ -41,9 +41,9 @@ return [
             'provider' => 'users',
         ],
 
-        'tenant' => [
+        'lords' => [
             'driver' => 'session',
-            'provider' => 'clients',
+            'provider' => 'lords',
         ],
     ],
 
@@ -67,12 +67,12 @@ return [
     'providers' => [
         'users' => [
             'driver' => 'eloquent',
-            'model' => env('AUTH_MODEL', App\Models\User::class),
+            'model' => env('AUTH_MODEL', App\Models\Tenant\User::class),
         ],
 
-        'clients' => [
+        'lords' => [
             'driver' => 'eloquent',
-            'model' => App\Models\Tenant\Client::class,
+            'model' => App\Models\User::class,
         ],
 
 

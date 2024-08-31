@@ -13,6 +13,9 @@ use Stancl\JobPipeline\JobPipeline;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
+use App\Jobs\Tenant\CreateAdminUserAfterRegisterTenant;
+use App\Jobs\Tenant\CreateOrganizationAndUserForTenant;
+use App\Jobs\Tenant\CreateFrameworkDirectoriesForTenant;
 
 class TenancyServiceProvider extends ServiceProvider
 {
@@ -28,6 +31,8 @@ class TenancyServiceProvider extends ServiceProvider
                 JobPipeline::make([
                     Jobs\CreateDatabase::class,
                     Jobs\MigrateDatabase::class,
+                    CreateFrameworkDirectoriesForTenant::class,
+                    CreateOrganizationAndUserForTenant::class,
                     // Jobs\SeedDatabase::class,
 
                     // Your own jobs to prepare the tenant.

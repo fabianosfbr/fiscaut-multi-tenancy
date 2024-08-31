@@ -2,7 +2,7 @@
 
 namespace App\Models\Tenant;
 
-use App\Models\Tenant\Client as User;
+use App\Models\Tenant\User;
 use Filament\Models\Contracts\HasName;
 use App\Observers\Tenant\OrganizationObserver;
 use Illuminate\Database\Eloquent\Model;
@@ -36,10 +36,6 @@ class Organization extends Model implements HasName, HasCurrentTenantLabel
         return $this->belongsToMany(User::class)->withPivot(['is_active']);
     }
 
-    public function usersWithRoles()
-    {
-        return $this->users()->with('roles');
-    }
 
 
     public function categoryTags(): HasMany

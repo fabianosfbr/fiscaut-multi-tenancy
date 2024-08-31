@@ -2,34 +2,33 @@
 
 namespace App\Models\Tenant;
 
-use Illuminate\Support\Str;
-use App\Models\Tenant\Client as User;
-use Illuminate\Database\Eloquent\Model;
-use App\Models\Tenant\Concerns\Tenantable;
+use Spatie\Permission\Models\Permission as SpatiePermission;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Spatie\Permission\Guard;
+use Spatie\Permission\Exceptions\PermissionAlreadyExists;
 
-class Permission extends Model
+
+class Permission extends SpatiePermission
 {
-    use HasUuids, Tenantable;
 
-    protected $guarded = ['id'];
+    use HasUuids;
+    protected $primaryKey = 'id';
+    protected $keyType = 'string';
+    public $incrementing = false;
 
 
-    public function setNameAttribute($value):void
+    public static function create(array $attributes = [])
     {
-        $this->attributes['name'] = $value;
-        $this->attributes['slug'] = Str::slug($value);
+        $attributes['guard_name'] = $attributes['guard_name'] ?? Guard::getDefaultName(static::class);
+
+        $permission = static::getPermission(['name' => $attributes['name'], 'guard_name' => $attributes['guard_name'], 'organization_id' => $attributes['organization_id']]);
+
+        if ($permission) {
+            throw PermissionAlreadyExists::create($attributes['name'], $attributes['guard_name']);
+        }
+
+        return static::query()->create($attributes);
     }
 
-    public function roles(): BelongsToMany
-    {
-        return $this->belongsToMany(Role::class);
-    }
-
-    public function users(): BelongsToMany
-    {
-        return $this->belongsToMany(User::class);
-    }
 }
 

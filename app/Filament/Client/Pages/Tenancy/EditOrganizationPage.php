@@ -53,7 +53,7 @@ class EditOrganizationPage extends EditTenantProfile  implements HasForms
                                 Livewire::make('organization.user-organization-form', $this->getViewData()),
                             ]),
 
-                    ])->activeTab(4)
+                    ])
 
             ])
             ->statePath('data');

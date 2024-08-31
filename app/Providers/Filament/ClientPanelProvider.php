@@ -91,7 +91,6 @@ class ClientPanelProvider extends PanelProvider
             ], isPersistent: true)
             ->authMiddleware([
                 Authenticate::class,
-            ])
-            ->authGuard('tenant');
+            ]);
     }
 }

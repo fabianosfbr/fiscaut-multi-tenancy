@@ -25,6 +25,6 @@ Route::middleware([
 ])->group(function () {
     Route::get('/', function () {
 
-       return redirect(route('filament.client.pages.dashboard'));
+        return redirect('/app');
     });
 });

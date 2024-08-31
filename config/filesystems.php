@@ -30,6 +30,13 @@ return [
 
     'disks' => [
 
+        'tenant' => [
+            'driver' => 'local',
+            'root' => storage_path('app/tenants'), // Pasta base para os arquivos dos tenants
+            'url' => env('APP_URL') . '/storage/tenants',
+            'throw' => false,
+        ],
+
         'local' => [
             'driver' => 'local',
             'root' => storage_path('app'),

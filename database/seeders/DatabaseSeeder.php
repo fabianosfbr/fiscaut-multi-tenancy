@@ -33,19 +33,5 @@ class DatabaseSeeder extends Seeder
         ]);
         $tenant1->domains()->create(['domain' => 'foo.localhost']);
 
-        $tenant1->run(function ($tenant) use ($tenant1) {
-            $user = Client::create($tenant->only('name', 'email', 'password'));
-
-            //    $organization = Organization::create([
-            //        'razao_social' => $tenant1->razao_social,
-            //        'cnpj' => $tenant1->cnpj,
-            //    ]);
-
-
-            $user->organizations()->create([
-                'razao_social' => $tenant1->razao_social,
-                'cnpj' => $tenant1->cnpj,
-            ]);
-        });
     }
 }

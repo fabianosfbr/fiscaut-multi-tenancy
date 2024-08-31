@@ -19,6 +19,8 @@ class TagsRelationManager extends RelationManager
 {
     protected static string $relationship = 'tags';
 
+    protected static ?string $title = 'Etiquetas';
+
     public function form(Form $form): Form
     {
         return $form

@@ -14,13 +14,13 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('client_organization', function (Blueprint $table) {
+        Schema::create('organization_user', function (Blueprint $table) {
             $table->id();
             $table->uuid('organization_id');
-            $table->uuid('client_id');
+            $table->uuid('user_id');
             $table->boolean('is_active')->default(true);
             $table->timestamp('expires_at')->nullable();
-            $table->foreign('client_id')->references('id')->on('clients');
+            $table->foreign('user_id')->references('id')->on('users');
             $table->foreign('organization_id')->references('id')->on('organizations');
         });
     }
@@ -30,6 +30,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('client_organization');
+        Schema::dropIfExists('organization_user');
     }
 };

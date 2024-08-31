@@ -3,23 +3,24 @@
 namespace App\Filament\Client\Pages\Tenancy;
 
 use Closure;
+use Exception;
 use Filament\Forms\Form;
 use Filament\Pages\Page;
 use Filament\Actions\Action;
 use Filament\Facades\Filament;
 use Illuminate\Support\Facades\Auth;
-use App\Services\Tenant\OrganizationService;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Toggle;
-use App\Enums\Tenant\RegimesEmpresariaisEnum;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Contracts\HasForms;
 use Illuminate\Support\Facades\Storage;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
-use App\Enums\Tenant\AtividadesEmpresariaisEnum;
-use Exception;
 use Filament\Forms\Components\FileUpload;
+use App\Events\CreateOrganizationProcessed;
+use App\Services\Tenant\OrganizationService;
+use App\Enums\Tenant\RegimesEmpresariaisEnum;
+use App\Enums\Tenant\AtividadesEmpresariaisEnum;
 
 class RegisterOrganizationPage extends Page
 {
@@ -71,6 +72,10 @@ class RegisterOrganizationPage extends Page
                 ->send();
             return;
         }
+
+        $roles = $organization->roles;
+        Auth()->user()->syncRoles($roles->pluck('name')->toArray());
+
 
         Notification::make()
             ->success()

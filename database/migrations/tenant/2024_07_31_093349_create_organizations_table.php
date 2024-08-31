@@ -15,7 +15,7 @@ return new class extends Migration
 
             $table->uuid('id')->primary();
             $table->string('razao_social');
-            $table->string('cnpj')->nullable();
+            $table->string('cnpj')->unique()->nullable();
             $table->string('inscricao_estadual')->nullable();
             $table->string('inscricao_municipal')->nullable();
             $table->string('cod_municipio_ibge')->nullable();

@@ -7,7 +7,9 @@ use Filament\Panel;
 use App\Enums\Tenant\UserTypeEnum;
 use Illuminate\Support\Collection;
 use App\Models\Tenant\Organization;
+use Spatie\Permission\Traits\HasRoles;
 use Illuminate\Database\Eloquent\Model;
+use App\Enums\Tenant\PermissionTypeEnum;
 use Illuminate\Notifications\Notifiable;
 use Filament\Models\Contracts\HasTenants;
 use Filament\Models\Contracts\FilamentUser;
@@ -22,7 +24,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class User extends Authenticatable  implements FilamentUser, HasTenants, HasDefaultTenant
 {
-    use HasFactory, HasUuids, Notifiable, HasPermissions;
+    use HasFactory, HasUuids, Notifiable, HasRoles;
 
     /**
      * The attributes that are mass assignable.
@@ -31,7 +33,6 @@ class User extends Authenticatable  implements FilamentUser, HasTenants, HasDefa
      */
     protected $guarded = ['id'];
 
-   // protected $with = ['roles'];
 
     /**
      * The attributes that should be hidden for serialization.
@@ -81,7 +82,7 @@ class User extends Authenticatable  implements FilamentUser, HasTenants, HasDefa
 
     public function canAccessTenant(Model $tenant): bool
     {
-        dd($this->organizations->contains($tenant));
+
         return $this->organizations->contains($tenant);
     }
 
@@ -91,8 +92,14 @@ class User extends Authenticatable  implements FilamentUser, HasTenants, HasDefa
         return true;
     }
 
-    public function is_super_admin(): bool
+    public function hasRole(...$roles)
     {
-        return $this->hasRole(UserTypeEnum::SUPER_ADMIN);
+        foreach ($roles as $role) {
+            if ($this->roles()->where('name', $role)->count()) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

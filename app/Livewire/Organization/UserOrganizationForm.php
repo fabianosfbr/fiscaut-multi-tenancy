@@ -21,7 +21,7 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Contracts\HasTable;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
-use App\Models\Tenant\Client as User;
+use App\Models\Tenant\User;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\ToggleButtons;
@@ -45,10 +45,11 @@ class UserOrganizationForm extends Component implements HasForms, HasTable
         return $table
             ->query(function () {
 
-                $userInOrganization = DB::table('client_organization')
+                $userInOrganization = DB::table('organization_user')
                     ->where('organization_id', $this->organization->id)
-                    ->pluck('client_id')
+                    ->pluck('user_id')
                     ->toArray();
+
 
                 return User::query()->whereIn('id', $userInOrganization)->with('organizations');
             })
@@ -59,7 +60,7 @@ class UserOrganizationForm extends Component implements HasForms, HasTable
                 TextColumn::make('email')
                     ->label('Email')
                     ->searchable(),
-                TextColumn::make('roles.name')
+                TextColumn::make('roles.description')
                     ->label('Perfil')
                     ->badge(),
 
@@ -102,11 +103,11 @@ class UserOrganizationForm extends Component implements HasForms, HasTable
                     ->icon('heroicon-o-pencil-square')
                     ->modalHeading('Atualizar permissões')
                     ->modalWidth('lg')
-                    ->hidden(fn (User $record) => $record->hasRole('super-admin'))
+                    ->hidden(fn(User $record) => $record->hasRole('super-admin'))
                     ->modalSubmitActionLabel('Salvar')
-                    ->fillForm(function (User $record) {
+                    ->fillForm(function (User $user) {
 
-                        $organization = $record
+                        $organization = $user
                             ->organizations()
                             ->where('organizations.id', $this->organization->id)
                             ->first();
@@ -114,8 +115,7 @@ class UserOrganizationForm extends Component implements HasForms, HasTable
                         return [
                             'expires_at' => $organization->pivot->expires_at,
                             'is_active' => $organization->pivot->is_active,
-                            'roles' => $record->roles->pluck('id'),
-                            'permissions' => $record->permissions->pluck('id'),
+                            'roles' => $user->roles()->pluck('id'),
                         ];
                     })
                     ->form($this->userVinculationForm())
@@ -165,34 +165,13 @@ class UserOrganizationForm extends Component implements HasForms, HasTable
                                                 TextInput::make('password')
                                                     ->label('Senha')
                                                     ->password()
-                                                    ->dehydrateStateUsing(fn (string $state): string => Hash::make($state))
-                                                    ->dehydrated(fn (?string $state): bool => filled($state))
+                                                    ->dehydrateStateUsing(fn(string $state): string => Hash::make($state))
+                                                    ->dehydrated(fn(?string $state): bool => filled($state))
                                                     ->required()
                                                     ->columnSpan(2),
 
                                             ]),
-                                        Section::make('Permissões do usuário')
-                                            ->schema([
-                                                ToggleButtons::make('roles')
-                                                    ->label('Grupos')
-                                                    ->inline()
-                                                    ->multiple()
-                                                    ->options(function () {
-                                                        return DB::table('roles')->where('slug', '<>', 'super-admin')
-                                                            ->where('organization_id', $this->organization->id)
-                                                            ->pluck('name', 'id');
-                                                    }),
-                                                ToggleButtons::make('permissions')
-                                                    ->label('Permissões')
-                                                    ->inline()
-                                                    ->multiple()
-                                                    ->options(function () {
-                                                        return DB::table('permissions')->where('organization_id', $this->organization->id)
-                                                            ->pluck('name', 'id');
-                                                    }),
 
-
-                                            ]),
                                     ])
                                     ->createOptionAction(function (FormAction $action) {
                                         return $action
@@ -200,16 +179,12 @@ class UserOrganizationForm extends Component implements HasForms, HasTable
                                             ->slideOver()
                                             ->modalWidth('md')
                                             ->action(static function (array $data) {
-
-                                                $user = User::create([
+                                                User::create([
                                                     'name' => $data['name'],
                                                     'email' => $data['email'],
                                                     'password' => $data['password'],
-                                                    //'email_verified_at' => now(),
+                                                    'email_verified_at' => now(),
                                                 ]);
-
-                                                $user->roles()->sync($data['roles']);
-                                                $user->permissions()->sync($data['permissions']);
                                             });
                                     })
                                     ->options(function () {
@@ -232,8 +207,8 @@ class UserOrganizationForm extends Component implements HasForms, HasTable
 
                         $user->update(['last_organization_id' => $this->organization->id]);
 
-                        $user->roles()->sync($data['roles']);
-                        $user->permissions()->sync($data['permissions']);
+                        $user->syncRoles($data['roles']);
+
 
                         Notification::make()
                             ->title('Usuário vinculado com sucesso')
@@ -254,25 +229,12 @@ class UserOrganizationForm extends Component implements HasForms, HasTable
                         ->multiple()
                         ->required()
                         ->options(function () {
-                            return DB::table('roles')->where('slug', '<>', 'super-admin')
-                                ->where('organization_id', $this->organization->id)
-                                ->pluck('name', 'id');
+                            return $this->organization->roles
+                                ->where('name', '<>', 'super-admin')
+                                ->pluck('description', 'id');
                         })->columnSpan(2),
                 ]),
 
-            Fieldset::make('Permissões')
-                ->schema([
-                    ToggleButtons::make('permissions')
-                        ->hiddenLabel()
-                        ->inline()
-                        ->multiple()
-                        ->required()
-                        ->options(function () {
-                            return DB::table('permissions')
-                                ->where('organization_id', $this->organization->id)
-                                ->pluck('name', 'id');
-                        })->columnSpan(2),
-                ]),
             DatePicker::make('expires_at')
                 ->hint('Deixar em branco para não expirar')
                 ->label('Data Expiração')

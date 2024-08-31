@@ -2,33 +2,43 @@
 
 namespace App\Models\Tenant;
 
-use Illuminate\Support\Str;
-use App\Models\Tenant\Client as User;
-use Illuminate\Database\Eloquent\Model;
-use App\Models\Tenant\Concerns\Tenantable;
+
+use Spatie\Permission\Models\Role as SpatieRole;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Spatie\Permission\Exceptions\RoleAlreadyExists;
+use Spatie\Permission\Guard;
+use Spatie\Permission\PermissionRegistrar;
 
-class Role extends Model
+
+
+class Role extends SpatieRole
 {
-    use  HasUuids, Tenantable;
 
-    protected $guarded = ['id'];
+    use HasUuids;
+
+    protected $primaryKey = 'id';
+    protected $keyType = 'string';
+    public $incrementing = false;
 
 
-    public function setNameAttribute($value):void
+    public static function create(array $attributes = [])
     {
-        $this->attributes['name'] = $value;
-        $this->attributes['slug'] = Str::slug($value);
-    }
+        $attributes['guard_name'] = $attributes['guard_name'] ?? Guard::getDefaultName(static::class);
 
-    public function permissions(): BelongsToMany
-    {
-        return $this->belongsToMany(Permission::class);
-    }
+        $params = ['name' => $attributes['name'], 'guard_name' => $attributes['guard_name'], 'organization_id' => $attributes['organization_id']];
+        if (app(PermissionRegistrar::class)->teams) {
+            $teamsKey = app(PermissionRegistrar::class)->teamsKey;
 
-    public function users(): BelongsToMany
-    {
-        return $this->belongsToMany(User::class);
+            if (array_key_exists($teamsKey, $attributes)) {
+                $params[$teamsKey] = $attributes[$teamsKey];
+            } else {
+                $attributes[$teamsKey] = getPermissionsTeamId();
+            }
+        }
+        if (static::findByParam($params)) {
+            throw RoleAlreadyExists::create($attributes['name'], $attributes['guard_name']);
+        }
+
+        return static::query()->create($attributes);
     }
 }

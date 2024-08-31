@@ -1,22 +1,14 @@
 <?php
 
+use App\Enums\Tenant\UserTypeEnum;
+
 return [
-    'roles' => [
-        '0' => 'Super Admin',
-        '1' => 'Admin',
-        '2' => 'Contabilidade',
-        '3' => 'Usuário',
-    ],
+    'roles' => array_keys(UserTypeEnum::toArray()),
 
     'permissions' => [
-        '0' => 'Manifestar nota',
-        '1' => 'Classificar nota',
-        '2' => 'Marcar documento como apurado',
+        '0' => 'manifestar-nota',
+        '1' => 'classificar-nota',
+        '2' => 'marcar-documento-apurado',
     ],
 
-    'user_permissions' => [
-        '0' => 'Manifestar nota',
-        '1' => 'Classificar nota',
-        '2' => 'Marcar documento como apurado',
-    ],
 ];
