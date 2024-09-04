@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Filament\Client\Resources;
+namespace App\Filament\Fiscal\Resources;
 
 use Filament\Forms;
 use Filament\Tables;
@@ -19,9 +19,9 @@ use Filament\Forms\Components\TextInput;
 use Illuminate\Database\Eloquent\Builder;
 use Filament\Forms\Components\ColorPicker;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
-use App\Filament\Client\Resources\CategoryTagResource\Pages;
-use App\Filament\Client\Resources\CategoryTagResource\RelationManagers;
-use App\Filament\Client\Resources\CategoryTagResource\RelationManagers\TagsRelationManager;
+use App\Filament\Fiscal\Resources\CategoryTagResource\Pages;
+use App\Filament\Fiscal\Resources\CategoryTagResource\RelationManagers;
+use App\Filament\Fiscal\Resources\CategoryTagResource\RelationManagers\TagsRelationManager;
 
 class CategoryTagResource extends Resource
 {
@@ -32,7 +32,6 @@ class CategoryTagResource extends Resource
     protected static ?string $modelLabel = 'Etiqueta';
 
     protected static ?string $navigationGroup = 'Configurações';
-
 
 
 

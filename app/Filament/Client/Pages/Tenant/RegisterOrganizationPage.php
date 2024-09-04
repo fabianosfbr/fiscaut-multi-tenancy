@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Filament\Client\Pages\Tenancy;
+namespace App\Filament\Client\Pages\Tenant;
 
 use Closure;
 use Exception;
@@ -28,11 +28,11 @@ class RegisterOrganizationPage extends Page
 
     protected static bool $shouldRegisterNavigation = false;
 
-    protected static ?string $title = 'Adicionar organização';
+    protected static ?string $title = 'Adicionar nova empresa';
 
     public ?array $data = [];
 
-    protected static string $view = 'filament.client.pages.tenancy.register-organization-page';
+    protected static string $view = 'filament.client.pages.tenant.register-organization-page';
 
     public function form(Form $form): Form
     {
@@ -85,14 +85,13 @@ class RegisterOrganizationPage extends Page
         return Action::make('return')
             ->label('Cancelar')
             ->color('warning')
-            ->url(route('filament.client.pages.dashboard', ['tenant' => getTenant()?->id])); // @phpstan-ignore-line
+            ->url(route('filament.client.pages.dashboard')); // @phpstan-ignore-line
     }
 
     public function saveAction(): Action
     {
         return Action::make('save')
             ->label('Salvar')
-            ->icon('heroicon-m-check')
             ->action(fn() => $this->create());
     }
 
@@ -173,7 +172,7 @@ class RegisterOrganizationPage extends Page
     {
         return [
             Section::make('Certificado Digital')
-                ->description('Insira o certificado digital e a senha da sua organização')
+                ->description('Insira o certificado digital e a senha da empresa que deseja cadastrar')
                 ->schema([
                     FileUpload::make('certificate')
                         ->label('Certificado digital')

@@ -4,8 +4,8 @@
             {{ $this->form }}
 
             <div class="mt-4 flex justify-end gap-4">
-                {{ $this->returnAction }}
                 {{ $this->saveAction }}
+                {{ $this->returnAction }}
             </div>
         </form>
     </div>

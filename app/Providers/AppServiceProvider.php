@@ -39,7 +39,12 @@ class AppServiceProvider extends ServiceProvider
                 ->modalWidth('md')
                 ->excludes(['admin'])
                 ->iconSize(16)
-                ->simple();
+                ->simple()
+                ->labels([
+                    'client' => __('Configuração'),
+                    'fiscal' => __('Fiscal'),
+                    'contabil' => __('Contabil'),
+                ]);;
         });
     }
 }

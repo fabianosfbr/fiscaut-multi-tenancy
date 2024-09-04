@@ -1,8 +1,7 @@
 <?php
 
-namespace App\Filament\Client\Resources\CategoryTagResource\RelationManagers;
+namespace App\Filament\Fiscal\Resources\CategoryTagResource\RelationManagers;
 
-use Filament\Facades\Filament;
 use Filament\Forms;
 use Filament\Tables;
 use Filament\Forms\Form;
@@ -19,9 +18,10 @@ use Filament\Resources\RelationManagers\RelationManager;
 
 class TagsRelationManager extends RelationManager
 {
-
     protected static string $relationship = 'tags';
+
     protected static ?string $title = 'Etiquetas';
+
 
     public function form(Form $form): Form
     {

@@ -36,7 +36,7 @@ class DigitalCertificateForm extends Component implements HasForms
         return $form
             ->schema([
                 Section::make('Certificado Digital')
-                    ->description('Insira o certificado digital e a senha da sua organização')
+                    ->description('Insira o certificado digital e a senha da empresa que deseja cadastrar')
                     ->schema([
                         FileUpload::make('certificate')
                             ->label('Certificado digital')
