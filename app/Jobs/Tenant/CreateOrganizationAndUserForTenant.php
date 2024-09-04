@@ -45,11 +45,14 @@ class CreateOrganizationAndUserForTenant implements ShouldQueue
                 ]);
 
                 $organization = Organization::create([
-                    'razao_social' => $this->tenant->razao_social,
+                    'razao_social' => $this->tenant->razao_social . ':' . $this->tenant->cnpj,
                     'cnpj' => $this->tenant->cnpj,
                 ]);
 
                 $user->organizations()->attach($organization->id);
+
+                $user->last_organization_id = $organization->id;
+                $user->saveQuietly();
 
                 event(new CreateOrganizationProcessed($user, $organization));
 

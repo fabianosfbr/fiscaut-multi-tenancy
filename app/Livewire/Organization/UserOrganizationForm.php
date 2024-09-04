@@ -3,8 +3,9 @@
 namespace App\Livewire\Organization;
 
 use Livewire\Component;
-use App\Models\Tenant\Role;
 use Filament\Tables\Table;
+use App\Models\Tenant\Role;
+use App\Models\Tenant\User;
 use Filament\Facades\Filament;
 use App\Models\Tenant\Permission;
 use Illuminate\Support\Facades\DB;
@@ -13,6 +14,7 @@ use Filament\Tables\Actions\Action;
 use Illuminate\Support\Facades\Hash;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Toggle;
+use Illuminate\Support\Facades\Cache;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Contracts\HasForms;
 use Filament\Forms\Components\Fieldset;
@@ -21,7 +23,6 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Contracts\HasTable;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
-use App\Models\Tenant\User;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\ToggleButtons;
@@ -80,18 +81,18 @@ class UserOrganizationForm extends Component implements HasForms, HasTable
                     ->falseIcon('heroicon-o-x-circle'),
 
 
-                TextColumn::make('expires_at')
-                    ->label('Expira em')
-                    ->getStateUsing(function (User $record) {
+                // TextColumn::make('expires_at')
+                //     ->label('Expira em')
+                //     ->getStateUsing(function (User $record) {
 
-                        $organization = $record
-                            ->organizations()
-                            ->where('organizations.id', $this->organization->id)
-                            ->first();
+                //         $organization = $record
+                //             ->organizations()
+                //             ->where('organizations.id', $this->organization->id)
+                //             ->first();
 
-                        return $organization->pivot->expires_at;
-                    })
-                    ->date('d/m/Y'),
+                //         return $organization->pivot->expires_at;
+                //     })
+                //     ->date('d/m/Y'),
 
             ])
             ->filters([
@@ -113,19 +114,18 @@ class UserOrganizationForm extends Component implements HasForms, HasTable
                             ->first();
 
                         return [
-                            'expires_at' => $organization->pivot->expires_at,
                             'is_active' => $organization->pivot->is_active,
                             'roles' => $user->roles()->pluck('id'),
+                            //'expires_at' => $organization->pivot->expires_at,
                         ];
                     })
                     ->form($this->userVinculationForm())
                     ->action(function (User $user, array $data) {
                         $user->organizations()
-                            ->updateExistingPivot($this->organization->id, ['is_active' => $data['is_active'], 'expires_at' => $data['expires_at']]);
+                            ->updateExistingPivot($this->organization->id, ['is_active' => $data['is_active']]);
+
 
                         $user->roles()->sync($data['roles']);
-                        $user->permissions()->sync($data['permissions']);
-
 
                         Notification::make()
                             ->title('Usuário atualziado com sucesso.')
@@ -209,6 +209,7 @@ class UserOrganizationForm extends Component implements HasForms, HasTable
 
                         $user->syncRoles($data['roles']);
 
+                        Cache::forget('all_valid_organizations_for_user_' . $user->id);
 
                         Notification::make()
                             ->title('Usuário vinculado com sucesso')
@@ -235,12 +236,12 @@ class UserOrganizationForm extends Component implements HasForms, HasTable
                         })->columnSpan(2),
                 ]),
 
-            DatePicker::make('expires_at')
-                ->hint('Deixar em branco para não expirar')
-                ->label('Data Expiração')
-                ->displayFormat('d/m/Y')
-                ->native(false)
-                ->columnSpan(2),
+            // DatePicker::make('expires_at')
+            //     ->hint('Deixar em branco para não expirar')
+            //     ->label('Data Expiração')
+            //     ->displayFormat('d/m/Y')
+            //     ->native(false)
+            //     ->columnSpan(2),
 
             Toggle::make('is_active')
                 ->label('Ativo')

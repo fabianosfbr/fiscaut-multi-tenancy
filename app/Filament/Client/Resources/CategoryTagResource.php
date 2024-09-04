@@ -31,6 +31,11 @@ class CategoryTagResource extends Resource
 
     protected static ?string $modelLabel = 'Etiqueta';
 
+    protected static ?string $navigationGroup = 'Configurações';
+
+
+
+
     public static function form(Form $form): Form
     {
         return $form->schema(self::getFormSchema());

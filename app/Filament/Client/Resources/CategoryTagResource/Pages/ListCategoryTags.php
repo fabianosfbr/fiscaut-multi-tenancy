@@ -17,13 +17,14 @@ class ListCategoryTags extends ListRecords
 
     protected function getHeaderActions(): array
     {
+
         return [
             Actions\CreateAction::make()
                 ->label('Criar categoria'),
             Actions\Action::make('issuers')
                 ->color('success')
                 ->label('Gerar Etiqueta')
-                ->hidden(CategoryTag::where('organization_id', Filament::getTenant()->id)->get()->count() > 0)
+                ->hidden(CategoryTag::where('organization_id', getTenant()->id)->get()->count() > 0)
                 ->action(function () {
 
                     $this->registerTags();
@@ -40,7 +41,7 @@ class ListCategoryTags extends ListRecords
     {
         $categoryData = CategoriaEtiquetaPadrao::with('tags')->get()->toArray();
 
-        $organization = Filament::getTenant();
+        $organization = getTenant();
         foreach ($categoryData as $cat) {
 
             $category = new CategoryTag();

@@ -17,6 +17,7 @@ use Illuminate\Session\Middleware\StartSession;
 use App\Filament\Client\Pages\Auth\RegisterPage;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use App\Filament\Client\Pages\Auth\PasswordReset;
+use App\Http\Middleware\CheckUserHasOrganization;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\AuthenticateSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
@@ -50,17 +51,17 @@ class ClientPanelProvider extends PanelProvider
                 resetAction: PasswordReset::class
             )
 
-            ->tenant(Organization::class)
-            ->tenantProfile(EditOrganizationPage::class)
-            ->tenantMenuItems([
-                'profile' => MenuItem::make()
-                //->visible(fn (): bool => auth()->user()->can('manage-organization'))
-                ->label('Gerenciar empresa'),
-                'register' => MenuItem::make()
-                    ->label('Adicionar empresa')
-                    ->url(fn (): string => '/app/'.Filament::getTenant()->id.'/new-organization'), // @phpstan-ignore-line,
+            // ->tenant(Organization::class)
+            // ->tenantProfile(EditOrganizationPage::class)
+            // ->tenantMenuItems([
+            //     'profile' => MenuItem::make()
+            //     //->visible(fn (): bool => auth()->user()->can('manage-organization'))
+            //     ->label('Gerenciar empresa'),
+            //     'register' => MenuItem::make()
+            //         ->label('Adicionar empresa')
+            //         ->url(fn (): string => '/app/'.Filament::getTenant()->id.'/new-organization'), // @phpstan-ignore-line,
 
-            ])
+            // ])
 
             ->viteTheme('resources/css/filament/client/theme.css')
             ->discoverResources(in: app_path('Filament/Client/Resources'), for: 'App\\Filament\\Client\\Resources')
@@ -88,6 +89,7 @@ class ClientPanelProvider extends PanelProvider
                 'web',
                 InitializeTenancyByDomain::class,
                 PreventAccessFromCentralDomains::class,
+                CheckUserHasOrganization::class,
             ], isPersistent: true)
             ->authMiddleware([
                 Authenticate::class,

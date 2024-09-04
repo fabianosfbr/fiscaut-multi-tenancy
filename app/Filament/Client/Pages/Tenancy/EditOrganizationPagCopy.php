@@ -16,7 +16,7 @@ use Filament\Forms\Concerns\InteractsWithForms;
 use Illuminate\Auth\Access\AuthorizationException;
 
 
-class EditOrganizationPage extends EditTenantProfile  implements HasForms
+class EditOrganizationPagCopy extends EditTenantProfile  implements HasForms
 {
 
     use InteractsWithForms;

@@ -49,32 +49,26 @@ class RegisterOrganizationPage extends Page
         // @phpstan-ignore-next-line
         $data = $this->form->getState();
 
+        $organization = null;
+
         $service = app(OrganizationService::class);
 
         try {
             $data = $service->readerCertificateFile($data);
+
+            $organization = $service->create($data);
+
         } catch (Exception $e) {
             Notification::make()
                 ->danger()
-                ->title('Erro ao ler o certificado digital')
+                ->title('Erro ao criar a organização')
                 ->body($e->getMessage())
                 ->send();
             return;
         }
 
-        $organization = $service->create($data);
 
-        if (!$organization) {
-            Notification::make()
-                ->danger()
-                ->title('Erro ao criar a organização')
-                ->body('Verifique os dados informados')
-                ->send();
-            return;
-        }
-
-        $roles = $organization->roles;
-        Auth()->user()->syncRoles($roles->pluck('name')->toArray());
+        $this->updateAuthUserData( $organization);
 
 
         Notification::make()
@@ -83,7 +77,7 @@ class RegisterOrganizationPage extends Page
             ->body('Agora é necessário completar os dados da empresa')
             ->send();
 
-        redirect(route('filament.client.tenant.profile', ['tenant' => $organization->id]));
+        redirect(route('filament.client.pages.edit-organization'));
     }
 
     public function returnAction(): Action
@@ -91,7 +85,7 @@ class RegisterOrganizationPage extends Page
         return Action::make('return')
             ->label('Cancelar')
             ->color('warning')
-            ->url(route('filament.client.pages.dashboard', ['tenant' => Filament::getTenant()?->id])); // @phpstan-ignore-line
+            ->url(route('filament.client.pages.dashboard', ['tenant' => getTenant()?->id])); // @phpstan-ignore-line
     }
 
     public function saveAction(): Action
@@ -99,7 +93,7 @@ class RegisterOrganizationPage extends Page
         return Action::make('save')
             ->label('Salvar')
             ->icon('heroicon-m-check')
-            ->action(fn () => $this->create());
+            ->action(fn() => $this->create());
     }
 
     public static function getOrganizationDataForm()
@@ -188,7 +182,7 @@ class RegisterOrganizationPage extends Page
                         ->minSize(1)
                         ->maxSize(20)
                         ->rules([
-                            fn (): Closure => function (string $attribute, $value, Closure $fail) {
+                            fn(): Closure => function (string $attribute, $value, Closure $fail) {
                                 $extension = $value->getClientOriginalExtension();
                                 if (!in_array($extension, ['pfx', 'p12'])) {
                                     $fail('Erro: arquivo inválido. O arquivo deve ser do tipo .pfx ou .p12' . $extension);
@@ -219,5 +213,15 @@ class RegisterOrganizationPage extends Page
                 ])->columns(2)
 
         ];
+    }
+
+    public function updateAuthUserData( $organization)
+    {
+        $roles = $organization->roles;
+
+        $user = Auth()->user();
+        $user->syncRoles($roles->pluck('name')->toArray());
+        $user->last_organization_id = $organization->id;
+        $user->saveQuietly();
     }
 }

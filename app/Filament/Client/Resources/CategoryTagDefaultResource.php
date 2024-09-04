@@ -22,6 +22,8 @@ class CategoryTagDefaultResource extends Resource
 
     protected static ?string $modelLabel = 'Etiqueta Padrão';
 
+    protected static ?string $navigationGroup = 'Configurações';
+
     public static function form(Form $form): Form
     {
         return $form

@@ -10,7 +10,10 @@ trait Tenantable
     {
         static::addGlobalScope(new TenancyScope);
 
-
+        if (auth()->hasUser()) {
+            static::creating(function ($model) {
+                $model->organization_id = auth()->user()->last_organization_id;
+            });
+        }
     }
-
 }

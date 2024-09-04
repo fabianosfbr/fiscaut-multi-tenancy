@@ -8,6 +8,7 @@ use Illuminate\Broadcasting\Channel;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Broadcasting\PresenceChannel;
+use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
@@ -20,7 +21,7 @@ class CreateOrganizationProcessed
      * Create a new event instance.
      */
     public function __construct(
-        public User $user,
+        public User|Authenticatable $user,
         public Organization $organization
     )
     {
