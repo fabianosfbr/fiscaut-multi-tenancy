@@ -1,57 +1,48 @@
 <?php
 
 use App\Models\Tenant;
+use App\Models\PricePlan;
 use App\Models\Tenant\Role;
 use App\Models\Tenant\User;
-use App\Models\Tenant\Permission;
-use App\Enums\Tenant\UserTypeEnum;
-use App\Models\Tenant\Organization;
-use Illuminate\Foundation\Inspiring;
+use Illuminate\Support\Str;
+use App\Models\Tenant\PaymentLog;
+
 use Illuminate\Support\Facades\Artisan;
 use App\Enums\Tenant\PermissionTypeEnum;
 
 Artisan::command('play', function () {
 
     $tenant = Tenant::first();
-    $tenant->run(function () {
 
-        // $organization = Organization::find('9ce28135-70ef-4f47-9acb-56aa624d475f');
-        // $user = User::find('9ce28135-7011-454c-aad0-945852cc4a3c');
+    $package = PricePlan::first();
 
 
-        $roles = UserTypeEnum::toArray();
-        $permissions = PermissionTypeEnum::toArray();
+    $subscription = [
+        'package_id' => $package->id,
+        'package_name' => $package->title,
+        'package_price' => $package->price,
+        'status' => 'pending',
+        'name' => $tenant->name,
+        'email' => $tenant->email,
+        'tenant_id' => $tenant->id,
+        'track' => Str::random(10) . Str::random(10),
 
-        foreach ($permissions as $name => $description) {
-            dd($name, $description);
-            // $permission = Permission::create([
-            //     'name' => $valuePermission,
-            //     'organization_id' => $organization->id,
-            // ]);
+    ];
 
-            $permissionsCollection[] = $permission;
-        }
-
-
-
-
-        $roles = $organization->roles;
+  //  PaymentLog::create($subscription);
 
 
-        //dd($roles->pluck('name')->toArray());
-        //  $user->syncRoles($roles->pluck('name')->toArray());
-        dd($user->roles);
+    $tenant->run(function () use ($subscription) {
 
-        // foreach ($roles as $role) {
+        $user = User::where('email', tenant()->email)->first();
 
-        //     $permissions = $role->permissions;
+        $subscription['user_id'] = $user->id;
+        $subscription['email'] = $user->email;
+        $subscription['name'] = $user->name;
 
-        //     foreach ($permissions as $permission) {
-        //         $user->givePermissionTo($permission->name);
-        //     }
+        PaymentLog::create($subscription);
+        $payment_log = PaymentLog::where('tenant_id', tenant()->id)->first();
 
-        // };
-
-
+        dd($payment_log);
     });
 });

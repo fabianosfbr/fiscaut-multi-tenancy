@@ -3,10 +3,12 @@
 namespace App\Models;
 
 
-use Stancl\Tenancy\Database\Models\Tenant as BaseTenant;
+use App\Models\Tenant\PaymentLog;
 use Stancl\Tenancy\Contracts\TenantWithDatabase;
-use Stancl\Tenancy\Database\Concerns\HasDatabase;
 use Stancl\Tenancy\Database\Concerns\HasDomains;
+use Stancl\Tenancy\Database\Concerns\HasDatabase;
+use Illuminate\Database\Eloquent\Relations\HasOne;
+use Stancl\Tenancy\Database\Models\Tenant as BaseTenant;
 
 class Tenant extends BaseTenant implements TenantWithDatabase
 {
@@ -27,4 +29,9 @@ class Tenant extends BaseTenant implements TenantWithDatabase
     protected $hidden = [
         'password',
     ];
+
+    public function payment_log(): HasOne
+    {
+        return $this->hasOne(PaymentLog::class, 'tenant_id', 'id')->latest();
+    }
 }

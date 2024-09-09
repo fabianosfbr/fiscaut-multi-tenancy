@@ -16,22 +16,12 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // User::factory(10)->create();
-
-        User::factory()->create([
-            'name' => 'Admin',
-            'email' => 'admin@email.com',
-            'password' => bcrypt('asdfasdf'),
+        $this->call([
+            PricePlanSeeder::class,
+            TenantSeeder::class,
         ]);
 
-        $tenant1 = Tenant::create([
-            'name' => 'Foo',
-            'email' => 'email@email.com',
-            'password' => bcrypt('Mudar@1234*'),
-            'razao_social' => 'Foo Ltd.',
-            'cnpj' => '11111111111111',
-        ]);
-        $tenant1->domains()->create(['domain' => 'foo.localhost']);
+
 
     }
 }

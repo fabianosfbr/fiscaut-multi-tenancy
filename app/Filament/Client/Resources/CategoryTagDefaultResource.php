@@ -10,6 +10,7 @@ use Filament\Resources\Resource;
 use Illuminate\Database\Eloquent\Builder;
 use App\Models\Tenant\CategoriaEtiquetaPadrao;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use App\Filament\Fiscal\Resources\CategoryTagResource;
 use App\Filament\Client\Resources\CategoryTagDefaultResource\Pages;
 use App\Filament\Client\Resources\CategoryTagDefaultResource\RelationManagers;
 use App\Filament\Client\Resources\CategoryTagDefaultResource\RelationManagers\TagsRelationManager;

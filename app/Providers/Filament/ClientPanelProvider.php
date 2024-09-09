@@ -11,6 +11,8 @@ use Filament\Facades\Filament;
 use Filament\Navigation\MenuItem;
 use Filament\Support\Colors\Color;
 use App\Models\Tenant\Organization;
+use Filament\View\PanelsRenderHook;
+use Illuminate\Support\Facades\Blade;
 use Filament\Http\Middleware\Authenticate;
 use App\Filament\Client\Pages\Auth\LoginPage;
 use Illuminate\Session\Middleware\StartSession;
@@ -18,6 +20,7 @@ use App\Filament\Client\Pages\Auth\RegisterPage;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use App\Filament\Client\Pages\Auth\PasswordReset;
 use App\Http\Middleware\CheckUserHasOrganization;
+use App\Filament\Clusters\Profile\Pages\ViewProfile;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\AuthenticateSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
@@ -51,21 +54,10 @@ class ClientPanelProvider extends PanelProvider
                 resetAction: PasswordReset::class
             )
 
-            // ->tenant(Organization::class)
-            // ->tenantProfile(EditOrganizationPage::class)
-            // ->tenantMenuItems([
-            //     'profile' => MenuItem::make()
-            //     //->visible(fn (): bool => auth()->user()->can('manage-organization'))
-            //     ->label('Gerenciar empresa'),
-            //     'register' => MenuItem::make()
-            //         ->label('Adicionar empresa')
-            //         ->url(fn (): string => '/app/'.Filament::getTenant()->id.'/new-organization'), // @phpstan-ignore-line,
-
-            // ])
-
             ->viteTheme('resources/css/filament/client/theme.css')
             ->discoverResources(in: app_path('Filament/Client/Resources'), for: 'App\\Filament\\Client\\Resources')
             ->discoverPages(in: app_path('Filament/Client/Pages'), for: 'App\\Filament\\Client\\Pages')
+            ->discoverClusters(in: app_path('Filament/Clusters'), for: 'App\\Filament\\Clusters')
             ->pages([
                 Pages\Dashboard::class,
             ])
@@ -74,6 +66,16 @@ class ClientPanelProvider extends PanelProvider
                 Widgets\AccountWidget::class,
                 Widgets\FilamentInfoWidget::class,
             ])
+            ->userMenuItems([
+                MenuItem::make()
+                ->label('Meu Perfil')
+                ->icon('heroicon-o-user')
+                ->url(fn (): string => ViewProfile::getUrl()),
+            ])
+            ->renderHook(
+                PanelsRenderHook::CONTENT_START,
+            fn (): string => Blade::render('@livewire(\'component.choice-organization\')'),
+            )
             ->middleware([
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,

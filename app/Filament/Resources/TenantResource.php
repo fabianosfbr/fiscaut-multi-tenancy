@@ -94,6 +94,10 @@ class TenantResource extends Resource
                     ->label('Responsável'),
                 TextColumn::make('cnpj')
                     ->label('CNPJ'),
+                TextColumn::make('payment_log.package_name')
+                    ->label('Pacote Assinado'),
+                    TextColumn::make('payment_log.status')
+                    ->label('Status do pacote'),
             ])
             ->filters([
                 //

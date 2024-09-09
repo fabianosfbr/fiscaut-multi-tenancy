@@ -1,0 +1,63 @@
+<?php
+
+namespace Database\Seeders;
+
+use App\Models\User;
+use App\Models\Tenant;
+use App\Models\PricePlan;
+use Illuminate\Support\Str;
+use Illuminate\Database\Seeder;
+use App\Models\Tenant\PaymentLog;
+use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+
+class TenantSeeder extends Seeder
+{
+    /**
+     * Run the database seeds.
+     */
+    public function run(): void
+    {
+        User::factory()->create([
+            'name' => 'Admin',
+            'email' => 'admin@email.com',
+            'password' => bcrypt('asdfasdf'),
+        ]);
+
+        $tenant = Tenant::create([
+            'name' => 'Foo',
+            'email' => 'email@email.com',
+            'password' => bcrypt('asdfasdf'),
+            'razao_social' => 'Foo Ltd.',
+            'cnpj' => '11111111111111',
+        ]);
+        $tenant->domains()->create(['domain' => 'foo.localhost']);
+
+        $package = PricePlan::first();
+
+        $subscription = [
+            'package_id' => $package->id,
+            'package_name' => $package->title,
+            'package_price' => $package->price,
+            'status' => 'pending',
+            'name' => $tenant->name,
+            'email' => $tenant->email,
+            'tenant_id' => $tenant->id,
+            'start_date' => now(),
+            'track' => Str::random(10) . Str::random(10),
+
+        ];
+
+        PaymentLog::create($subscription);
+
+        $tenant->run(function () use ($subscription) {
+
+            // $user = User::where('email', tenant()->email)->first();
+
+            $subscription['user_id'] = tenant()->id;
+            $subscription['email'] = tenant()->email;
+            $subscription['name'] = tenant()->name;
+
+            PaymentLog::create($subscription);
+        });
+    }
+}
