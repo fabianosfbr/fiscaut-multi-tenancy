@@ -27,6 +27,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('acumuladors');
+        Schema::dropIfExists('entradas_acumulador_equivalentes');
     }
 };

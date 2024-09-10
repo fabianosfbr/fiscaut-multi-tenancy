@@ -26,10 +26,10 @@ class User extends Authenticatable  implements FilamentUser, HasTenants, HasDefa
 {
     use HasFactory, HasUuids, Notifiable, HasRoles;
 
+    protected $keyType = 'string';
 
+    public $incrementing = false;
     protected $guarded = ['id'];
-
-
 
     protected $hidden = [
         'password',
