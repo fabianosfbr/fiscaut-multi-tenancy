@@ -6,6 +6,7 @@ use Filament\Forms\Form;
 use Filament\Pages\Page;
 use Filament\Forms\Components\Tabs;
 use Filament\Forms\Components\Livewire;
+use App\Livewire\Organization\UserOrganizationForm;
 
 class EditOrganizationPage extends Page
 {
@@ -34,13 +35,9 @@ class EditOrganizationPage extends Page
                             ->schema([
                                 Livewire::make('organization.digital-certificate-form', $this->getViewData()),
                             ]),
-                        Tabs\Tab::make('Configuração Geral')
+                        Tabs\Tab::make('Permissões')
                             ->schema([
-                                Livewire::make('organization.configuration-organization-form', $this->getViewData()),
-                            ]),
-                        Tabs\Tab::make('Usuários')
-                            ->schema([
-                                Livewire::make('organization.user-organization-form', $this->getViewData()),
+                                Livewire::make(UserOrganizationForm::class),
                             ]),
 
                     ])

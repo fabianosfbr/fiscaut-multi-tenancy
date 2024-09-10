@@ -9,6 +9,7 @@ use App\Models\Tenant\User;
 use Filament\Facades\Filament;
 use App\Models\Tenant\Permission;
 use Illuminate\Support\Facades\DB;
+use App\Models\Tenant\Organization;
 use Filament\Forms\Components\Grid;
 use Filament\Tables\Actions\Action;
 use Illuminate\Support\Facades\Hash;
@@ -34,11 +35,11 @@ class UserOrganizationForm extends Component implements HasForms, HasTable
 {
     use InteractsWithTable;
     use InteractsWithForms;
-    public mixed $organization;
+    public Organization $organization;
 
-    public function mount(mixed $organization): void
+    public function mount(): void
     {
-        $this->organization = $organization;
+        $this->organization = Organization::find(auth()->user()->last_organization_id);
     }
 
     public function table(Table $table): Table
@@ -50,7 +51,6 @@ class UserOrganizationForm extends Component implements HasForms, HasTable
                     ->where('organization_id', $this->organization->id)
                     ->pluck('user_id')
                     ->toArray();
-
 
                 return User::query()->whereIn('id', $userInOrganization)->with('organizations');
             })
@@ -80,19 +80,6 @@ class UserOrganizationForm extends Component implements HasForms, HasTable
                     ->trueIcon('heroicon-o-check-circle')
                     ->falseIcon('heroicon-o-x-circle'),
 
-
-                // TextColumn::make('expires_at')
-                //     ->label('Expira em')
-                //     ->getStateUsing(function (User $record) {
-
-                //         $organization = $record
-                //             ->organizations()
-                //             ->where('organizations.id', $this->organization->id)
-                //             ->first();
-
-                //         return $organization->pivot->expires_at;
-                //     })
-                //     ->date('d/m/Y'),
 
             ])
             ->filters([
@@ -165,6 +152,7 @@ class UserOrganizationForm extends Component implements HasForms, HasTable
                                                 TextInput::make('password')
                                                     ->label('Senha')
                                                     ->password()
+                                                    ->revealable()
                                                     ->dehydrateStateUsing(fn(string $state): string => Hash::make($state))
                                                     ->dehydrated(fn(?string $state): bool => filled($state))
                                                     ->required()
@@ -235,13 +223,6 @@ class UserOrganizationForm extends Component implements HasForms, HasTable
                                 ->pluck('description', 'id');
                         })->columnSpan(2),
                 ]),
-
-            // DatePicker::make('expires_at')
-            //     ->hint('Deixar em branco para não expirar')
-            //     ->label('Data Expiração')
-            //     ->displayFormat('d/m/Y')
-            //     ->native(false)
-            //     ->columnSpan(2),
 
             Toggle::make('is_active')
                 ->label('Ativo')
