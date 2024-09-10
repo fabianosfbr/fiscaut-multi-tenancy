@@ -5,15 +5,16 @@ namespace App\Livewire\Organization;
 use Exception;
 use Livewire\Component;
 use Filament\Forms\Form;
+use App\Models\Tenant\Organization;
 use Filament\Forms\Components\Tabs;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Contracts\HasForms;
 use Filament\Forms\Components\Checkbox;
 use Filament\Forms\Components\Fieldset;
+use Filament\Forms\Components\Livewire;
 use Filament\Notifications\Notification;
 use App\Services\Tenant\OrganizationService;
-use Filament\Forms\Components\Livewire;
 use Filament\Forms\Concerns\InteractsWithForms;
 
 class ConfigurationOrganizationForm extends Component implements HasForms
@@ -24,11 +25,7 @@ class ConfigurationOrganizationForm extends Component implements HasForms
 
     public mixed $organization;
 
-    public function mount(mixed $organization): void
-    {
-        $this->organization = $organization;
-        $this->form->fill($organization->toArray());
-    }
+
 
     public function form(Form $form): Form
     {
@@ -103,7 +100,7 @@ class ConfigurationOrganizationForm extends Component implements HasForms
                                         Tabs\Tab::make('tax-incomes')
                                         ->label('Impostos')
                                             ->schema([
-                                               Livewire::make('organization.configuration.entrada-imposto-equivalente-form')
+                                              // Livewire::make('organization.configuration.entrada-imposto-equivalente-form')
                                             ]),
                                         Tabs\Tab::make('Tab 2')
                                             ->schema([

@@ -13,4 +13,10 @@ class EntradasCfopsEquivalente extends Model
         'cfop_entrada' => 'integer',
         'valores' => 'array',
     ];
+
+
+    public function grupo()
+    {
+        return $this->belongsTo(GrupoEntradasCfopsEquivalente::class, 'grupo_id');
+    }
 }

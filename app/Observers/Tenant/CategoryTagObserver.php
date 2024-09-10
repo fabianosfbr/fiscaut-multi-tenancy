@@ -11,11 +11,7 @@ class CategoryTagObserver
 {
     public function creating(CategoryTag $model)
     {
-        // $organization = Filament::getTenant();
 
-        // if ($organization) {
-        //     $model->organization_id = $organization->id;
-        // }
     }
     /**
      * Handle the CategoryTag "created" event.

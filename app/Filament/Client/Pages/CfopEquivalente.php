@@ -19,6 +19,8 @@ class CfopEquivalente extends Page
 
     protected static ?string $slug = 'configuracoes/cfops-equivalentes';
 
+    protected static ?int $navigationSort = 3;
+
 
     public function form(Form $form): Form
     {

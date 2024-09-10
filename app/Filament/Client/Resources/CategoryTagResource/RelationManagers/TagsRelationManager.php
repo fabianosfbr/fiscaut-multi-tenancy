@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Filament\Fiscal\Resources\CategoryTagResource\RelationManagers;
+namespace App\Filament\Client\Resources\CategoryTagResource\RelationManagers;
 
 use Filament\Forms;
 use Filament\Tables;

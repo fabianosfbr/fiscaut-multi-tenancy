@@ -13,9 +13,10 @@ class Acumuladores extends Page
     protected static ?string $navigationGroup = 'Configurações';
 
     protected static ?string $navigationLabel = 'Acumuladores';
-
     protected static ?string $slug = 'configuracoes/acumuladores';
     protected static string $view = 'filament.client.pages.acumulador';
+
+    protected static ?int $navigationSort = 2;
 
 
 

@@ -25,9 +25,11 @@ class ImpostosEquivalente extends Page implements HasTable
 
     protected static ?string $navigationLabel = 'Impostos Equivalentes';
 
+    protected static ?string $slug = 'configuracoes/impostos-equivalentes';
     protected static string $view = 'filament.client.pages.impostos-equivalentes';
 
-    protected static ?string $slug = 'configuracoes/impostos-equivalentes';
+    protected static ?int $navigationSort = 4;
+
 
     public function table(Table $table): Table
     {

@@ -1,13 +1,13 @@
 <?php
 
-namespace App\Filament\Fiscal\Resources\CategoryTagResource\Pages;
+namespace App\Filament\Client\Resources\CategoryTagResource\Pages;
 
+use App\Filament\Client\Resources\CategoryTagResource;
 use Filament\Actions;
 use App\Models\Tenant\Tag;
 use App\Models\Tenant\CategoryTag;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ListRecords;
-use App\Filament\Fiscal\Resources\CategoryTagResource;
 
 class ListCategoryTags extends ListRecords
 {

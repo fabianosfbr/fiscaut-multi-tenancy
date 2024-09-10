@@ -27,6 +27,7 @@ class Organization extends Model implements HasName, HasCurrentTenantLabel
     {
         return [
             'atividade' => 'array',
+            'tagsCreditoIcms' => 'array',
         ];
     }
 

@@ -1,8 +1,7 @@
 <?php
 
-namespace App\Filament\Fiscal\Resources;
+namespace App\Filament\Client\Resources;
 
-use Filament\Forms;
 use Filament\Tables;
 use Filament\Forms\Form;
 use Filament\Tables\Table;
@@ -16,12 +15,11 @@ use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Illuminate\Database\Eloquent\Model;
 use Filament\Forms\Components\TextInput;
-use Illuminate\Database\Eloquent\Builder;
 use Filament\Forms\Components\ColorPicker;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
-use App\Filament\Fiscal\Resources\CategoryTagResource\Pages;
-use App\Filament\Fiscal\Resources\CategoryTagResource\RelationManagers;
-use App\Filament\Fiscal\Resources\CategoryTagResource\RelationManagers\TagsRelationManager;
+use Illuminate\Contracts\Database\Eloquent\Builder;
+use App\Filament\Client\Resources\CategoryTagResource\Pages;
+use App\Filament\Client\Resources\CategoryTagResource\RelationManagers;
+use App\Filament\Client\Resources\CategoryTagResource\RelationManagers\TagsRelationManager;
 
 class CategoryTagResource extends Resource
 {
@@ -44,6 +42,7 @@ class CategoryTagResource extends Resource
     {
         return $table
             ->recordUrl(null)
+            ->modifyQueryUsing(fn (Builder $query) => $query->where('organization_id', auth()->user()->last_organization_id))
             ->reorderable('order')
             ->columns(self::getColumnTableSchema())
             ->filters([
@@ -163,3 +162,4 @@ class CategoryTagResource extends Resource
         ];
     }
 }
+
