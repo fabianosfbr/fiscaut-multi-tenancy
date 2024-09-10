@@ -5,13 +5,15 @@ namespace App\Livewire\Organization;
 use Exception;
 use Livewire\Component;
 use Filament\Forms\Form;
-use App\Services\Tenant\OrganizationService;
+use Filament\Forms\Components\Tabs;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Contracts\HasForms;
 use Filament\Forms\Components\Checkbox;
 use Filament\Forms\Components\Fieldset;
 use Filament\Notifications\Notification;
+use App\Services\Tenant\OrganizationService;
+use Filament\Forms\Components\Livewire;
 use Filament\Forms\Concerns\InteractsWithForms;
 
 class ConfigurationOrganizationForm extends Component implements HasForms
@@ -32,9 +34,10 @@ class ConfigurationOrganizationForm extends Component implements HasForms
     {
         return $form
             ->schema([
-                Section::make('Configurações Gerais')
-                    ->schema([
-                        Fieldset::make('')
+                Tabs::make('Tabs')
+                    ->tabs([
+                        Tabs\Tab::make('general-settings')
+                            ->label('Configurações Gerais')
                             ->schema([
                                 Checkbox::make('isNfeClassificarNaEntrada')
                                     ->label('Data de entrada na classificação da Nfe')
@@ -91,9 +94,35 @@ class ConfigurationOrganizationForm extends Component implements HasForms
                                     ->validationMessages([
                                         'required' => 'É obrigatório informar as etiquetas para credito de ICMS',
                                     ]),
-
-                            ])->columnSpan(1),
+                            ]),
+                        Tabs\Tab::make('entry-settings')
+                            ->label('Entradas')
+                            ->schema([
+                                Tabs::make('Tabs')
+                                    ->tabs([
+                                        Tabs\Tab::make('tax-incomes')
+                                        ->label('Impostos')
+                                            ->schema([
+                                               Livewire::make('organization.configuration.entrada-imposto-equivalente-form')
+                                            ]),
+                                        Tabs\Tab::make('Tab 2')
+                                            ->schema([
+                                                // ...
+                                            ]),
+                                        Tabs\Tab::make('Tab 3')
+                                            ->schema([
+                                                // ...
+                                            ]),
+                                    ])
+                            ]),
+                        Tabs\Tab::make('tags-default')
+                            ->label('Etiquetas Padrao')
+                            ->schema([
+                                // ...
+                            ]),
                     ]),
+
+
             ])
             ->statePath('data');
     }

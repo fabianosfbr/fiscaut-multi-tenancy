@@ -1,0 +1,132 @@
+<?php
+
+namespace App\Livewire\Organization\Configuration;
+
+use Livewire\Component;
+use Filament\Forms\Form;
+use App\Models\Tenant\Cfop;
+use Illuminate\Support\Facades\DB;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Contracts\HasForms;
+use Filament\Forms\Components\Repeater;
+use Filament\Forms\Components\TagsInput;
+use Filament\Notifications\Notification;
+use App\Models\Tenant\EntradasCfopsEquivalente;
+use Filament\Forms\Concerns\InteractsWithForms;
+use App\Models\Tenant\GrupoEntradasCfopsEquivalente;
+
+class NfeEntradaTerceiroForm extends Component implements HasForms
+{
+    use InteractsWithForms;
+    private const TIPO = 'nfe-entrada-terceiro';
+
+    public ?array $data = [];
+
+    public $values;
+
+
+    public function mount(): void
+    {
+        $this->values = GrupoEntradasCfopsEquivalente::with('cfops')
+            ->whereHas('cfops', function ($query) {
+                $query->where('tipo', self::TIPO);
+            })
+            ->where('organization_id', auth()->user()->last_organization_id)->get();
+
+        $this->form->fill([
+            'organization_cfop' => $this->values,
+        ]);
+    }
+
+    public function form(Form $form): Form
+    {
+        return $form
+            ->schema([
+                Repeater::make('organization_cfop')
+                    ->label('')
+                    ->schema([
+                        TagsInput::make('tags')
+                            ->label('Etiquetas')
+                            ->required()
+                            ->placeholder('Digite a nova etiqueta e tecle ENTER para adicionar'),
+                        Repeater::make('cfops')
+                            ->label('')
+                            ->schema([
+                                Select::make('cfop_entrada')
+                                    ->label('CFOP')
+                                    ->searchable()
+                                    ->required()
+                                    ->options($this->cfopsForSearching())
+                                    ->columnSpan(2),
+                                TagsInput::make('valores')
+                                    ->label('CFOP Saída')
+                                    ->required()
+                                    ->placeholder('Digite a nova etiqueta e tecle ENTER para adicionar')
+                                    ->columnSpan(2),
+                            ])
+                            ->addActionLabel('Adicionar CFOP')
+                            ->columns(4),
+
+                    ])
+                    ->collapsible()
+                    ->addActionLabel('Adicionar Etiqueta'),
+
+            ])
+            ->statePath('data');
+    }
+
+    public function cfopsForSearching()
+    {
+
+        $tagData = Cfop::select(
+            'codigo',
+            DB::raw("CONCAT(cfops.codigo,'-',cfops.descricao) as full_name")
+        )->get()->pluck('full_name', 'codigo');
+
+        return $tagData;
+    }
+
+    public function submit()
+    {
+        $values = $this->form->getState();
+
+        foreach ($this->values as $grupo) {
+            EntradasCfopsEquivalente::where('grupo_id', $grupo->id)
+                ->where('tipo', self::TIPO)
+                ->delete();
+
+            GrupoEntradasCfopsEquivalente::find($grupo->id)->delete();
+        }
+
+
+
+
+        foreach ($values['organization_cfop'] as $value) {
+            $grupo = GrupoEntradasCfopsEquivalente::create([
+                'tags' => $value['tags'],
+                'organization_id' => auth()->user()->last_organization_id,
+            ]);
+
+            foreach ($value['cfops'] as $cfop) {
+                EntradasCfopsEquivalente::create([
+                    'cfop_entrada' => intval($cfop['cfop_entrada']),
+                    'valores' => $cfop['valores'],
+                    'tipo' => self::TIPO,
+                    'grupo_id' => $grupo->id,
+                ]);
+            }
+        }
+
+        Notification::make()
+            ->success()
+            ->title('O valores foram salvos com sucesso!')
+            ->send();
+    }
+
+
+    use InteractsWithForms;
+    public function render()
+    {
+        return view('livewire.organization.configuration.nfe-entrada-terceiro-form');
+    }
+}

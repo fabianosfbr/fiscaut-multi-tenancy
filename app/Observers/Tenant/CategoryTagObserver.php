@@ -5,6 +5,7 @@ namespace App\Observers\Tenant;
 
 use Filament\Facades\Filament;
 use App\Models\Tenant\CategoryTag;
+use Illuminate\Support\Facades\Cache;
 
 class CategoryTagObserver
 {
@@ -28,7 +29,9 @@ class CategoryTagObserver
      */
     public function updated(CategoryTag $categoryTag): void
     {
-        //
+        Cache::forget('categoryWithDifal_' . $categoryTag->organization_id);
+        Cache::forget('category_with_tag_for_searching_' . $categoryTag->organization_id);
+        Cache::forget('categorias_issuer_' . $categoryTag->organization_id);
     }
 
     /**
