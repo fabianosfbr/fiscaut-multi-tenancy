@@ -21,6 +21,10 @@ class Organization extends Model implements HasName, HasCurrentTenantLabel
     use HasFactory;
     use HasUuids;
 
+    protected $keyType = 'string';
+
+    public $incrementing = false;
+
     protected $guarded = ['id'];
 
     protected function casts(): array

@@ -9,6 +9,10 @@ class Tag extends Model
 {
     use HasUuids;
 
+    protected $keyType = 'string';
+
+    public $incrementing = false;
+
     protected $guarded = ['id'];
 
     protected $appends = ['namecode'];

@@ -13,6 +13,10 @@ class DigitalCertificate extends Model
 
     public $timestamps = false;
 
+    protected $keyType = 'string';
+
+    public $incrementing = false;
+
     protected $guarded = ['id'];
 
     public function issuer()

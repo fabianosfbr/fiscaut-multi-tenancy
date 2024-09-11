@@ -12,6 +12,7 @@
         "bezhansalleh/filament-panel-switch": "^1.0",
         "filament/filament": "^3.2",
         "laravel/framework": "^11.9",
+        "laravel/horizon": "^5.28",
         "laravel/tinker": "^2.9",
         "nfephp-org/sped-cte": "dev-master",
         "nfephp-org/sped-da": "dev-master",

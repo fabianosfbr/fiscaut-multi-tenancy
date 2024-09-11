@@ -28,7 +28,7 @@ trait HasLogSefaz
             ]
         );
 
-        Log::notice('CTe NSU consulta SEFAZ: ' . $numnsu . ' maxnsu: ' . $maxNSU . ' Empresa: ' . $this->organization->razao_social);
+        Log::notice('CTe NSU consulta SEFAZ: ' . $numnsu . ' maxnsu: ' . $maxNSU . ' Empresa: ' . $organization->razao_social);
 
         return $logContent;
     }
@@ -48,7 +48,7 @@ trait HasLogSefaz
             ]
         );
 
-        Log::notice('NFe NSU consulta SEFAZ: ' . $numnsu . ' maxnsu: ' . $maxNSU . ' Empresa: ' . $this->organization->razao_social);
+        Log::notice('NFe NSU consulta SEFAZ: ' . $numnsu . ' maxnsu: ' . $maxNSU . ' Empresa: ' . $organization->razao_social);
 
         return $logContent;
     }
