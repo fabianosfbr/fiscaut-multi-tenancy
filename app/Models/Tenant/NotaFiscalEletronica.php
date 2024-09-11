@@ -24,11 +24,13 @@ class NotaFiscalEletronica extends Model
         return [
             'aut_xml' => 'array',
             'carta_correcao' => 'array',
+            'pagamento' => 'array',
+            'cobranca' => 'array',
         ];
     }
 
 
-    public function produtos()
+    public function products()
     {
 
         return $this->hasMany(Produto::class, 'nfe_id');

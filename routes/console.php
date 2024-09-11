@@ -1,18 +1,52 @@
 <?php
 
-use App\Models\Tenant;
 use App\Models\PricePlan;
-use App\Models\Tenant\Role;
-use App\Models\Tenant\User;
-use Illuminate\Support\Str;
+use App\Models\Tenant;
+use App\Models\Tenant\NotaFiscalEletronica;
+use App\Models\Tenant\Organization;
 use App\Models\Tenant\PaymentLog;
-
+use App\Models\Tenant\User;
+use App\Services\Tenant\Sefaz\NfeService;
 use Illuminate\Support\Facades\Artisan;
-use App\Enums\Tenant\PermissionTypeEnum;
+use Illuminate\Support\Str;
 
 Artisan::command('play', function () {
 
     $tenant = Tenant::first();
+
+    $tenant->run(function ()  {
+
+
+        $nfe = NotaFiscalEletronica::whereJsonContains('aut_xml', ['CNPJ' => '15705134000185'])->first();
+
+
+        $user = User::where('email', tenant()->email)->first();
+
+        $organization =  Organization::findOrFail($user->last_organization_id);
+
+        $service = app(NfeService::class);
+
+        $service->issuer($organization);
+
+
+        $service->buscarDocumentosFiscaisPorNsu(82603);
+
+        dd('parei');
+
+        dd($organization->digitalCertificate->content_file);
+
+        $subscription['user_id'] = $user->id;
+        $subscription['email'] = $user->email;
+        $subscription['name'] = $user->name;
+
+        PaymentLog::create($subscription);
+        $payment_log = PaymentLog::where('tenant_id', tenant()->id)->first();
+
+        dd($payment_log);
+    });
+
+
+    dd('pare');
 
     $package = PricePlan::first();
 

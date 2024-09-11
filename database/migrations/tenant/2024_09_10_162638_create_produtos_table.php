@@ -17,7 +17,6 @@ return new class extends Migration
             $table->string('num_nfe', 255)->nullable();
             $table->string('codigo_produto', 255);
             $table->string('descricao_produto', 255);
-            $table->string('cst_icms', 255)->nullable();
             $table->string('ncm', 255);
             $table->integer('cfop');
             $table->string('unidade', 255);
@@ -28,6 +27,7 @@ return new class extends Migration
             $table->decimal('base_icms', 14, 4)->nullable();
             $table->decimal('valor_icms', 14, 4)->nullable();
             $table->decimal('aliq_icms', 14, 4)->nullable();
+            $table->string('cst_icms', 255)->nullable();
             $table->decimal('base_ipi', 14, 4)->nullable();
             $table->decimal('valor_ipi', 14, 4)->nullable();
             $table->decimal('aliq_ipi', 14, 4)->nullable();
@@ -35,6 +35,7 @@ return new class extends Migration
             $table->decimal('base_pis', 14, 4)->nullable();
             $table->decimal('valor_pis', 14, 4)->nullable();
             $table->decimal('aliq_pis', 14, 4)->nullable();
+            $table->string('cst_pis', 255)->nullable();
             $table->string('cst_pis', 255)->nullable();
             $table->decimal('base_cofins', 14, 4)->nullable();
             $table->decimal('valor_cofins', 14, 4)->nullable();

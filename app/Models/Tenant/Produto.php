@@ -14,6 +14,8 @@ class Produto extends Model
 
     public $incrementing = false;
 
+    protected $guarded = ['id'];
+
 
     public function nota_fiscal()
     {

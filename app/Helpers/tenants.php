@@ -1,5 +1,6 @@
 <?php
 
+use Saloon\XmlWrangler\XmlReader;
 use App\Models\Tenant\CategoryTag;
 use App\Models\Tenant\Organization;
 use Illuminate\Support\Facades\Cache;
@@ -39,5 +40,31 @@ if (!function_exists("categoryWithTagForSearching")) {
                 ->orderBy('order', 'asc')
                 ->get();
         });
+    }
+}
+
+
+if (!function_exists("loadXmlReader")) {
+    function loadXmlReader($xml)
+    {
+        return XmlReader::fromString($xml);
+    }
+}
+
+if (!function_exists("searchValueInArray")) {
+    function searchValueInArray(array $data, $needle)
+    {
+        $iterator = new RecursiveArrayIterator($data);
+        $recursive = new RecursiveIteratorIterator(
+            $iterator,
+            RecursiveIteratorIterator::SELF_FIRST
+        );
+        foreach ($recursive as $key => $value) {
+            if ($key === $needle) {
+                return $value;
+            }
+        }
+
+        return null;
     }
 }

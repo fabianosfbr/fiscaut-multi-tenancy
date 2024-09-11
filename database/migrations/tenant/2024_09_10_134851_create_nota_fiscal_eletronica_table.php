@@ -38,7 +38,10 @@ return new class extends Migration
             $table->string('transportador_razao_social', 255)->nullable();
             $table->json('aut_xml')->nullable();
             $table->string('digVal', 255)->nullable();
-
+            $table->longText('infAdFisco')->nullable();
+            $table->longText('infCpl')->nullable();
+            $table->json('cobranca')->nullable();
+            $table->json('pagamento')->nullable();
             $table->decimal('vBC', 14, 4)->default(0.0000);
             $table->decimal('vICMS', 14, 4)->default(0.0000);
             $table->decimal('vICMSDeson', 14, 4)->default(0.0000);
