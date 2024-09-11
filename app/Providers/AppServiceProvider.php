@@ -8,6 +8,8 @@ use Filament\Support\Assets\Css;
 use Illuminate\Support\ServiceProvider;
 use BezhanSalleh\PanelSwitch\PanelSwitch;
 use Filament\Support\Facades\FilamentAsset;
+use Filament\Tables\Enums\FiltersLayout;
+use Filament\Tables\Table;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -25,6 +27,13 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         $this->configurePanelSwitch();
+
+        Table::configureUsing(function (Table $table): void {
+            $table
+
+                ->filtersLayout(FiltersLayout::AboveContentCollapsible)
+                ->paginationPageOptions([25, 50, 100]);
+        });
 
         FilamentAsset::register([
             Js::make('tom-select', 'https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/js/tom-select.complete.min.js'),
