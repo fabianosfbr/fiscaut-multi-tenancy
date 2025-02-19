@@ -3,7 +3,7 @@
 namespace App\Models;
 
 
-use App\Models\Tenant\PaymentLog;
+use App\Models\PaymentLog;
 use Stancl\Tenancy\Contracts\TenantWithDatabase;
 use Stancl\Tenancy\Database\Concerns\HasDomains;
 use Stancl\Tenancy\Database\Concerns\HasDatabase;
@@ -23,6 +23,7 @@ class Tenant extends BaseTenant implements TenantWithDatabase
             'password',
             'razao_social',
             'cnpj',
+            'domain',
         ];
     }
 

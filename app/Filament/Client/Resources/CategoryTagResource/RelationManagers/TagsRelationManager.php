@@ -39,7 +39,7 @@ class TagsRelationManager extends RelationManager
                             ->required()
                             ->columnSpan(2),
                         Toggle::make('is_enable')
-                            ->label('Ativo')
+                            ->label('Habilitada')
                             ->default(true)
                             ->required()
                             ->columnSpan(1),
@@ -61,7 +61,7 @@ class TagsRelationManager extends RelationManager
                     ->label('Nome')
                     ->sortable(),
                 IconColumn::make('is_enable')
-                    ->label('Ativo')
+                    ->label('Habilitada')
                     ->boolean(),
             ])
             ->filters([

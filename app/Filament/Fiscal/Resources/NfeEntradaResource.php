@@ -7,8 +7,11 @@ use Filament\Tables;
 use Filament\Forms\Form;
 use Filament\Tables\Table;
 use Filament\Resources\Resource;
+use App\Tables\Columns\TagColumnNfe;
+use App\Tables\Columns\ViewChaveColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Columns\ViewColumn;
+use App\Enums\Tenant\StatusManifestoNfe;
 use Illuminate\Database\Eloquent\Builder;
 use App\Models\Tenant\NotaFiscalEletronica;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
@@ -39,6 +42,8 @@ class NfeEntradaResource extends Resource
 
     public static function table(Table $table): Table
     {
+        $mostrarCodigo = false;
+
         return $table
             ->recordUrl(null)
             ->extremePaginationLinks()
@@ -78,15 +83,60 @@ class NfeEntradaResource extends Resource
                     ->label('Valor')
                     ->iconPosition('after')
                     ->searchable()
+                    ->toggleable()
                     ->money('BRL')
+                    ->sortable(),
+                ViewColumn::make('apurada.status')
+                    ->label('Situação')
+                    ->alignCenter()
+                    ->toggleable()
+                    ->view('tables.columns.apurada-status-icon-column'),
+                TextColumn::make('cfops')
+                    ->label('CFOP')
+                    ->badge()
+                    ->toggleable()
+                    ->alignCenter(),
+                TextColumn::make('data_emissao')
+                    ->label('Emissão')
                     ->sortable()
+                    ->toggleable()
+                    ->date('d/m/Y'),
+                TextColumn::make('data_entrada')
+                    ->label('Entrada')
+                    ->sortable()
+                    ->toggleable()
+                    ->date('d/m/Y'),
+                TextColumn::make('status_nota')
+                    ->label('Status')
+                    ->toggleable()
+                    ->badge(),
+                TagColumnNfe::make('tagged')
+                    ->label('Etiqueta')
+                    ->alignCenter()
+                    ->toggleable()
+                    ->showTagCode($mostrarCodigo),
+                TextColumn::make('status_manifestacao')
+                    ->label('Manifestação')
+                    ->toggleable()
+                    ->icon(function (NotaFiscalEletronica $record) {
+                        if (
+                            $record->status_manifestacao === StatusManifestoNfe::DESCONHECIDA ||
+                            $record->status_manifestacao === StatusManifestoNfe::NAOREALIZADA
+                        ) {
+                            return 'heroicon-o-printer';
+                        }
+
+                        return null;
+                    })->iconPosition('after'),
+                ViewChaveColumn::make('chave')
+                    ->label('Chave')
+                    ->searchable()
+                    ->alignCenter(),
             ])
             ->filters([
                 //
             ])
-            ->actions([
-                Tables\Actions\EditAction::make(),
-            ])
+            ->actions([])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make(),

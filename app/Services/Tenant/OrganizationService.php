@@ -27,16 +27,22 @@ class OrganizationService
             $organization = $user->organizations()->create([
                 'razao_social' => $data['razao_social'],
                 'cnpj' => $data['cnpj'],
+                'regime' => $data['regime'] ?? null,
+                'inscricao_estadual' => $data['inscricao_estadual'] ?? null,
+                'inscricao_municipal' => $data['inscricao_municipal'] ?? null,
+                'cod_municipio_ibge' => $data['cod_municipio_ibge'] ?? null,
+                'atividade' => $data['atividade'] ?? null,
             ]);
 
-            $organization->digitalCertificate()->create($data);
+            if ($data['certificate'] && $data['password'] && $data['password_confirm']) {
+                $organization->digitalCertificate()->create($data);
+            }
+
 
             $user->last_organization_id = $organization->id;
             $user->saveQuietly();
 
             Cache::forget('all_valid_organizations_for_user_' . $user->id);
-
-            event(new CreateOrganizationProcessed($user, $organization));
         });
 
         return $organization;
@@ -52,25 +58,29 @@ class OrganizationService
 
     public function readerCertificateFile($data): array
     {
-        $pfxContent = Storage::get('certificates/' . $data['certificate']);
+        if (isset($data['certificate'])) {
 
-        $CertPriv = [];
+            $pfxContent = Storage::get('certificates/' . $data['certificate']);
 
-        if (!openssl_pkcs12_read($pfxContent, $x509certdata, $data['password'])) {
-            Log::error('Erro ao ler o certificado');
-            throw new Exception('Não foi possiível ler o certificado, verifique o formato do arquivo ou a senha informada');
-        } else {
+            $CertPriv = [];
 
-            $CertPriv   = openssl_x509_parse(openssl_x509_read($x509certdata['cert']));
+            if (!openssl_pkcs12_read($pfxContent, $x509certdata, $data['password'])) {
+                Log::error('Erro ao ler o certificado');
+                throw new Exception('Não foi possiível ler o certificado, verifique o formato do arquivo ou a senha informada');
+            } else {
 
-            $dadosCertificado = explode(':', $CertPriv['subject']['CN']);
-            $data['razao_social'] = $dadosCertificado[0];
-            $data['cnpj'] = $dadosCertificado[1];
-            $data['validated_at'] = date('Y-m-d H:i:s', $CertPriv['validTo_time_t']);
-            $data['content_file'] = $pfxContent;
+                $CertPriv   = openssl_x509_parse(openssl_x509_read($x509certdata['cert']));
+
+                $dadosCertificado = explode(':', $CertPriv['subject']['CN']);
+                $data['razao_social'] = $dadosCertificado[0];
+                $data['cnpj'] = $dadosCertificado[1];
+                $data['validated_at'] = date('Y-m-d H:i:s', $CertPriv['validTo_time_t']);
+                $data['content_file'] = $pfxContent;
+            }
+
+            Storage::delete('certificates/' . $data['certificate']);
         }
 
-        Storage::delete('certificates/' . $data['certificate']);
 
         return $data;
     }

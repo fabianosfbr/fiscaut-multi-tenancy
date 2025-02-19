@@ -37,6 +37,7 @@ return new class extends Migration
             $table->string('transportador_cnpj', 255)->nullable();
             $table->string('transportador_razao_social', 255)->nullable();
             $table->json('aut_xml')->nullable();
+            $table->json('cfops')->nullable();
             $table->string('digVal', 255)->nullable();
             $table->longText('infAdFisco')->nullable();
             $table->longText('infCpl')->nullable();

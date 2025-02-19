@@ -68,3 +68,26 @@ if (!function_exists("searchValueInArray")) {
         return null;
     }
 }
+
+if (!function_exists("money_formatter")) {
+    function money_formatter($valor)
+    {
+        return 'R$ ' . number_format($valor, 2, ',', '.');
+    }
+}
+
+if (!function_exists("getLabelTag")) {
+    function getLabelTag($str)
+    {
+        $acronym = null;
+        $word = null;
+
+        $words = preg_split("/(\s|\-|\.)/", $str);
+        foreach ($words as $w) {
+            $acronym .= substr($w, 0, 1);
+        }
+        $word = $word . $acronym;
+
+        return $word;
+    }
+}

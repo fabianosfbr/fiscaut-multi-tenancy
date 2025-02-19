@@ -1,5 +1,16 @@
 <div>
-    @php
+    <!-- Possui etiqueta atribuida então mostra -->
+    @if (count($getRecord()->tagged) > 0)
+        <x-tagged-summary :record="$getRecord()" :showTagCode="$getShowTagCode()" />
+    @else
+        @php
+            $results = $getRecord()->tagging_summary;
+        @endphp
+
+        <x-tagging-summary :results="$results" :record="$getRecord()" />
+    @endif
+
+    {{-- @php
         $status = $getRecord()->status_nota->value;
         $manifestacao = isset($getRecord()->status_manifestacao->value) ? $getRecord()->status_manifestacao->value : 0;
     @endphp
@@ -15,5 +26,5 @@
 
             <x-tagging-summary :results="$results" :record="$getRecord()" />
         @endif
-    @endif
+    @endif --}}
 </div>

@@ -24,17 +24,11 @@ class RegisterPermissionForUserOrganization implements ShouldQueue
     public function handle(CreateOrganizationProcessed $event): void
     {
         $user = $event->user;
+        $roles = $event->roles;
 
-        $organization = $event->organization;
 
-        $roles = $organization->roles;
+        $user->syncRoles(array_keys($roles));
 
-        $user->syncRoles($roles->pluck('name')->toArray());
 
-        // foreach ($user->roles as $roles) {
-        //     $roles->permissions->each(function ($permission) use ($user) {
-        //         $user->givePermissionTo($permission->name);
-        //     });
-        // }
     }
 }

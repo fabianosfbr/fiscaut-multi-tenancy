@@ -4,17 +4,20 @@ namespace App\Jobs\Tenant;
 
 use App\Models\Tenant;
 use App\Models\Tenant\Role;
+use App\Models\Tenant\User;
 use App\Models\Tenant\Client;
+use App\Models\Tenant\Permission;
+use App\Enums\Tenant\UserTypeEnum;
 use Illuminate\Support\Facades\DB;
 use App\Models\Tenant\Organization;
 use Illuminate\Support\Facades\Log;
-use App\Models\Tenant\User;
 use Illuminate\Queue\SerializesModels;
+use App\Enums\Tenant\PermissionTypeEnum;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Foundation\Queue\Queueable;
+use App\Events\CreateOrganizationProcessed;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
-use App\Events\CreateOrganizationProcessed;
 
 class CreateOrganizationAndUserForTenant implements ShouldQueue
 {
@@ -54,7 +57,10 @@ class CreateOrganizationAndUserForTenant implements ShouldQueue
                 $user->last_organization_id = $organization->id;
                 $user->saveQuietly();
 
-                event(new CreateOrganizationProcessed($user, $organization));
+                $roles = $this->registerRolesAndPermissionsForUser();
+
+                event(new CreateOrganizationProcessed($user, $roles));
+
 
                 DB::commit();
             } catch (\Exception $e) {
@@ -63,4 +69,36 @@ class CreateOrganizationAndUserForTenant implements ShouldQueue
         });
     }
 
+    private function registerRolesAndPermissionsForUser(): array
+    {
+        $roles = UserTypeEnum::toArray();
+        $permissions = PermissionTypeEnum::toArray();
+
+        $permissionsCollection = [];
+
+        foreach ($permissions as $name => $description) {
+
+            $permission = Permission::create([
+                'name' => $name,
+                'description' => $description,
+                'guard_name' => 'web',
+            ]);
+
+            $permissionsCollection[] = $permission;
+        }
+
+        foreach ($roles as $name => $description) {
+            $role = Role::create([
+                'name' => $name,
+                'description' => $description,
+                'guard_name' => 'web',
+            ]);
+
+            foreach ($permissionsCollection as $key => $permission) {
+                $role->givePermissionTo($permission);
+            }
+        }
+
+        return $roles;
+    }
 }

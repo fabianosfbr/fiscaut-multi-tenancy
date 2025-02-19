@@ -2,15 +2,15 @@
 
 namespace App\Traits;
 
-use App\Models\Tag;
+use App\Models\Tenant\Tag;
 use Illuminate\Support\Str;
 use Barryvdh\DomPDF\Facade\Pdf;
-use App\Models\LogSefazNfeEvent;
+use App\Models\Tenant\LogSefazNfeEvent;
 use Illuminate\Support\Facades\DB;
 use NFePHP\NFe\Common\Standardize;
-use App\Models\NotaFiscalEletronica;
+use App\Models\Tenant\NotaFiscalEletronica;
 use Illuminate\Support\Facades\Cache;
-use App\Models\ConhecimentoTransporteEletronico;
+use App\Models\Tenant\ConhecimentoTransporteEletronico;
 
 trait NfeHelper
 {
@@ -84,9 +84,9 @@ trait NfeHelper
 
         $this->aplicarTagNoNfe($nfe, $tag);
 
-        $this->aplicarTagNosCtes($nfe, $tag);
+       // $this->aplicarTagNosCtes($nfe, $tag);
 
-        Cache::forget('sugerir-etiqueta-' . $cnpjEmitente);
+        Cache::forget('tagging_summary-' . $cnpjEmitente);
     }
 
 

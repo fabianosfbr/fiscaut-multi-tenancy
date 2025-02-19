@@ -8,6 +8,7 @@ use Filament\Tables\Table;
 use Filament\Resources\Resource;
 use App\Models\Tenant\CategoryTag;
 use Filament\Forms\Components\Grid;
+use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Toggle;
 use Filament\Forms\Components\Section;
 use App\Tables\Columns\ColorNameColumn;
@@ -42,7 +43,7 @@ class CategoryTagResource extends Resource
     {
         return $table
             ->recordUrl(null)
-            ->modifyQueryUsing(fn (Builder $query) => $query->where('organization_id', auth()->user()->last_organization_id))
+            ->modifyQueryUsing(fn(Builder $query) => $query->where('organization_id', auth()->user()->last_organization_id))
             ->reorderable('order')
             ->columns(self::getColumnTableSchema())
             ->filters([
@@ -62,7 +63,7 @@ class CategoryTagResource extends Resource
     {
         return [
 
-            Section::make('Categoria')
+            Section::make('Categorias das Etiquetas')
                 ->schema([
                     TextInput::make('order')
                         ->label('Ordem')
@@ -75,12 +76,8 @@ class CategoryTagResource extends Resource
                         ->required()
                         ->columnSpan(1),
 
-                    ColorPicker::make('color')
-                        ->label('Cor')
-                        ->columnSpan(1),
-
                     TextInput::make('grupo')
-                        ->label('Código grupo')
+                        ->label('Código grupo do produto')
                         ->numeric()
                         ->required()
                         ->columnSpan(1),
@@ -90,29 +87,53 @@ class CategoryTagResource extends Resource
                         ->numeric()
                         ->required()
                         ->columnSpan(1),
-                    Grid::make(2)
-                        ->schema([
-                            Toggle::make('is_enable')
-                                ->label('Ativo')
-                                ->default(true)
-                                ->required()
-                                ->columnSpan(1),
 
-                            Toggle::make('is_difal')
-                                ->label('Difal')
-                                ->default(false)
-                                ->required()
-                                ->columnSpan(1),
+                    Select::make('tipo_item')
+                        ->label('Tipo do item')
+                        ->required()
+                        ->options([
 
-                            Toggle::make('is_devolucao')
-                                ->label('Devolução')
-                                ->default(false)
-                                ->required()
-                                ->columnSpan(1),
-                        ])->columns(3)
-                        ->columnSpan('full'),
+                            '0' => 'Mercadoria',
+                            '1' => 'Matéria Prima',
+                            '2' => 'Produto Intermediário',
+                            '3' => 'Produto em Fabricação',
+                            '4' => 'Produto Acabado',
+                            '5' => 'Embalagem',
+                            '6' => 'Subproduto',
+                            '7' => 'Material de Uso e Consumo',
+                            '8' => 'Ativo Imobilizado',
+                            '9' => 'Serviços',
+                            '10' => 'Outros Insumos',
+                            '99' => 'Outros',
 
-                ])->columns(2),
+                        ])
+                        ->columnSpan(1),
+
+                    ColorPicker::make('color')
+                        ->label('Cor')
+                        ->columnSpan(1),
+
+                    Toggle::make('is_enable')
+                        ->label('Habilitado')
+                        ->default(true)
+                        ->required()
+                        ->columnSpan(1),
+
+                    Toggle::make('is_difal')
+                        ->label('Difal')
+                        ->default(false)
+                        ->required()
+                        ->columnSpan(1),
+
+                    Toggle::make('is_devolucao')
+                        ->label('Devolução')
+                        ->default(false)
+                        ->required()
+                        ->columnSpan(1),
+
+
+
+                ])->columns(3),
 
         ];
     }
@@ -162,4 +183,3 @@ class CategoryTagResource extends Resource
         ];
     }
 }
-

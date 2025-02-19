@@ -22,7 +22,7 @@ class CreateOrganizationProcessed
      */
     public function __construct(
         public User|Authenticatable $user,
-        public Organization $organization
+        public array $roles
     )
     {
         //

@@ -6,7 +6,9 @@ use Filament\Forms\Form;
 use Filament\Pages\Page;
 use Filament\Forms\Components\Tabs;
 use Filament\Forms\Components\Livewire;
+use App\Livewire\Organization\EditOrganizationForm;
 use App\Livewire\Organization\UserOrganizationForm;
+use App\Livewire\Organization\DigitalCertificateForm;
 
 class EditOrganizationPage extends Page
 {
@@ -29,16 +31,13 @@ class EditOrganizationPage extends Page
                     ->tabs([
                         Tabs\Tab::make('Dados Gerais')
                             ->schema([
-                                Livewire::make('organization.edit-organization-form', $this->getViewData()),
+                                Livewire::make(EditOrganizationForm::class, $this->getViewData()),
                             ]),
                         Tabs\Tab::make('Certificado Digital')
                             ->schema([
-                                Livewire::make('organization.digital-certificate-form', $this->getViewData()),
+                                Livewire::make(DigitalCertificateForm::class, $this->getViewData()),
                             ]),
-                        Tabs\Tab::make('Permissões')
-                            ->schema([
-                                Livewire::make(UserOrganizationForm::class),
-                            ]),
+
 
                     ])
 

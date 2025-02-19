@@ -21,24 +21,5 @@ class Role extends SpatieRole
     public $incrementing = false;
 
 
-    public static function create(array $attributes = [])
-    {
-        $attributes['guard_name'] = $attributes['guard_name'] ?? Guard::getDefaultName(static::class);
 
-        $params = ['name' => $attributes['name'], 'guard_name' => $attributes['guard_name'], 'organization_id' => $attributes['organization_id']];
-        if (app(PermissionRegistrar::class)->teams) {
-            $teamsKey = app(PermissionRegistrar::class)->teamsKey;
-
-            if (array_key_exists($teamsKey, $attributes)) {
-                $params[$teamsKey] = $attributes[$teamsKey];
-            } else {
-                $attributes[$teamsKey] = getPermissionsTeamId();
-            }
-        }
-        if (static::findByParam($params)) {
-            throw RoleAlreadyExists::create($attributes['name'], $attributes['guard_name']);
-        }
-
-        return static::query()->create($attributes);
-    }
 }

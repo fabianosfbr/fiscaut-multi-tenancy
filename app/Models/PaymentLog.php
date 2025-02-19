@@ -1,9 +1,10 @@
 <?php
 
-namespace App\Models\Tenant;
+namespace App\Models;
 
-use App\Models\Tenant;
+use App\Models;
 use Illuminate\Database\Eloquent\Model;
+use App\Enums\Tenant\PaymentLogStatusEnum;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
@@ -17,6 +18,7 @@ class PaymentLog extends Model
     {
         return [
             'expire_date' => 'datetime',
+            'status' => PaymentLogStatusEnum::class,
         ];
     }
 

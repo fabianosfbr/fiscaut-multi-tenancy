@@ -36,7 +36,6 @@ return new class extends Migration
             $table->decimal('valor_pis', 14, 4)->nullable();
             $table->decimal('aliq_pis', 14, 4)->nullable();
             $table->string('cst_pis', 255)->nullable();
-            $table->string('cst_pis', 255)->nullable();
             $table->decimal('base_cofins', 14, 4)->nullable();
             $table->decimal('valor_cofins', 14, 4)->nullable();
             $table->decimal('aliq_cofins', 14, 4)->nullable();

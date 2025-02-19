@@ -14,34 +14,7 @@ class OrganizationObserver
      */
     public function created(Organization $organization): void
     {
-        $roles = UserTypeEnum::toArray();
-        $permissions = PermissionTypeEnum::toArray();
 
-
-        $permissionsCollection = [];
-
-        foreach ($permissions as $name => $description) {
-
-            $permission = Permission::create([
-                'name' => $name,
-                'description' => $description,
-                'organization_id' => $organization->id,
-            ]);
-
-            $permissionsCollection[] = $permission;
-        }
-
-        foreach ($roles as $name => $description) {
-            $role = Role::create([
-                'name' => $name,
-                'description' => $description,
-                'organization_id' => $organization->id,
-            ]);
-
-            foreach ($permissionsCollection as $key => $permission) {
-                $role->givePermissionTo($permission);
-            }
-        }
     }
 
     /**

@@ -54,16 +54,6 @@ class Organization extends Model implements HasName, HasCurrentTenantLabel
         return $this->hasOne(DigitalCertificate::class);
     }
 
-    public function roles(): HasMany
-    {
-        return $this->hasMany(Role::class);
-    }
-
-    public function permissions(): HasMany
-    {
-        return $this->hasMany(Permission::class);
-    }
-
 
     public function getFilamentName(): string
     {

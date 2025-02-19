@@ -8,9 +8,12 @@ use Filament\Forms\Form;
 use Filament\Pages\Page;
 use Filament\Actions\Action;
 use Filament\Facades\Filament;
+use Illuminate\Support\HtmlString;
 use Illuminate\Support\Facades\Auth;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Toggle;
+use Filament\Forms\Components\Wizard;
+use Illuminate\Support\Facades\Blade;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Contracts\HasForms;
 use Illuminate\Support\Facades\Storage;
@@ -21,6 +24,7 @@ use App\Events\CreateOrganizationProcessed;
 use App\Services\Tenant\OrganizationService;
 use App\Enums\Tenant\RegimesEmpresariaisEnum;
 use App\Enums\Tenant\AtividadesEmpresariaisEnum;
+use Filament\Forms\Components\Actions\Action as WizardAction;
 
 class RegisterOrganizationPage extends Page
 {
@@ -38,8 +42,31 @@ class RegisterOrganizationPage extends Page
     {
         return $form
             ->schema([
-                ...self::getDigitalCertificateForm(),
-                // ...self::getOrganizationDataForm(),
+                Wizard::make([
+                    Wizard\Step::make('Dados da empresa')
+                        ->schema([
+                            ...self::getOrganizationDataForm(),
+                        ]),
+                    Wizard\Step::make('Certificado digital')
+                        ->schema([
+                            ...self::getDigitalCertificateForm(),
+                        ]),
+                ])
+                    ->nextAction(
+                        fn(WizardAction $action) => $action->label('Avançar'),
+                    )
+                    ->submitAction(new HtmlString(Blade::render(<<<BLADE
+                                                                            <x-filament::button
+                                                                                type="submit"
+                                                                                size="sm"
+                                                                            >
+                                                                                Salvar
+                                                                            </x-filament::button>
+                                                                        BLADE)))
+
+
+
+
             ])
             ->statePath('data');
     }
@@ -56,8 +83,7 @@ class RegisterOrganizationPage extends Page
         try {
             $data = $service->readerCertificateFile($data);
 
-            $organization = $service->create($data);
-
+            $service->create($data);
         } catch (Exception $e) {
             Notification::make()
                 ->danger()
@@ -68,13 +94,9 @@ class RegisterOrganizationPage extends Page
         }
 
 
-        $this->updateAuthUserData( $organization);
-
-
         Notification::make()
             ->success()
             ->title('Organização criada com sucesso')
-            ->body('Agora é necessário completar os dados da empresa')
             ->send();
 
         redirect(route('filament.client.pages.edit-organization'));
@@ -84,8 +106,8 @@ class RegisterOrganizationPage extends Page
     {
         return Action::make('return')
             ->label('Cancelar')
-            ->color('warning')
             ->url(route('filament.client.pages.dashboard')); // @phpstan-ignore-line
+
     }
 
     public function saveAction(): Action
@@ -103,7 +125,6 @@ class RegisterOrganizationPage extends Page
                 ->schema([
                     TextInput::make('razao_social')
                         ->label('Razão Social')
-                        ->disabled()
                         ->required()
                         ->maxLength(255)
                         ->columnSpan(2),
@@ -123,9 +144,9 @@ class RegisterOrganizationPage extends Page
                         ->label('Inscrição Municipal (sem dígito)')
                         ->columnSpan(2),
 
-                    Select::make('cod_municipio_ibge')
+                        Select::make('cod_municipio_ibge')
                         ->label('Município')
-                        ->default('3525904')
+                        ->required()
                         ->options([
                             '3525904' => 'Jundiaí',
                         ])
@@ -172,11 +193,10 @@ class RegisterOrganizationPage extends Page
     {
         return [
             Section::make('Certificado Digital')
-                ->description('Insira o certificado digital e a senha da empresa que deseja cadastrar')
+                ->description('Optional, Insira o certificado digital e a senha da empresa que deseja cadastrar')
                 ->schema([
                     FileUpload::make('certificate')
                         ->label('Certificado digital')
-                        ->required()
                         ->preserveFilenames()
                         ->minSize(1)
                         ->maxSize(20)
@@ -199,7 +219,6 @@ class RegisterOrganizationPage extends Page
                     TextInput::make('password')
                         ->label('Senha')
                         ->password()
-                        ->required()
                         ->revealable()
                         ->same('password_confirm')
                         ->columnSpan(1),
@@ -207,20 +226,10 @@ class RegisterOrganizationPage extends Page
                         ->label('Confirmar senha')
                         ->password()
                         ->revealable()
-                        ->required()
                         ->columnSpan(1),
                 ])->columns(2)
 
         ];
     }
 
-    public function updateAuthUserData( $organization)
-    {
-        $roles = $organization->roles;
-
-        $user = Auth()->user();
-        $user->syncRoles($roles->pluck('name')->toArray());
-        $user->last_organization_id = $organization->id;
-        $user->saveQuietly();
-    }
 }

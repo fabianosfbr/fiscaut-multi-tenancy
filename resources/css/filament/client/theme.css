@@ -1,3 +1,181 @@
 @import '/vendor/filament/filament/resources/css/theme.css';
 
 @config 'tailwind.config.js';
+
+
+.fi-topbar {
+    @apply  p-0 m-0 dark:border-none;
+}
+
+/* Topbar */
+.fi-topbar nav {
+    @apply !border-none !ring-0 shadow-none !bg-slate-50 dark:!bg-transparent;
+}
+
+/* Header/Logo */
+.fi-sidebar-header {
+    @apply !bg-white !border-none !ring-0 shadow-none dark:!bg-neutral-900;
+}
+
+/* Sidebar */
+.fi-sidebar {
+    @apply !bg-white dark:!bg-neutral-900 border-e border-neutral-200 dark:border-neutral-800 shadow;
+}
+
+
+.fi-sidebar-group div span {
+    @apply text-sm uppercase text-neutral-500 dark:text-neutral-300;
+}
+
+.fi-sidebar-nav-groups {
+    @apply !gap-y-3;
+}
+
+.fi-sidebar-nav {
+    @apply px-3;
+}
+
+.fi-sidebar-group {
+    @apply border-b border-neutral-200 dark:border-neutral-800 py-1;
+}
+
+.fi-sidebar-group div span {
+    @apply text-neutral-800;
+}
+
+.fi-sidebar-group .fi-icon-btn {
+    @apply text-neutral-800 duration-200;
+}
+
+.fi-sidebar-group .fi-icon-btn:hover {
+    @apply text-neutral-400;
+}
+
+
+.fi-sidebar-item-label {
+    @apply text-neutral-800 text-sm;
+}
+
+.fi-sidebar-item a {
+    @apply duration-200;
+}
+
+.fi-sidebar-item a:hover {
+    @apply bg-neutral-200;
+}
+
+.fi-sidebar-item-active a {
+    @apply bg-opacity-60 bg-gradient-to-r from-primary-500 to-primary-600 ;
+}
+
+.fi-sidebar-item-active .fi-sidebar-item-label {
+    @apply text-white dark:text-neutral-200;
+}
+
+.fi-sidebar-item-active .fi-sidebar-item-icon {
+    @apply text-white dark:text-neutral-200;
+}
+
+.fi-sidebar-item-button {
+    @apply rounded-lg;
+}
+
+.fi-sidebar-group-label {
+    @apply  font-semibold;
+}
+
+/* Main Content */
+.fi-main {
+    @apply max-w-full 2xl:max-w-[80%];
+}
+
+.fi-main-ctn {
+    @apply bg-transparent p-2;
+}
+
+/* Buttons */
+.fi-btn {
+    @apply rounded-lg;
+}
+
+.fi-btn-label {
+    @apply !text-sm !font-semibold;
+}
+
+/* Table Repeater */
+.table-repeater-column {
+    @apply py-1 px-2;
+}
+
+.table-repeater-container {
+    @apply border ring-0 rounded-none dark:border-neutral-700;
+}
+
+.table-repeater-header {
+    @apply border-none;
+}
+
+.table-repeater-header-column {
+    @apply dark:!bg-neutral-800;
+}
+
+/* Header Heading */
+.fi-simple-header .fi-header-heading {
+    @apply text-2xl font-medium ;
+}
+
+/* Badges */
+.fi-badge {
+    @apply rounded-lg shadow-sm;
+}
+
+/* Tabs */
+.fi-fo-tabs {
+    @apply dark:ring-gray-950/5 !important;
+}
+
+
+.fi-tabs {
+    @apply  dark:ring-gray-950/5 dark:border-gray-200 !important;
+}
+
+.fi-tabs-item {
+    @apply rounded-none;
+}
+
+.fi-tabs-item-active {
+    @apply bg-transparent dark:bg-transparent border-b-2 border-primary-500;
+}
+
+/* Table */
+
+.fi-ta-header-heading {
+    @apply text-lg;
+}
+
+.fi-ta-table thead {
+    @apply bg-neutral-100 dark:bg-neutral-800;
+}
+
+
+.fi-ta-header-description {
+    @apply text-sm;
+}
+
+.fi-ta-header-cell-label {
+    @apply uppercase text-neutral-600 dark:text-neutral-400 font-bold text-xs;
+}
+
+/* Wizard */
+.fi-fo-wizard {
+    @apply shadow-none;
+}
+
+/* Status Widget */
+.fi-wi-stats-overview-header-heading {
+    @apply text-xl;
+}
+
+.fi-wi-stats-overview-stat-label {
+    @apply uppercase;
+}

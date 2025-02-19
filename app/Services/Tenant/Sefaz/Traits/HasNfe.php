@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Log;
 
 trait HasNfe
 {
-    public function preparaDadosNfe($element):array
+    public function preparaDadosNfe($element): array
     {
 
         return [
@@ -80,6 +80,7 @@ trait HasNfe
             'vCOFINS' => $element->value('NFe.infNFe.total.ICMSTot.vCOFINS')->sole(),
             'vOutro' => $element->value('NFe.infNFe.total.ICMSTot.vOutro')->sole(),
             'num_produtos' => count($element->value('NFe.infNFe.det')->get()),
+            'cfops' => $this->preparaCfops($element),
 
         ];
     }
@@ -95,26 +96,38 @@ trait HasNfe
             'quantidade' => searchValueInArray($produto, 'qCom'),
             'valor_unit' => searchValueInArray($produto, 'vUnCom'),
             'valor_total' => searchValueInArray($produto, 'vProd'),
-            'valor_desc' => searchValueInArray($produto, 'vDesc')??0,
+            'valor_desc' => searchValueInArray($produto, 'vDesc') ?? 0,
             'valor_seguro' => searchValueInArray($produto, 'vSeg') ?? 0,
             'valor_frete' => searchValueInArray($produto, 'vFrete') ?? 0,
             'base_icms' => isset($produto['imposto']['ICMS']) ? searchValueInArray($produto['imposto']['ICMS'], 'vBC') : 0,
             'valor_icms' => isset($produto['imposto']['ICMS']) ? searchValueInArray($produto['imposto']['ICMS'], 'vICMS') : 0,
-            'aliq_icms' => isset($produto['imposto']['ICMS']) ? searchValueInArray($produto['imposto']['ICMS'], 'pICMS'): 0,
-            'cst_icms' => isset($produto['imposto']['ICMS']) ? searchValueInArray($produto['imposto']['ICMS'], 'CST'): null,
-            'base_ipi' => isset($produto['imposto']['IPI']) ? searchValueInArray($produto['imposto']['IPI'], 'vBC'): 0,
-            'valor_ipi' => isset($produto['imposto']['IPI']) ? searchValueInArray($produto['imposto']['IPI'], 'vIPI'): 0,
-            'aliq_ipi' => isset($produto['imposto']['IPI']) ? searchValueInArray($produto['imposto']['IPI'], 'pIPI'): 0,
-            'cst_ipi' => (isset($produto['imposto']['IPI'])) ? searchValueInArray($produto['imposto']['IPI'], 'CST'): null,
-            'base_pis' => isset($produto['imposto']['PIS']) ? searchValueInArray($produto['imposto']['PIS'], 'vBC'): 0,
-            'valor_pis' => isset($produto['imposto']['PIS']) ? searchValueInArray($produto['imposto']['PIS'], 'vPIS'): 0,
-            'aliq_pis' => isset($produto['imposto']['PIS']) ? searchValueInArray($produto['imposto']['PIS'], 'pPIS'): 0,
-            'cst_pis' => isset($produto['imposto']['PIS']) ? searchValueInArray($produto['imposto']['PIS'], 'CST'): null,
-            'base_cofins' => isset($produto['imposto']['COFINS']) ? searchValueInArray($produto['imposto']['COFINS'], 'vBC'): 0,
-            'valor_cofins' => isset($produto['imposto']['COFINS']) ? searchValueInArray($produto['imposto']['COFINS'], 'vCOFINS'): 0,
-            'aliq_cofins' => isset($produto['imposto']['COFINS']) ? searchValueInArray($produto['imposto']['COFINS'], 'pCOFINS'): 0,
-            'cst_cofins' => isset($produto['imposto']['COFINS']) ? searchValueInArray($produto['imposto']['COFINS'], 'CST'): null,
+            'aliq_icms' => isset($produto['imposto']['ICMS']) ? searchValueInArray($produto['imposto']['ICMS'], 'pICMS') : 0,
+            'cst_icms' => isset($produto['imposto']['ICMS']) ? searchValueInArray($produto['imposto']['ICMS'], 'CST') : null,
+            'base_ipi' => isset($produto['imposto']['IPI']) ? searchValueInArray($produto['imposto']['IPI'], 'vBC') : 0,
+            'valor_ipi' => isset($produto['imposto']['IPI']) ? searchValueInArray($produto['imposto']['IPI'], 'vIPI') : 0,
+            'aliq_ipi' => isset($produto['imposto']['IPI']) ? searchValueInArray($produto['imposto']['IPI'], 'pIPI') : 0,
+            'cst_ipi' => (isset($produto['imposto']['IPI'])) ? searchValueInArray($produto['imposto']['IPI'], 'CST') : null,
+            'base_pis' => isset($produto['imposto']['PIS']) ? searchValueInArray($produto['imposto']['PIS'], 'vBC') : 0,
+            'valor_pis' => isset($produto['imposto']['PIS']) ? searchValueInArray($produto['imposto']['PIS'], 'vPIS') : 0,
+            'aliq_pis' => isset($produto['imposto']['PIS']) ? searchValueInArray($produto['imposto']['PIS'], 'pPIS') : 0,
+            'cst_pis' => isset($produto['imposto']['PIS']) ? searchValueInArray($produto['imposto']['PIS'], 'CST') : null,
+            'base_cofins' => isset($produto['imposto']['COFINS']) ? searchValueInArray($produto['imposto']['COFINS'], 'vBC') : 0,
+            'valor_cofins' => isset($produto['imposto']['COFINS']) ? searchValueInArray($produto['imposto']['COFINS'], 'vCOFINS') : 0,
+            'aliq_cofins' => isset($produto['imposto']['COFINS']) ? searchValueInArray($produto['imposto']['COFINS'], 'pCOFINS') : 0,
+            'cst_cofins' => isset($produto['imposto']['COFINS']) ? searchValueInArray($produto['imposto']['COFINS'], 'CST') : null,
         ];
+    }
+
+    private function preparaCfops($element)
+    {
+        $produtos = $element->value('NFe.infNFe.det')->get();
+        array_walk($produtos, function (&$value, $key) use (&$cfops) {
+            $cfops[] = $value['prod']['CFOP'];
+        });
+
+        $values = array_unique($cfops);
+        rsort($values);
+        return  $values;
     }
 
     public function prepareDocs($response, $reader, $origem)
@@ -181,8 +194,6 @@ trait HasNfe
 
         if ($this->checkIsType($xmlReader, 'nfeProc')) {
 
-
-
             Log::info('Registrando/Atualizando NFe no Fiscaut - Chave:  ' . $xmlReader->value('protNFe.infProt.chNFe')->sole());
             $params = $this->preparaDadosNfe($xmlReader);
 
@@ -197,7 +208,9 @@ trait HasNfe
             );
 
             foreach ($xmlReader->value('NFe.infNFe.det')->get() as $product) {
+
                 $paramsProduct = $this->preparaDadosProdutos($product);
+
                 $paramsProduct['cst_ipi'] = is_null($paramsProduct['valor_ipi']) ? null : $paramsProduct['cst_ipi'];
                 $paramsProduct['cst_icms'] = is_null($paramsProduct['valor_icms']) ? null : $paramsProduct['cst_icms'];
                 $paramsProduct['num_nfe'] = $nfe->nNF;

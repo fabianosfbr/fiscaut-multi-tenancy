@@ -7,7 +7,8 @@ use App\Models\Tenant;
 use App\Models\PricePlan;
 use Illuminate\Support\Str;
 use Illuminate\Database\Seeder;
-use App\Models\Tenant\PaymentLog;
+use App\Models\PaymentLog;
+use App\Enums\Tenant\PaymentLogStatusEnum;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 
 class TenantSeeder extends Seeder
@@ -32,17 +33,18 @@ class TenantSeeder extends Seeder
         ]);
         $tenant->domains()->create(['domain' => 'foo.localhost']);
 
-        $package = PricePlan::first();
+        $package = PricePlan::where('title', 'Premium Plan')->first();
 
         $subscription = [
             'package_id' => $package->id,
             'package_name' => $package->title,
             'package_price' => $package->price,
-            'status' => 'pending',
+            'status' => PaymentLogStatusEnum::PAID->value,
             'name' => $tenant->name,
             'email' => $tenant->email,
             'tenant_id' => $tenant->id,
             'start_date' => now(),
+            'expire_date' => '2100-12-31',
             'track' => Str::random(10) . Str::random(10),
 
         ];

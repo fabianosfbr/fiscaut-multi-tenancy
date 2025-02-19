@@ -5,7 +5,7 @@
     <x-filament::button type="submit">
         Salvar
     </x-filament::button>
-    <x-filament::button href="{{ route('filament.client.pages.dashboard') }}" color="warning" tag="a">
+    <x-filament::button href="{{ route('filament.client.pages.dashboard') }}"  tag="a">
         Voltar
     </x-filament::button>
 

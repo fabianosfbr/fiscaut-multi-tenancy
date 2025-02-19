@@ -10,6 +10,8 @@ class CreateCategoryTag extends CreateRecord
 {
     protected static string $resource = CategoryTagResource::class;
 
+    protected static bool $canCreateAnother = false;
+
 
     protected function mutateFormDataBeforeCreate(array $data): array
     {

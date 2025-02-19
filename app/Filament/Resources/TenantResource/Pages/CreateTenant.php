@@ -2,9 +2,9 @@
 
 namespace App\Filament\Resources\TenantResource\Pages;
 
-use App\Models\User;
+
 use Filament\Actions;
-use App\Models\Tenant\Client;
+use App\Models\Tenant\User as Client;
 use Illuminate\Support\Facades\DB;
 use App\Models\Tenant\Organization;
 use App\Filament\Resources\TenantResource;
@@ -19,9 +19,9 @@ class CreateTenant extends CreateRecord
 
     protected function mutateFormDataBeforeCreate(array $data): array
     {
-        $this->data['domain'] = $data['domains'] . '.' . config('app.domain');
+
+        $this->data['cnpj'] = str_replace(['-', '.', '/'], '', $data['cnpj']);
         $this->data['password'] = bcrypt($this->data['password']);
-        unset($this->data['domains']);
 
         return $this->data;
     }
@@ -31,32 +31,8 @@ class CreateTenant extends CreateRecord
     {
         $tenant = $this->getRecord();
         $tenant->domains()->create([
-            'domain' => $this->data['domain'],
+            'domain' => $this->data['domain'] . '.' . config('app.domain'),
         ]);
+
     }
-    //     // $tenant = $this->getRecord();
-
-    //     // DB::beginTransaction();
-
-    //     // $tenant->domains()->create([
-    //     //     'domain' => $this->data['domain'],
-    //     // ]);
-
-    //     // $tenant->run(function ($tenant) {
-    //     //     $user = Client::create($tenant->only('name', 'email', 'password'));
-
-    //     //     // $organization = Organization::create([
-    //     //     //     'razao_social' => $tenant->razao_social,
-    //     //     //     'cnpj' => $tenant->cnpj,
-    //     //     // ]);
-
-    //     //     // $user->organizations()->attach($organization->id);
-
-    //     //     if ($user) {
-    //     //         DB::commit();
-    //     //     } else {
-    //     //         DB::rollBack();
-    //     //     }
-    //     // });
-    // }
 }

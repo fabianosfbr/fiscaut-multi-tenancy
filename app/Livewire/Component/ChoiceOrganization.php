@@ -54,7 +54,6 @@ class ChoiceOrganization extends Component implements HasForms
                     ->prefix('Empresa:')
                     ->live()
                     ->options(function () {
-
                         return $this->organizations->pluck('razao_social', 'id');
                     })
                     ->afterStateUpdated(function (?string $state) {
