@@ -54,10 +54,14 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->middleware([
                 'universal',
+                \Hasnayeen\Themes\Http\Middleware\SetTheme::class
             ])
             ->authMiddleware([
                 Authenticate::class,
             ])
-            ->authGuard('lords');;
+            ->plugin(
+                \Hasnayeen\Themes\ThemesPlugin::make()
+            )
+            ->authGuard('lords');
     }
 }

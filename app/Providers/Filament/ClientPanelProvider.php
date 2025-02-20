@@ -92,9 +92,14 @@ class ClientPanelProvider extends PanelProvider
                 InitializeTenancyByDomain::class,
                 PreventAccessFromCentralDomains::class,
                 CheckUserHasOrganization::class,
+                \Hasnayeen\Themes\Http\Middleware\SetTheme::class
             ], isPersistent: true)
             ->authMiddleware([
                 Authenticate::class,
-            ]);
+
+            ])
+            ->plugin(
+                \Hasnayeen\Themes\ThemesPlugin::make()
+            );
     }
 }
