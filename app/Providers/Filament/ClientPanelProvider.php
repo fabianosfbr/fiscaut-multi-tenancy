@@ -17,6 +17,7 @@ use Filament\Http\Middleware\Authenticate;
 use App\Filament\Client\Pages\Auth\LoginPage;
 use Illuminate\Session\Middleware\StartSession;
 use App\Filament\Client\Pages\Auth\RegisterPage;
+use App\Models\Tenant\ShowChoiceOrganizationUrl;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use App\Filament\Client\Pages\Auth\PasswordReset;
 use App\Http\Middleware\CheckUserHasOrganization;
@@ -68,13 +69,13 @@ class ClientPanelProvider extends PanelProvider
             ])
             ->userMenuItems([
                 MenuItem::make()
-                ->label('Meu Perfil')
-                ->icon('heroicon-o-user')
-                ->url(fn (): string => ViewProfile::getUrl()),
+                    ->label('Meu Perfil')
+                    ->icon('heroicon-o-user')
+                    ->url(fn(): string => ViewProfile::getUrl()),
             ])
             ->renderHook(
                 PanelsRenderHook::CONTENT_START,
-            fn (): string => Blade::render('@livewire(\'component.choice-organization\')'),
+                fn(): string => Blade::render('@livewire(\'component.choice-organization\')'),
             )
             ->middleware([
                 EncryptCookies::class,

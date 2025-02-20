@@ -12,14 +12,17 @@ use App\Models\Tenant\Permission;
 use App\Enums\Tenant\UserTypeEnum;
 use Illuminate\Support\Facades\DB;
 use App\Models\Tenant\Organization;
+use Illuminate\Support\Facades\Log;
 use App\Models\Tenant\User as Client;
 use Illuminate\Support\Facades\Artisan;
 use App\Enums\Tenant\PermissionTypeEnum;
 use App\Services\Tenant\Sefaz\NfeService;
 use App\Models\Tenant\NotaFiscalEletronica;
-use Illuminate\Support\Facades\Log;
+use App\Models\Tenant\ShowChoiceOrganizationUrl;
 
 Artisan::command('play', function () {
+
+    dd(ShowChoiceOrganizationUrl::show()->get()->toArray());
 
     $tenant = Tenant::where('id', 'e1b1da9a-7ea7-4653-99ec-6972dc34244a')->first();
 

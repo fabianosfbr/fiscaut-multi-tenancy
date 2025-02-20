@@ -50,10 +50,10 @@ class ContabilPanelProvider extends PanelProvider
                 ->icon('heroicon-o-user')
                 ->url(fn (): string => 'app/profile/me'),
             ])
-            ->renderHook(
-                PanelsRenderHook::CONTENT_START,
-            fn (): string => Blade::render('@livewire(\'component.choice-organization\')'),
-            )
+            // ->renderHook(
+            //     PanelsRenderHook::CONTENT_START,
+            // fn (): string => Blade::render('@livewire(\'component.choice-organization\')'),
+            // )
             ->middleware([
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,
