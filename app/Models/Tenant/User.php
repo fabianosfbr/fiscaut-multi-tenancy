@@ -22,6 +22,10 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
+use Spatie\Permission\Contracts\Role as RoleContract;
+use Spatie\Permission\Exceptions\RoleDoesNotExist;
+use Spatie\Permission\Guard;
+
 class User extends Authenticatable  implements FilamentUser, HasTenants, HasDefaultTenant
 {
     use HasFactory, HasUuids, Notifiable, HasRoles;
@@ -80,6 +84,18 @@ class User extends Authenticatable  implements FilamentUser, HasTenants, HasDefa
         return true;
     }
 
+    public function roles(): BelongsToMany
+    {
+        return $this->belongsToMany(
+            Role::class,
+            'role_users',
+            'user_id',
+            'role_id',
+        )
+            ->using(RoleUser::class)
+            ->withPivot('organization_id');
+    }
+
     public function hasRole(...$roles)
     {
         foreach ($roles as $role) {
@@ -89,5 +105,89 @@ class User extends Authenticatable  implements FilamentUser, HasTenants, HasDefa
         }
 
         return false;
+    }
+
+    public function assignRole($roles, $organization_id)
+    {
+
+        $roles = collect($roles)
+            ->flatten()
+            ->map(function ($role) {
+                if (empty($role)) {
+                    return false;
+                }
+
+                return $this->getStoredRole($role);
+            })
+            ->filter(function ($role) {
+                return $role instanceof Role;
+            })
+            ->each(function ($role) use ($organization_id) {
+
+                $this->roles()->attach($role->id, ['organization_id' => $organization_id]);
+            })
+            ->all();
+
+        $this->forgetCachedPermissions();
+
+        return $this;
+    }
+
+    public function syncRolesWithOrganization($roles, $organization_id)
+    {
+        $existingRoles = $this->roles()->wherePivot('organization_id', $organization_id)->pluck('roles.id')->toArray();
+
+
+        $rolesParaSincronizar = collect($roles)
+            ->flatten()
+            ->map(function ($role) {
+                if (empty($role)) {
+                    return false;
+                }
+
+                return $this->getStoredRole($role);
+            })
+            ->filter(function ($role) {
+                return $role instanceof Role;
+            })
+            ->pluck('id')
+            ->toArray();
+
+
+        $rolesParaAdicionar = array_diff($rolesParaSincronizar, $existingRoles);
+        $rolesParaRemover = array_diff($existingRoles, $rolesParaSincronizar);
+
+        foreach ($rolesParaAdicionar as $roleId) {
+            $this->roles()->attach($roleId, ['organization_id' => $organization_id]);
+        }
+        foreach ($rolesParaRemover as $roleId) {
+            $this->roles()->detach($roleId);
+        }
+
+        $this->forgetCachedPermissions();
+
+        return $this;
+    }
+
+    protected function getStoredRole($role): RoleContract
+    {
+        if (is_numeric($role)) {
+            return Role::findById((int) $role, $this->getDefaultGuardName());
+        }
+
+        if (is_string($role)) {
+            return Role::findByName($role, $this->getDefaultGuardName());
+        }
+
+        if ($role instanceof RoleContract) {
+            return $role;
+        }
+
+        throw new RoleDoesNotExist;
+    }
+
+    protected function getDefaultGuardName(): string
+    {
+        return Guard::getDefaultName(static::class);
     }
 }

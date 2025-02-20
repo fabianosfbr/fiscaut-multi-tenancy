@@ -8,6 +8,7 @@ use Filament\Forms\Form;
 use Filament\Pages\Page;
 use Filament\Actions\Action;
 use Filament\Facades\Filament;
+use App\Enums\Tenant\UserTypeEnum;
 use Illuminate\Support\HtmlString;
 use Illuminate\Support\Facades\Auth;
 use Filament\Forms\Components\Select;
@@ -76,14 +77,23 @@ class RegisterOrganizationPage extends Page
         // @phpstan-ignore-next-line
         $data = $this->form->getState();
 
-        $organization = null;
-
         $service = app(OrganizationService::class);
 
         try {
             $data = $service->readerCertificateFile($data);
 
-            $service->create($data);
+            $organization = $service->create($data);
+
+            $user = auth()->user();
+            $user->organizations()->attach($organization?->id);
+
+            $user->last_organization_id = $organization?->id;
+            $user->saveQuietly();
+
+
+            $roles = UserTypeEnum::toArray();
+            event(new CreateOrganizationProcessed($user, $roles));
+
         } catch (Exception $e) {
             Notification::make()
                 ->danger()
@@ -144,7 +154,7 @@ class RegisterOrganizationPage extends Page
                         ->label('Inscrição Municipal (sem dígito)')
                         ->columnSpan(2),
 
-                        Select::make('cod_municipio_ibge')
+                    Select::make('cod_municipio_ibge')
                         ->label('Município')
                         ->required()
                         ->options([
@@ -157,7 +167,7 @@ class RegisterOrganizationPage extends Page
                         ->options(RegimesEmpresariaisEnum::class)
                         ->columnSpan(2),
                     Select::make('atividade')
-                        ->required()
+
                         ->multiple()
                         ->options(AtividadesEmpresariaisEnum::class)
                         ->columnSpan(2),
@@ -231,5 +241,4 @@ class RegisterOrganizationPage extends Page
 
         ];
     }
-
 }

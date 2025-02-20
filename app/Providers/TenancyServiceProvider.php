@@ -105,6 +105,12 @@ class TenancyServiceProvider extends ServiceProvider
 
     public function boot()
     {
+        \Stancl\Tenancy\Middleware\InitializeTenancyByDomain::$onFail = function ($exception, $request, $next) {
+            dd('eu');
+            return redirect('https://my-central-domain.com/');
+        };
+
+
         $this->bootEvents();
         $this->mapRoutes();
 

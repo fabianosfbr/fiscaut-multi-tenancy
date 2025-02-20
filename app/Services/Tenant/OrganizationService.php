@@ -26,7 +26,7 @@ class OrganizationService
 
             $organization = $user->organizations()->create([
                 'razao_social' => $data['razao_social'],
-                'cnpj' => $data['cnpj'],
+                'cnpj' => str_replace(['-', '.', '/'], '', $data['cnpj']),
                 'regime' => $data['regime'] ?? null,
                 'inscricao_estadual' => $data['inscricao_estadual'] ?? null,
                 'inscricao_municipal' => $data['inscricao_municipal'] ?? null,
@@ -38,9 +38,6 @@ class OrganizationService
                 $organization->digitalCertificate()->create($data);
             }
 
-
-            $user->last_organization_id = $organization->id;
-            $user->saveQuietly();
 
             Cache::forget('all_valid_organizations_for_user_' . $user->id);
         });

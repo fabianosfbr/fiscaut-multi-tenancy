@@ -26,8 +26,7 @@ class RegisterPermissionForUserOrganization implements ShouldQueue
         $user = $event->user;
         $roles = $event->roles;
 
-
-        $user->syncRoles(array_keys($roles));
+        $user->syncRolesWithOrganization(array_keys($roles), $user->last_organization_id);
 
 
     }

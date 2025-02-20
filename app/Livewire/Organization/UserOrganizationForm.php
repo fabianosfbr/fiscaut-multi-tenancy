@@ -8,6 +8,7 @@ use App\Models\Tenant\Role;
 use App\Models\Tenant\User;
 use Filament\Facades\Filament;
 use App\Models\Tenant\Permission;
+use App\Enums\Tenant\UserTypeEnum;
 use Illuminate\Support\Facades\DB;
 use App\Models\Tenant\Organization;
 use Filament\Forms\Components\Grid;
@@ -61,8 +62,18 @@ class UserOrganizationForm extends Component implements HasForms, HasTable
                 TextColumn::make('email')
                     ->label('Email')
                     ->searchable(),
-                TextColumn::make('roles.description')
+                TextColumn::make('id')
                     ->label('Perfil')
+                    ->getStateUsing(function (User $record) {
+                        $roles = $record->roles()
+                            ->wherePivot('organization_id', $this->organization->id)
+                            ->get()->pluck('name')
+                            ->toArray();
+                        foreach ($roles as $index => $value) {
+                            $role[$index] = UserTypeEnum::from($value)->getLabel();
+                        }
+                        return $role ?? [];
+                    })
                     ->badge(),
 
                 IconColumn::make('is_active')
@@ -91,7 +102,6 @@ class UserOrganizationForm extends Component implements HasForms, HasTable
                     ->icon('heroicon-o-pencil-square')
                     ->modalHeading('Atualizar permissões')
                     ->modalWidth('lg')
-                    ->hidden(fn(User $record) => $record->hasRole('super-admin'))
                     ->modalSubmitActionLabel('Salvar')
                     ->fillForm(function (User $user) {
 
@@ -102,7 +112,7 @@ class UserOrganizationForm extends Component implements HasForms, HasTable
 
                         return [
                             'is_active' => $organization->pivot->is_active,
-                            'roles' => $user->roles()->pluck('id'),
+                            'roles' => $user->roles()->wherePivot('organization_id', $organization->id)->get()->pluck('name')->toArray(),
                             //'expires_at' => $organization->pivot->expires_at,
                         ];
                     })
@@ -111,11 +121,10 @@ class UserOrganizationForm extends Component implements HasForms, HasTable
                         $user->organizations()
                             ->updateExistingPivot($this->organization->id, ['is_active' => $data['is_active']]);
 
-
-                        $user->roles()->sync($data['roles']);
+                        $user->syncRolesWithOrganization($data['roles'], $this->organization->id);
 
                         Notification::make()
-                            ->title('Usuário atualziado com sucesso.')
+                            ->title('Usuário atualizado com sucesso.')
                             ->success()
                             ->duration(3000)
                             ->send();
@@ -133,10 +142,17 @@ class UserOrganizationForm extends Component implements HasForms, HasTable
                                     ->label('Instruções')
                                     ->content('Pesquise o usuário que deseja vincular. Caso ele não tenha cadastro, basta clicar no botão (+) para adicionar')
                                     ->columnSpan(2),
+
                                 Select::make('user_id')
                                     ->label('Usuários')
                                     ->searchable()
+                                    ->required()
                                     ->columnSpan(2)
+                                    ->options(function () {
+                                        $users = $this->organization->users()->get()->pluck('id')->toArray();
+
+                                        return User::whereNotIn('id', $users)->get()->pluck('name', 'id');
+                                    })
                                     ->createOptionForm([
                                         Section::make('Dados do Usuário')
                                             ->schema([
@@ -157,9 +173,7 @@ class UserOrganizationForm extends Component implements HasForms, HasTable
                                                     ->dehydrated(fn(?string $state): bool => filled($state))
                                                     ->required()
                                                     ->columnSpan(2),
-
-                                            ]),
-
+                                            ])
                                     ])
                                     ->createOptionAction(function (FormAction $action) {
                                         return $action
@@ -174,18 +188,15 @@ class UserOrganizationForm extends Component implements HasForms, HasTable
                                                     'email_verified_at' => now(),
                                                 ]);
                                             });
-                                    })
-                                    ->options(function () {
-                                        $users = $this->organization->users()->get()->pluck('id')->toArray();
-
-                                        return User::whereNotIn('id', $users)->get()->pluck('name', 'id');
                                     }),
-                                ...$this->userVinculationForm(),
+
+                                ...$this->userVinculationForm()
+
                             ])
                     ])
                     ->action(function (array $data) {
 
-                        $user = User::findOrFail($data['user_id']);
+                        $user = User::find($data['user_id']);
 
                         $this->organization
                             ->users()
@@ -195,7 +206,7 @@ class UserOrganizationForm extends Component implements HasForms, HasTable
 
                         $user->update(['last_organization_id' => $this->organization->id]);
 
-                        $user->syncRoles($data['roles']);
+                        $user->syncRolesWithOrganization($data['roles'], $this->organization->id);
 
                         Cache::forget('all_valid_organizations_for_user_' . $user->id);
 
@@ -218,9 +229,9 @@ class UserOrganizationForm extends Component implements HasForms, HasTable
                         ->multiple()
                         ->required()
                         ->options(function () {
-                            return $this->organization->roles
-                                ->where('name', '<>', 'super-admin')
-                                ->pluck('description', 'id');
+                            $roles = UserTypeEnum::toArray();
+                            //  unset($roles[UserTypeEnum::SUPER_ADMIN->value]);
+                            return $roles;
                         })->columnSpan(2),
                 ]),
 

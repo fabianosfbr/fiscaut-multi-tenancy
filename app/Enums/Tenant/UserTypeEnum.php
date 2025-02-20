@@ -9,7 +9,7 @@ use Filament\Support\Contracts\HasLabel;
 enum UserTypeEnum: string implements HasColor, HasIcon, HasLabel
 {
 
-    case SUPER_ADMIN = 'super-admin';
+   // case SUPER_ADMIN = 'super-admin';
     case ADMIN = 'admin';
     case ACCOUNTING = 'accounting';
     case USER = 'user';
@@ -18,7 +18,7 @@ enum UserTypeEnum: string implements HasColor, HasIcon, HasLabel
     public function getLabel(): ?string
     {
         return match ($this) {
-            self::SUPER_ADMIN => 'Super Administrador',
+          //  self::SUPER_ADMIN => 'Super Administrador',
             self::ADMIN => 'Administrador',
             self::ACCOUNTING => 'Contabilidade',
             self::USER => 'Usuário',
@@ -28,7 +28,7 @@ enum UserTypeEnum: string implements HasColor, HasIcon, HasLabel
     public function getColor(): string|array|null
     {
         return match ($this) {
-            self::SUPER_ADMIN => 'success',
+          //  self::SUPER_ADMIN => 'success',
             self::ADMIN => 'success',
             self::ACCOUNTING => 'warning',
             self::USER => 'warning',
@@ -38,7 +38,7 @@ enum UserTypeEnum: string implements HasColor, HasIcon, HasLabel
     public function getIcon(): ?string
     {
         return match ($this) {
-            self::SUPER_ADMIN => 'heroicon-o-shield-check',
+          //  self::SUPER_ADMIN => 'heroicon-o-shield-check',
             self::ADMIN => 'heroicon-o-shield-check',
             self::ACCOUNTING => 'heroicon-o-users',
             self::USER => 'heroicon-o-users',
