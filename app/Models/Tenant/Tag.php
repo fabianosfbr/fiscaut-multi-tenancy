@@ -2,6 +2,7 @@
 
 namespace App\Models\Tenant;
 
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 
@@ -16,6 +17,24 @@ class Tag extends Model
     protected $guarded = ['id'];
 
     protected $appends = ['namecode'];
+
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::saved(function ($tag) {
+            Cache::forget("category_tag_.{$tag->category->organization_id}._all");
+        });
+
+        static::deleted(function ($tag) {
+            Cache::forget("category_tag_.{$tag->category->organization_id}._all");
+        });
+
+        static::updated(function ($tag) {
+
+            Cache::forget("category_tag_.{$tag->category->organization_id}._all");
+        });
+    }
 
     public function category()
     {

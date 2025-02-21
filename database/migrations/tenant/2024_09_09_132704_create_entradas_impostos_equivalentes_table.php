@@ -14,10 +14,13 @@ return new class extends Migration
         Schema::create('entradas_impostos_equivalentes', function (Blueprint $table) {
             $table->id();
             $table->integer('tag')->nullable();
+            $table->uuid('tag_id')->nullable();
+            $table->string('tag_description')->nullable();
             $table->string('description')->nullable();
             $table->boolean('status_icms')->default(true);
             $table->boolean('status_ipi')->default(true);
-            $table->uuid('organization_id');
+            $table->uuid('organization_id')->index();
+
             $table->timestamps();
         });
     }

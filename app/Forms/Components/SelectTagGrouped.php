@@ -13,28 +13,6 @@ class SelectTagGrouped extends Field
     protected array | Closure $options = [];
     protected bool $multiple = false;
 
-    public function organization(string $organization_id): static
-    {
-
-        $categoryTag = categoryWithTagForSearching($organization_id);
-
-        foreach ($categoryTag as $key => $category) {
-            $tags = [];
-            foreach ($category->tags  as $tagKey => $tag) {
-                if (!$tag->is_enable) {
-                    continue;
-                }
-                $tags[$tagKey]['id'] = $tag->id;
-                $tags[$tagKey]['name'] = $tag->code . ' - ' . $tag->name;
-            }
-            $this->options[$key]['text'] = $category->name;
-            $this->options[$key]['children'] = $tags;
-        }
-
-        return $this;
-    }
-
-
     public function options($options): static
     {
         if (is_callable($options)) {
@@ -57,7 +35,6 @@ class SelectTagGrouped extends Field
 
     public function getMultiple(): bool
     {
-
 
         return $this->multiple;
     }

@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\DB;
 use NFePHP\NFe\Common\Standardize;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
+use App\Models\Tenant\ConfiguracaoGeral;
 
 
 
@@ -294,4 +295,20 @@ function getMesesAnterioresEPosteriores(): array
     $meses = array_reverse($meses);
 
     return $meses;
+}
+
+if (!function_exists('config_system')) {
+    function config_system($key, $organizationId = null, $default = null)
+    {
+        if (is_null($organizationId)) {
+            // Tenta pegar organization_id do usuário logado
+            $organizationId = auth()->user()?->last_organization_id;
+
+            if (is_null($organizationId)) {
+                throw new \Exception('Organization ID is obrigatório');
+            }
+        }
+
+        return ConfiguracaoGeral::getValue($key, $organizationId, $default);
+    }
 }
