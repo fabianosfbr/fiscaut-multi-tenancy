@@ -4,12 +4,15 @@ namespace App\Livewire\Organization\Configuration\Acumulador;
 
 use Livewire\Component;
 use Filament\Forms\Form;
+use App\Models\Tenant\Acumulador;
+use App\Models\Tenant\CategoryTag;
 use Illuminate\Support\Facades\Cache;
 use Filament\Forms\Contracts\HasForms;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\TagsInput;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
+use App\Forms\Components\SelectTagGrouped;
 use Filament\Forms\Concerns\InteractsWithForms;
 use App\Models\Tenant\EntradasAcumuladorEquivalente;
 
@@ -39,15 +42,40 @@ class NfeEntradaPropriaForm extends Component  implements HasForms
                 Repeater::make('configuracoes_acumuladores')
                     ->label('')
                     ->schema([
-                        TextInput::make('etiqueta_entrada')
+                        SelectTagGrouped::make('etiqueta_entrada')
                             ->label('Acumulador')
-                            ->required()
-                            ->columnSpan(1),
-                        TagsInput::make('valores')
-                            ->label('Etiquetas')
-                            ->placeholder('Digite a nova etiqueta e tecle ENTER para adicionar')
-                            ->required()
-                            ->columnSpan(1),
+                            ->columnSpan(5)
+                            ->multiple(false)
+                            ->options(function () {
+                                $acumuladores = Acumulador::getAll(auth()->user()->last_organization_id);
+                                foreach ($acumuladores as $tagKey => $acumulador) {
+                                    $tags['id'] = $acumulador->codi_acu;
+                                    $tags['name'] = $acumulador->codi_acu . ' - ' . $acumulador->nome_acu;
+                                    $options[$tagKey] = $tags;
+                                }
+                                return $options ?? [];
+                            }),
+                            SelectTagGrouped::make('valores')
+                            ->label('Etiqueta')
+                            ->columnSpan(1)
+                            ->multiple(true)
+                            ->options(function () {
+                                $categoryTag = CategoryTag::getAllEnabled(auth()->user()->last_organization_id);
+
+                                foreach ($categoryTag as $key => $category) {
+                                    $tags = [];
+                                    foreach ($category->tags  as $tagKey => $tag) {
+                                        if (!$tag->is_enable) {
+                                            continue;
+                                        }
+                                        $tags[$tagKey]['id'] = $tag->id;
+                                        $tags[$tagKey]['name'] = $tag->code . ' - ' . $tag->name;
+                                    }
+                                    $tagData[$key]['text'] = $category->name;
+                                    $tagData[$key]['children'] = $tags;
+                                }
+                                return $tagData ?? [];
+                            }),
                         TagsInput::make('cfops')
                             ->label('CFOPs')
                             ->hint('CFOP já convertido')

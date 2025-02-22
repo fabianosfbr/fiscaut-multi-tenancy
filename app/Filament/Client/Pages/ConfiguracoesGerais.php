@@ -8,10 +8,14 @@ use App\Models\Tenant\Organization;
 use Filament\Forms\Components\Tabs;
 use Filament\Forms\Components\Livewire;
 use App\Livewire\Organization\Configuration\CteSaidaForm;
+use App\Livewire\Organization\Configuration\Acumulador\CteSaidaForm as AcumuladorCteSaidaForm;
 use App\Livewire\Organization\Configuration\CteEntradaForm;
+use App\Livewire\Organization\Configuration\Acumulador\CteEntradaForm as AcumuladorCteEntradaForm;
 use App\Livewire\Organization\Configuration\ProdutoGenericoForm;
 use App\Livewire\Organization\Configuration\NfeEntradaPropriaForm;
+use App\Livewire\Organization\Configuration\Acumulador\NfeEntradaPropriaForm as AcumuladorNfeEntradaPropriaForm;
 use App\Livewire\Organization\Configuration\NfeEntradaTerceiroForm;
+use App\Livewire\Organization\Configuration\Acumulador\NfeEntradaTerceiroForm as AcumuladorNfeEntradaTerceiroForm;
 use App\Livewire\Organization\Configuration\ConfiguracoesGeraisForm;
 use App\Livewire\Organization\Configuration\ImpostoEquivalenteEntradaForm;
 
@@ -86,6 +90,52 @@ class ConfiguracoesGerais extends Page
                                                                         Tabs\Tab::make('NFe Saída')
                                                                             ->schema([
                                                                                 Livewire::make(component: CteSaidaForm::class),
+                                                                            ]),
+
+                                                                    ])
+                                                            ]),
+
+                                                    ])
+                                                    ->persistTabInQueryString('cfops-tab')
+                                            ]),
+
+                                        Tabs\Tab::make('Acumuladores')
+                                            ->schema([
+                                                Tabs::make('Tabs')
+                                                    ->tabs([
+                                                        Tabs\Tab::make('NFe')
+                                                            ->schema([
+                                                                Tabs::make('nfe-tipo-entrada')
+                                                                    ->contained(false)
+                                                                    ->persistTabInQueryString('nfe-tab')
+                                                                    ->tabs([
+                                                                        Tabs\Tab::make('Entrada Terceiro')
+                                                                            ->schema([
+                                                                                Livewire::make(AcumuladorNfeEntradaTerceiroForm::class),
+
+                                                                            ]),
+                                                                        Tabs\Tab::make('Entrada Própria')
+                                                                            ->schema([
+                                                                                Livewire::make(AcumuladorNfeEntradaPropriaForm::class),
+
+                                                                            ]),
+
+                                                                    ])
+                                                            ]),
+                                                        Tabs\Tab::make('CTe')
+                                                            ->schema([
+                                                                Tabs::make('cte-tipo-entrada')
+                                                                    ->contained(false)
+                                                                    ->persistTabInQueryString('cte-tab')
+                                                                    ->tabs([
+                                                                        Tabs\Tab::make('NFe Entrada')
+                                                                            ->schema([
+                                                                                Livewire::make(component: AcumuladorCteEntradaForm::class),
+
+                                                                            ]),
+                                                                        Tabs\Tab::make('NFe Saída')
+                                                                            ->schema([
+                                                                                Livewire::make(component: AcumuladorCteSaidaForm::class),
                                                                             ]),
 
                                                                     ])
