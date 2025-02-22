@@ -5,12 +5,14 @@ namespace App\Livewire\Organization\Configuration;
 use Livewire\Component;
 use Filament\Forms\Form;
 use App\Models\Tenant\Cfop;
+use App\Models\Tenant\CategoryTag;
 use Illuminate\Support\Facades\DB;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Contracts\HasForms;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\TagsInput;
 use Filament\Notifications\Notification;
+use App\Forms\Components\SelectTagGrouped;
 use App\Models\Tenant\EntradasCfopsEquivalente;
 use Filament\Forms\Concerns\InteractsWithForms;
 use App\Models\Tenant\GrupoEntradasCfopsEquivalente;
@@ -45,10 +47,27 @@ class NfeEntradaTerceiroForm extends Component implements HasForms
                 Repeater::make('organization_cfop')
                     ->label('')
                     ->schema([
-                        TagsInput::make('tags')
-                            ->label('Etiquetas')
-                            ->required()
-                            ->placeholder('Digite a nova etiqueta e tecle ENTER para adicionar'),
+                        SelectTagGrouped::make('tags')
+                            ->label('Etiqueta')
+                            ->columnSpan(1)
+                            ->multiple(true)
+                            ->options(function () {
+                                $categoryTag = CategoryTag::getAllEnabled(auth()->user()->last_organization_id);
+
+                                foreach ($categoryTag as $key => $category) {
+                                    $tags = [];
+                                    foreach ($category->tags  as $tagKey => $tag) {
+                                        if (!$tag->is_enable) {
+                                            continue;
+                                        }
+                                        $tags[$tagKey]['id'] = $tag->id;
+                                        $tags[$tagKey]['name'] = $tag->code . ' - ' . $tag->name;
+                                    }
+                                    $tagData[$key]['text'] = $category->name;
+                                    $tagData[$key]['children'] = $tags;
+                                }
+                                return $tagData ?? [];
+                            }),
                         Repeater::make('cfops')
                             ->label('')
                             ->schema([
@@ -78,10 +97,7 @@ class NfeEntradaTerceiroForm extends Component implements HasForms
     public function cfopsForSearching()
     {
 
-        $tagData = Cfop::select(
-            'codigo',
-            DB::raw("CONCAT(cfops.codigo,'-',cfops.descricao) as full_name")
-        )->get()->pluck('full_name', 'codigo');
+        $tagData = Cfop::getAllForTag()->pluck('full_name', 'codigo');
 
         return $tagData;
     }

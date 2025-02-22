@@ -5,12 +5,15 @@ namespace App\Livewire\Organization\Configuration;
 use Livewire\Component;
 use Filament\Forms\Form;
 use App\Models\Tenant\Cfop;
+use App\Models\Tenant\CategoryTag;
 use Illuminate\Support\Facades\DB;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Contracts\HasForms;
+use Filament\Forms\Components\Checkbox;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\TagsInput;
 use Filament\Notifications\Notification;
+use App\Forms\Components\SelectTagGrouped;
 use App\Models\Tenant\EntradasCfopsEquivalente;
 use Filament\Forms\Concerns\InteractsWithForms;
 use App\Models\Tenant\GrupoEntradasCfopsEquivalente;
@@ -45,10 +48,6 @@ class CteSaidaForm extends Component implements HasForms
                 Repeater::make('organization_cfop')
                     ->label('')
                     ->schema([
-                        TagsInput::make('tags')
-                            ->label('Etiquetas')
-                            ->required()
-                            ->placeholder('Digite a nova etiqueta e tecle ENTER para adicionar'),
                         Repeater::make('cfops')
                             ->label('')
                             ->schema([
@@ -63,9 +62,16 @@ class CteSaidaForm extends Component implements HasForms
                                     ->required()
                                     ->placeholder('Digite a nova etiqueta e tecle ENTER para adicionar')
                                     ->columnSpan(2),
+
+                                Checkbox::make('uf_diferente')
+                                    ->label('Aplicar UF diferente')
+                                    // ->visible(function () {
+                                    //     return getIssuerGeneralSettings(getCurrentIssuer(), 'verificar_uf_emitente_destinatario');
+                                    // })
+                                    ->inline(false)
                             ])
                             ->addActionLabel('Adicionar CFOP')
-                            ->columns(4),
+                            ->columns(5),
 
                     ])
                     ->collapsible()
@@ -78,10 +84,7 @@ class CteSaidaForm extends Component implements HasForms
     public function cfopsForSearching()
     {
 
-        $tagData = Cfop::select(
-            'codigo',
-            DB::raw("CONCAT(cfops.codigo,'-',cfops.descricao) as full_name")
-        )->get()->pluck('full_name', 'codigo');
+        $tagData = Cfop::getAllForTag()->pluck('full_name', 'codigo');
 
         return $tagData;
     }
@@ -103,7 +106,7 @@ class CteSaidaForm extends Component implements HasForms
 
         foreach ($values['organization_cfop'] as $value) {
             $grupo = GrupoEntradasCfopsEquivalente::create([
-                'tags' => $value['tags'],
+                'tags' => $value['tags'] ?? null,
                 'organization_id' => auth()->user()->last_organization_id,
             ]);
 
@@ -112,6 +115,7 @@ class CteSaidaForm extends Component implements HasForms
                     'cfop_entrada' => intval($cfop['cfop_entrada']),
                     'valores' => $cfop['valores'],
                     'tipo' => self::TIPO,
+                    'uf_diferente' => $cfop['uf_diferente'] ?? false,
                     'grupo_id' => $grupo->id,
                 ]);
             }
