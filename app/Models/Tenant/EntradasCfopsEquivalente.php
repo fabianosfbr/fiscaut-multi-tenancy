@@ -2,7 +2,6 @@
 
 namespace App\Models\Tenant;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class EntradasCfopsEquivalente extends Model
@@ -13,7 +12,6 @@ class EntradasCfopsEquivalente extends Model
         'cfop_entrada' => 'integer',
         'valores' => 'array',
     ];
-
 
     public function grupo()
     {

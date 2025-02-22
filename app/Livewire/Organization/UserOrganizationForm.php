@@ -2,40 +2,37 @@
 
 namespace App\Livewire\Organization;
 
-use Livewire\Component;
-use Filament\Tables\Table;
-use App\Models\Tenant\Role;
-use App\Models\Tenant\User;
-use Filament\Facades\Filament;
-use App\Models\Tenant\Permission;
 use App\Enums\Tenant\UserTypeEnum;
-use Illuminate\Support\Facades\DB;
 use App\Models\Tenant\Organization;
-use Filament\Forms\Components\Grid;
-use Filament\Tables\Actions\Action;
-use Illuminate\Support\Facades\Hash;
-use Filament\Forms\Components\Select;
-use Filament\Forms\Components\Toggle;
-use Illuminate\Support\Facades\Cache;
-use Filament\Forms\Components\Section;
-use Filament\Forms\Contracts\HasForms;
+use App\Models\Tenant\User;
+use Filament\Forms\Components\Actions\Action as FormAction;
 use Filament\Forms\Components\Fieldset;
-use Filament\Tables\Columns\IconColumn;
-use Filament\Tables\Columns\TextColumn;
-use Filament\Tables\Contracts\HasTable;
-use Filament\Forms\Components\TextInput;
-use Filament\Notifications\Notification;
-use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\Grid;
 use Filament\Forms\Components\Placeholder;
+use Filament\Forms\Components\Section;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Toggle;
 use Filament\Forms\Components\ToggleButtons;
 use Filament\Forms\Concerns\InteractsWithForms;
+use Filament\Forms\Contracts\HasForms;
+use Filament\Notifications\Notification;
+use Filament\Tables\Actions\Action;
+use Filament\Tables\Columns\IconColumn;
+use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Concerns\InteractsWithTable;
-use Filament\Forms\Components\Actions\Action as FormAction;
+use Filament\Tables\Contracts\HasTable;
+use Filament\Tables\Table;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
+use Livewire\Component;
 
 class UserOrganizationForm extends Component implements HasForms, HasTable
 {
-    use InteractsWithTable;
     use InteractsWithForms;
+    use InteractsWithTable;
+
     public Organization $organization;
 
     public function mount(): void
@@ -72,6 +69,7 @@ class UserOrganizationForm extends Component implements HasForms, HasTable
                         foreach ($roles as $index => $value) {
                             $role[$index] = UserTypeEnum::from($value)->getLabel();
                         }
+
                         return $role ?? [];
                     })
                     ->badge(),
@@ -90,7 +88,6 @@ class UserOrganizationForm extends Component implements HasForms, HasTable
                     ->boolean()
                     ->trueIcon('heroicon-o-check-circle')
                     ->falseIcon('heroicon-o-x-circle'),
-
 
             ])
             ->filters([
@@ -113,7 +110,7 @@ class UserOrganizationForm extends Component implements HasForms, HasTable
                         return [
                             'is_active' => $organization->pivot->is_active,
                             'roles' => $user->roles()->wherePivot('organization_id', $organization->id)->get()->pluck('name')->toArray(),
-                            //'expires_at' => $organization->pivot->expires_at,
+                            // 'expires_at' => $organization->pivot->expires_at,
                         ];
                     })
                     ->form($this->userVinculationForm())
@@ -169,11 +166,11 @@ class UserOrganizationForm extends Component implements HasForms, HasTable
                                                     ->label('Senha')
                                                     ->password()
                                                     ->revealable()
-                                                    ->dehydrateStateUsing(fn(string $state): string => Hash::make($state))
-                                                    ->dehydrated(fn(?string $state): bool => filled($state))
+                                                    ->dehydrateStateUsing(fn (string $state): string => Hash::make($state))
+                                                    ->dehydrated(fn (?string $state): bool => filled($state))
                                                     ->required()
                                                     ->columnSpan(2),
-                                            ])
+                                            ]),
                                     ])
                                     ->createOptionAction(function (FormAction $action) {
                                         return $action
@@ -190,9 +187,9 @@ class UserOrganizationForm extends Component implements HasForms, HasTable
                                             });
                                     }),
 
-                                ...$this->userVinculationForm()
+                                ...$this->userVinculationForm(),
 
-                            ])
+                            ]),
                     ])
                     ->action(function (array $data) {
 
@@ -208,7 +205,7 @@ class UserOrganizationForm extends Component implements HasForms, HasTable
 
                         $user->syncRolesWithOrganization($data['roles'], $this->organization->id);
 
-                        Cache::forget('all_valid_organizations_for_user_' . $user->id);
+                        Cache::forget('all_valid_organizations_for_user_'.$user->id);
 
                         Notification::make()
                             ->title('Usuário vinculado com sucesso')
@@ -230,6 +227,7 @@ class UserOrganizationForm extends Component implements HasForms, HasTable
                         ->required()
                         ->options(function () {
                             $roles = UserTypeEnum::toArray();
+
                             //  unset($roles[UserTypeEnum::SUPER_ADMIN->value]);
                             return $roles;
                         })->columnSpan(2),
@@ -243,6 +241,7 @@ class UserOrganizationForm extends Component implements HasForms, HasTable
                 ->columnSpan(2),
         ];
     }
+
     public function render()
     {
         return view('livewire.organization.user-organization-form');

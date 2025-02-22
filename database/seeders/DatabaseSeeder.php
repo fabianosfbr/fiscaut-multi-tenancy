@@ -2,11 +2,7 @@
 
 namespace Database\Seeders;
 
-use App\Models\User;
-use App\Models\Tenant\Client;
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
-use App\Models\Tenant;
-use App\Models\Tenant\Organization;
 use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
@@ -20,8 +16,6 @@ class DatabaseSeeder extends Seeder
             PricePlanSeeder::class,
             TenantSeeder::class,
         ]);
-
-
 
     }
 }

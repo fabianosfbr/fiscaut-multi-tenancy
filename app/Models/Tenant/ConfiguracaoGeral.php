@@ -2,9 +2,9 @@
 
 namespace App\Models\Tenant;
 
-use Illuminate\Support\Facades\Cache;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Casts\Attribute;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Cache;
 
 class ConfiguracaoGeral extends Model
 {
@@ -34,7 +34,6 @@ class ConfiguracaoGeral extends Model
         return $this->belongsTo(Organization::class);
     }
 
-
     protected function value(): Attribute
     {
         return Attribute::make(
@@ -47,16 +46,15 @@ class ConfiguracaoGeral extends Model
     /**
      * Casts the value based on the specified type.
      *
-     * @param mixed  $value
-     * @param string $type
+     * @param  mixed  $value
      * @return mixed
      */
     private function castValue($value, string $type)
     {
         return match ($type) {
             'boolean' => filter_var($value, FILTER_VALIDATE_BOOLEAN),
-            'integer' => (int)$value,
-            'float' => (float)$value,
+            'integer' => (int) $value,
+            'float' => (float) $value,
             'array', 'json' => is_string($value) ? json_decode($value, true) : $value,
             default => $value
         };
@@ -69,7 +67,7 @@ class ConfiguracaoGeral extends Model
         return static::updateOrCreate(
             [
                 'key' => $key,
-                'organization_id' => $organizationId
+                'organization_id' => $organizationId,
             ],
             [
                 'value' => match ($processed['type']) {
@@ -77,7 +75,7 @@ class ConfiguracaoGeral extends Model
                     'boolean' => $processed['value'] ? 'true' : 'false',
                     default => (string) $processed['value']
                 },
-                'type' => $processed['type']
+                'type' => $processed['type'],
             ]
         );
     }
@@ -94,7 +92,7 @@ class ConfiguracaoGeral extends Model
         });
     }
 
-    public static function getMany(string $organizationId, ?array $keys = null,  array $defaults = []): array
+    public static function getMany(string $organizationId, ?array $keys = null, array $defaults = []): array
     {
         // Se não foram especificadas chaves, busca todas as configurações da organização
         if (is_null($keys)) {
@@ -127,7 +125,7 @@ class ConfiguracaoGeral extends Model
     private static function detectAndCastValue($value): array
     {
         // Se já é um tipo primitivo, retorna ele mesmo com seu tipo
-        if (!is_string($value)) {
+        if (! is_string($value)) {
             return [
                 'value' => $value,
                 'type' => match (true) {
@@ -137,7 +135,7 @@ class ConfiguracaoGeral extends Model
                     is_array($value) => 'array',
                     is_object($value) => 'json',
                     default => 'string'
-                }
+                },
             ];
         }
 
@@ -148,7 +146,7 @@ class ConfiguracaoGeral extends Model
         if (strtolower($trimmed) === 'true' || strtolower($trimmed) === 'false') {
             return [
                 'value' => strtolower($trimmed) === 'true',
-                'type' => 'boolean'
+                'type' => 'boolean',
             ];
         }
 
@@ -156,7 +154,7 @@ class ConfiguracaoGeral extends Model
         if (preg_match('/^-?\d+$/', $trimmed)) {
             return [
                 'value' => (int) $trimmed,
-                'type' => 'integer'
+                'type' => 'integer',
             ];
         }
 
@@ -164,7 +162,7 @@ class ConfiguracaoGeral extends Model
         if (preg_match('/^-?\d*\.?\d+$/', $trimmed)) {
             return [
                 'value' => (float) $trimmed,
-                'type' => 'float'
+                'type' => 'float',
             ];
         }
 
@@ -177,7 +175,7 @@ class ConfiguracaoGeral extends Model
                 if (json_last_error() === JSON_ERROR_NONE) {
                     return [
                         'value' => $decoded,
-                        'type' => 'array'
+                        'type' => 'array',
                     ];
                 }
             } catch (\Exception $e) {
@@ -188,7 +186,7 @@ class ConfiguracaoGeral extends Model
         // Se nenhum tipo especial foi detectado, retorna como string
         return [
             'value' => $value,
-            'type' => 'string'
+            'type' => 'string',
         ];
     }
 }

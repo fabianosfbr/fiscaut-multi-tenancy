@@ -2,15 +2,14 @@
 
 namespace App\Models\Tenant;
 
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Cache;
 
 class ImpostoEquivalenteEntrada extends Model
 {
     public $table = 'entradas_impostos_equivalentes';
 
     protected $guarded = ['id'];
-
 
     protected static function boot()
     {
@@ -28,8 +27,6 @@ class ImpostoEquivalenteEntrada extends Model
             Cache::forget("entradas_impostos_equivalentes_.{$value->organizationId}");
         });
     }
-
-
 
     public static function getAll(string $organizationId)
     {

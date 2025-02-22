@@ -2,13 +2,12 @@
 
 namespace App\Filament\Client\Pages\Tenant;
 
+use App\Livewire\Organization\DigitalCertificateForm;
+use App\Livewire\Organization\EditOrganizationForm;
+use Filament\Forms\Components\Livewire;
+use Filament\Forms\Components\Tabs;
 use Filament\Forms\Form;
 use Filament\Pages\Page;
-use Filament\Forms\Components\Tabs;
-use Filament\Forms\Components\Livewire;
-use App\Livewire\Organization\EditOrganizationForm;
-use App\Livewire\Organization\UserOrganizationForm;
-use App\Livewire\Organization\DigitalCertificateForm;
 
 class EditOrganizationPage extends Page
 {
@@ -21,7 +20,6 @@ class EditOrganizationPage extends Page
     protected static ?string $title = 'Editar empresa';
 
     protected static bool $shouldRegisterNavigation = false;
-
 
     public function form(Form $form): Form
     {
@@ -38,13 +36,11 @@ class EditOrganizationPage extends Page
                                 Livewire::make(DigitalCertificateForm::class, $this->getViewData()),
                             ]),
 
-
-                    ])
+                    ]),
 
             ])
             ->statePath('data');
     }
-
 
     protected function getViewData(): array
     {
@@ -52,6 +48,4 @@ class EditOrganizationPage extends Page
             'organization' => getTenant(),
         ];
     }
-
-
 }

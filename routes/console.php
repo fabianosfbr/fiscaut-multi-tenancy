@@ -1,24 +1,21 @@
 <?php
 
-
-use App\Models\Tenant;
+use App\Enums\Tenant\PermissionTypeEnum;
+use App\Enums\Tenant\UserTypeEnum;
 use App\Models\PricePlan;
-use App\Models\Tenant\Tag;
-use App\Models\Tenant\Role;
-use App\Models\Tenant\User;
-use Illuminate\Support\Str;
+use App\Models\Tenant;
+use App\Models\Tenant\NotaFiscalEletronica;
+use App\Models\Tenant\Organization;
 use App\Models\Tenant\PaymentLog;
 use App\Models\Tenant\Permission;
-use App\Enums\Tenant\UserTypeEnum;
-use Illuminate\Support\Facades\DB;
-use App\Models\Tenant\Organization;
-use Illuminate\Support\Facades\Log;
-use App\Models\Tenant\User as Client;
-use Illuminate\Support\Facades\Artisan;
-use App\Enums\Tenant\PermissionTypeEnum;
-use App\Services\Tenant\Sefaz\NfeService;
-use App\Models\Tenant\NotaFiscalEletronica;
+use App\Models\Tenant\Role;
 use App\Models\Tenant\ShowChoiceOrganizationUrl;
+use App\Models\Tenant\Tag;
+use App\Models\Tenant\User;
+use App\Services\Tenant\Sefaz\NfeService;
+use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 Artisan::command('play', function () {
 
@@ -37,7 +34,7 @@ Artisan::command('play', function () {
         ]);
 
         $organization = Organization::create([
-            'razao_social' => $tenant->razao_social . ':' . $tenant->cnpj,
+            'razao_social' => $tenant->razao_social.':'.$tenant->cnpj,
             'cnpj' => $tenant->cnpj,
         ]);
 
@@ -75,33 +72,25 @@ Artisan::command('play', function () {
 
         $user->syncRoles(array_keys($roles));
 
-
         DB::commit();
 
-
         dd('funfou');
-
-
 
         $nfe = NotaFiscalEletronica::where('chave', '35230300565813000129550030009184021879812438')->first();
 
         $tag = Tag::find('9cfdd5ad-1e8e-409b-842f-b641d8d5b199');
 
-
-      //  $nfe->tag($tag, $nfe->vNfe);
+        //  $nfe->tag($tag, $nfe->vNfe);
 
         // dd($nfe->tagging_summary);
 
-         dd($nfe->tagging_summary);
+        dd($nfe->tagging_summary);
 
         dd('tagged');
-
-
 
         // $user = User::where('email', tenant()->email)->first();
 
         // $organization =  Organization::findOrFail($user->last_organization_id);
-
 
         // $service = app(NfeService::class);
 
@@ -123,11 +112,9 @@ Artisan::command('play', function () {
         dd($payment_log);
     });
 
-
     dd('pare');
 
     $package = PricePlan::first();
-
 
     $subscription = [
         'package_id' => $package->id,
@@ -137,12 +124,11 @@ Artisan::command('play', function () {
         'name' => $tenant->name,
         'email' => $tenant->email,
         'tenant_id' => $tenant->id,
-        'track' => Str::random(10) . Str::random(10),
+        'track' => Str::random(10).Str::random(10),
 
     ];
 
     //  PaymentLog::create($subscription);
-
 
     $tenant->run(function () use ($subscription) {
 

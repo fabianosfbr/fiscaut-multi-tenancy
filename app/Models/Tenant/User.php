@@ -2,44 +2,37 @@
 
 namespace App\Models\Tenant;
 
-
-use Filament\Panel;
-use App\Enums\Tenant\UserTypeEnum;
-use Illuminate\Support\Collection;
-use App\Models\Tenant\Organization;
-use Spatie\Permission\Traits\HasRoles;
-use Illuminate\Database\Eloquent\Model;
-use App\Enums\Tenant\PermissionTypeEnum;
-use Illuminate\Notifications\Notifiable;
-use Filament\Models\Contracts\HasTenants;
 use Filament\Models\Contracts\FilamentUser;
-use App\Models\Tenant\Concerns\HasPermissions;
-use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Filament\Models\Contracts\HasDefaultTenant;
+use Filament\Models\Contracts\HasTenants;
+use Filament\Panel;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
-
+use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Collection;
 use Spatie\Permission\Contracts\Role as RoleContract;
 use Spatie\Permission\Exceptions\RoleDoesNotExist;
 use Spatie\Permission\Guard;
+use Spatie\Permission\Traits\HasRoles;
 
-class User extends Authenticatable  implements FilamentUser, HasTenants, HasDefaultTenant
+class User extends Authenticatable implements FilamentUser, HasDefaultTenant, HasTenants
 {
-    use HasFactory, HasUuids, Notifiable, HasRoles;
+    use HasFactory, HasRoles, HasUuids, Notifiable;
 
     protected $keyType = 'string';
 
     public $incrementing = false;
+
     protected $guarded = ['id'];
 
     protected $hidden = [
         'password',
         'remember_token',
     ];
-
 
     protected function casts(): array
     {
@@ -71,13 +64,11 @@ class User extends Authenticatable  implements FilamentUser, HasTenants, HasDefa
         return $this->belongsTo(Organization::class, 'last_organization_id');
     }
 
-
     public function canAccessTenant(Model $tenant): bool
     {
 
         return $this->organizations->contains($tenant);
     }
-
 
     public function canAccessPanel(Panel $panel): bool
     {
@@ -137,7 +128,6 @@ class User extends Authenticatable  implements FilamentUser, HasTenants, HasDefa
     {
         $existingRoles = $this->roles()->wherePivot('organization_id', $organization_id)->pluck('roles.id')->toArray();
 
-
         $rolesParaSincronizar = collect($roles)
             ->flatten()
             ->map(function ($role) {
@@ -152,7 +142,6 @@ class User extends Authenticatable  implements FilamentUser, HasTenants, HasDefa
             })
             ->pluck('id')
             ->toArray();
-
 
         $rolesParaAdicionar = array_diff($rolesParaSincronizar, $existingRoles);
         $rolesParaRemover = array_diff($existingRoles, $rolesParaSincronizar);

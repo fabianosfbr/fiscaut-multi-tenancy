@@ -3,13 +3,11 @@
 namespace App\Filament\Resources\RenderHookUrlResource\RelationManagers;
 
 use Filament\Forms;
-use Filament\Tables;
 use Filament\Forms\Form;
+use Filament\Resources\RelationManagers\RelationManager;
+use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
-use Filament\Resources\RelationManagers\RelationManager;
 
 class RenderHookUrlRelationManager extends RelationManager
 {
@@ -39,15 +37,15 @@ class RenderHookUrlRelationManager extends RelationManager
             ])
             ->headerActions([
                 Tables\Actions\CreateAction::make()
-                ->after(function(){
-                    Cache::forget('url_render_avoid_' . auth()->user()->id);
-                }),
+                    ->after(function () {
+                        Cache::forget('url_render_avoid_'.auth()->user()->id);
+                    }),
             ])
             ->actions([
                 Tables\Actions\EditAction::make()
-                ->after(function(){
-                    Cache::forget('url_render_avoid_' . auth()->user()->id);
-                }),
+                    ->after(function () {
+                        Cache::forget('url_render_avoid_'.auth()->user()->id);
+                    }),
                 Tables\Actions\DeleteAction::make(),
             ])
             ->bulkActions([

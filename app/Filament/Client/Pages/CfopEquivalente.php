@@ -3,14 +3,12 @@
 namespace App\Filament\Client\Pages;
 
 use Filament\Forms\Components\Livewire;
+use Filament\Forms\Components\Tabs;
 use Filament\Forms\Form;
 use Filament\Pages\Page;
-use Filament\Forms\Components\Tabs;
-use Filament\Forms\Components\TextInput;
 
 class CfopEquivalente extends Page
 {
-
     protected static string $view = 'filament.client.pages.cfop-equivalente';
 
     protected static ?string $navigationGroup = 'Configurações';
@@ -20,7 +18,6 @@ class CfopEquivalente extends Page
     protected static ?string $slug = 'configuracoes/cfops-equivalentes';
 
     protected static ?int $navigationSort = 3;
-
 
     public function form(Form $form): Form
     {
@@ -41,7 +38,7 @@ class CfopEquivalente extends Page
                                                 Livewire::make('organization.configuration.nfe-entrada-propria-form'),
                                             ]),
 
-                                    ])
+                                    ]),
                             ]),
                         Tabs\Tab::make('CTes')
                             ->schema([
@@ -56,9 +53,9 @@ class CfopEquivalente extends Page
                                                 Livewire::make('organization.configuration.cte-saida-form'),
                                             ]),
 
-                                    ])
+                                    ]),
                             ]),
-                    ])
+                    ]),
             ])
             ->statePath('data');
     }

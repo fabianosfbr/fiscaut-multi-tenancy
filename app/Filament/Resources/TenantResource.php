@@ -2,29 +2,24 @@
 
 namespace App\Filament\Resources;
 
-use Closure;
-use Filament\Forms;
-use Filament\Tables;
-use App\Models\Tenant;
-use Filament\Forms\Set;
-use Filament\Forms\Form;
-use App\Models\PricePlan;
-use App\Models\PaymentLog;
-use Filament\Tables\Table;
-use Illuminate\Support\Str;
-use Filament\Resources\Resource;
-use Filament\Tables\Actions\Action;
-use Illuminate\Support\Facades\Hash;
-use Filament\Forms\Components\Select;
-use Filament\Forms\Components\Section;
-use Filament\Tables\Columns\TextColumn;
-use Illuminate\Database\Eloquent\Model;
-use Filament\Forms\Components\TextInput;
-use Illuminate\Database\Eloquent\Builder;
 use App\Enums\Tenant\PaymentLogStatusEnum;
 use App\Filament\Resources\TenantResource\Pages;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
-use App\Filament\Resources\TenantResource\RelationManagers;
+use App\Models\PaymentLog;
+use App\Models\PricePlan;
+use App\Models\Tenant;
+use Closure;
+use Filament\Forms\Components\Section;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\TextInput;
+use Filament\Forms\Form;
+use Filament\Forms\Set;
+use Filament\Resources\Resource;
+use Filament\Tables;
+use Filament\Tables\Actions\Action;
+use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Str;
 
 class TenantResource extends Resource
 {
@@ -47,7 +42,7 @@ class TenantResource extends Resource
                             ->validationAttribute('Razão Social')
                             ->required()
                             ->live(onBlur: true)
-                            ->afterStateUpdated(fn(Set $set, ?string $state) => $set('domains', Str::slug($state)))
+                            ->afterStateUpdated(fn (Set $set, ?string $state) => $set('domains', Str::slug($state)))
                             ->columnSpan(1),
                         TextInput::make('cnpj')
                             ->label('CNPJ')
@@ -55,7 +50,7 @@ class TenantResource extends Resource
                             ->validationAttribute('CNPJ')
                             ->unique(ignoreRecord: true)
                             ->rules([
-                                fn(): Closure => function (string $attribute, $value, Closure $fail) {
+                                fn (): Closure => function (string $attribute, $value, Closure $fail) {
                                     $value = str_replace(['-', '.', '/'], '', $value);
                                     $domain = Tenant::where('cnpj', $value)->first();
                                     if ($domain) {
@@ -88,7 +83,7 @@ class TenantResource extends Resource
                             ->disabledOn('edit')
                             ->required()
                             ->rules([
-                                fn(): Closure => function (string $attribute, $value, Closure $fail) {
+                                fn (): Closure => function (string $attribute, $value, Closure $fail) {
                                     $domain = Tenant::where('domain', $value)->first();
                                     if ($domain) {
                                         $fail('Este domínio já está sendo utilizado por outra empresa.');
@@ -98,7 +93,7 @@ class TenantResource extends Resource
                             ->columnSpan(1)
                             ->prefix('https://')
                             ->suffix('.localhost'),
-                    ])->columns(2)
+                    ])->columns(2),
             ]);
     }
 
@@ -150,12 +145,12 @@ class TenantResource extends Resource
                             'tenant_id' => $tenant->id,
                             'start_date' => now(),
                             'expire_date' => '2100-12-31',
-                            'track' => Str::random(10) . Str::random(10),
+                            'track' => Str::random(10).Str::random(10),
 
                         ];
 
                         PaymentLog::create($subscription);
-                    })
+                    }),
             ])
             ->bulkActions([]);
     }

@@ -2,18 +2,18 @@
 
 namespace App\Filament\Clusters\Profile\Pages;
 
-use Filament\Forms\Form;
-use Filament\Pages\Page;
-use Filament\Actions\Action;
 use App\Filament\Clusters\Profile;
-use Filament\Support\Enums\Alignment;
+use Filament\Actions\Action;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Form;
 use Filament\Pages\Concerns\InteractsWithFormActions;
+use Filament\Support\Enums\Alignment;
 
 class EditProfile extends BaseProfile
 {
     use InteractsWithFormActions;
+
     protected static ?string $navigationIcon = 'heroicon-o-pencil-square';
 
     protected static bool $shouldRegisterNavigation = true;
@@ -60,7 +60,7 @@ class EditProfile extends BaseProfile
             ->statePath('data');
     }
 
-        public function save(): void
+    public function save(): void
     {
         $data = $this->form->getState();
 

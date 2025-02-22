@@ -6,14 +6,11 @@ use Filament\Support\Contracts\HasColor;
 use Filament\Support\Contracts\HasIcon;
 use Filament\Support\Contracts\HasLabel;
 
-enum PricePlanTypEnum:int implements HasColor, HasIcon, HasLabel
+enum PricePlanTypEnum: int implements HasColor, HasIcon, HasLabel
 {
-
-
     case MONTHLY = 0;
     case YEARLY = 1;
     case LIFETIME = 2;
-
 
     public function getLabel(): ?string
     {
@@ -41,5 +38,4 @@ enum PricePlanTypEnum:int implements HasColor, HasIcon, HasLabel
             self::LIFETIME => 'heroicon-o-users',
         };
     }
-
 }

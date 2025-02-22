@@ -3,14 +3,14 @@
 namespace App\Forms\Components;
 
 use Closure;
-use App\Models\Tenant\CategoryTag;
 use Filament\Forms\Components\Field;
 
 class SelectTagGrouped extends Field
 {
     protected string $view = 'forms.components.select-tag-grouped';
 
-    protected array | Closure $options = [];
+    protected array|Closure $options = [];
+
     protected bool $multiple = false;
 
     public function options($options): static
@@ -24,7 +24,6 @@ class SelectTagGrouped extends Field
 
         return $this;
     }
-
 
     public function multiple($value): static
     {

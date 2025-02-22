@@ -2,19 +2,19 @@
 
 namespace App\Filament\Clusters\Profile\Pages;
 
-use Filament\Pages\Page;
-use Filament\Infolists\Infolist;
 use App\Filament\Clusters\Profile;
 use Filament\Infolists\Components\Section;
 use Filament\Infolists\Components\TextEntry;
-use Filament\Infolists\Contracts\HasInfolists;
-use Filament\Pages\Concerns\InteractsWithFormActions;
 use Filament\Infolists\Concerns\InteractsWithInfolists;
+use Filament\Infolists\Contracts\HasInfolists;
+use Filament\Infolists\Infolist;
+use Filament\Pages\Concerns\InteractsWithFormActions;
 
 class ViewProfile extends BaseProfile implements HasInfolists
 {
     use InteractsWithFormActions;
     use InteractsWithInfolists;
+
     protected static ?string $navigationIcon = 'heroicon-o-user';
 
     protected static string $view = 'filament.clusters.profile.pages.view-profile';

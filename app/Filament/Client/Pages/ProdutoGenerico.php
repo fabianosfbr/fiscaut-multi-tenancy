@@ -2,10 +2,10 @@
 
 namespace App\Filament\Client\Pages;
 
+use App\Livewire\Organization\Configuration\ProdutoGenericoForm;
+use Filament\Forms\Components\Livewire;
 use Filament\Forms\Form;
 use Filament\Pages\Page;
-use Filament\Forms\Components\Livewire;
-use App\Livewire\Organization\Configuration\ProdutoGenericoForm;
 
 class ProdutoGenerico extends Page
 {

@@ -2,11 +2,9 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Seeder;
-use App\Models\Tenant\PricePlan;
-use Illuminate\Support\Facades\DB;
 use App\Enums\Tenant\PricePlanTypEnum;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
 
 class PricePlanSeeder extends Seeder
 {

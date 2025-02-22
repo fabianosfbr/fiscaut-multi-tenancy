@@ -1,8 +1,8 @@
 <?php
 
-use Illuminate\Support\Facades\Schema;
-use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
@@ -25,38 +25,38 @@ return new class extends Migration
         }
 
         Schema::create($tableNames['permissions'], function (Blueprint $table) {
-            //$table->engine('InnoDB');
+            // $table->engine('InnoDB');
             $table->uuid('id')->primary()->unique(); // permission id
             $table->string('name');       // For MyISAM use string('name', 225); // (or 166 for InnoDB with Redundant/Compact row format)
-          //  $table->uuid('organization_id');
+            //  $table->uuid('organization_id');
             $table->string('description');
             $table->string('guard_name'); // For MyISAM use string('guard_name', 25);
             $table->timestamps();
 
-          //  $table->foreign('organization_id')->references('id')->on('organizations');
+            //  $table->foreign('organization_id')->references('id')->on('organizations');
 
-           // $table->unique(['name', 'guard_name', 'organization_id']);
+            // $table->unique(['name', 'guard_name', 'organization_id']);
         });
 
         Schema::create($tableNames['roles'], function (Blueprint $table) use ($teams, $columnNames) {
-            //$table->engine('InnoDB');
+            // $table->engine('InnoDB');
             $table->uuid('id')->primary()->unique(); // role id
             if ($teams || config('permission.testing')) { // permission.testing is a fix for sqlite testing
                 $table->unsignedBigInteger($columnNames['team_foreign_key'])->nullable();
                 $table->index($columnNames['team_foreign_key'], 'roles_team_foreign_key_index');
             }
             $table->string('name');       // For MyISAM use string('name', 225); // (or 166 for InnoDB with Redundant/Compact row format)
-          //  $table->uuid('organization_id');
+            //  $table->uuid('organization_id');
             $table->string('description');
             $table->string('guard_name'); // For MyISAM use string('guard_name', 25);
             $table->timestamps();
             if ($teams || config('permission.testing')) {
                 $table->unique([$columnNames['team_foreign_key'], 'name', 'guard_name']);
             } else {
-               // $table->unique(['name', 'guard_name', 'organization_id']);
+                // $table->unique(['name', 'guard_name', 'organization_id']);
             }
 
-          //  $table->foreign('organization_id')->references('id')->on('organizations');
+            //  $table->foreign('organization_id')->references('id')->on('organizations');
         });
 
         Schema::create($tableNames['model_has_permissions'], function (Blueprint $table) use ($tableNames, $columnNames, $pivotPermission, $teams) {

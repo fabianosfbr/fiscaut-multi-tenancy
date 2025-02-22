@@ -2,21 +2,19 @@
 
 namespace App\Livewire\Organization\Configuration\Acumulador;
 
-use Livewire\Component;
-use Filament\Forms\Form;
+use App\Forms\Components\SelectTagGrouped;
 use App\Models\Tenant\Acumulador;
 use App\Models\Tenant\CategoryTag;
-use Illuminate\Support\Facades\Cache;
-use Filament\Forms\Contracts\HasForms;
+use App\Models\Tenant\EntradasAcumuladorEquivalente;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\TagsInput;
-use Filament\Forms\Components\TextInput;
-use Filament\Notifications\Notification;
-use App\Forms\Components\SelectTagGrouped;
 use Filament\Forms\Concerns\InteractsWithForms;
-use App\Models\Tenant\EntradasAcumuladorEquivalente;
+use Filament\Forms\Contracts\HasForms;
+use Filament\Forms\Form;
+use Filament\Notifications\Notification;
+use Livewire\Component;
 
-class NfeEntradaPropriaForm extends Component  implements HasForms
+class NfeEntradaPropriaForm extends Component implements HasForms
 {
     use InteractsWithForms;
 
@@ -50,12 +48,13 @@ class NfeEntradaPropriaForm extends Component  implements HasForms
                                 $acumuladores = Acumulador::getAll(auth()->user()->last_organization_id);
                                 foreach ($acumuladores as $tagKey => $acumulador) {
                                     $tags['id'] = $acumulador->codi_acu;
-                                    $tags['name'] = $acumulador->codi_acu . ' - ' . $acumulador->nome_acu;
+                                    $tags['name'] = $acumulador->codi_acu.' - '.$acumulador->nome_acu;
                                     $options[$tagKey] = $tags;
                                 }
+
                                 return $options ?? [];
                             }),
-                            SelectTagGrouped::make('valores')
+                        SelectTagGrouped::make('valores')
                             ->label('Etiqueta')
                             ->columnSpan(1)
                             ->multiple(true)
@@ -64,16 +63,17 @@ class NfeEntradaPropriaForm extends Component  implements HasForms
 
                                 foreach ($categoryTag as $key => $category) {
                                     $tags = [];
-                                    foreach ($category->tags  as $tagKey => $tag) {
-                                        if (!$tag->is_enable) {
+                                    foreach ($category->tags as $tagKey => $tag) {
+                                        if (! $tag->is_enable) {
                                             continue;
                                         }
                                         $tags[$tagKey]['id'] = $tag->id;
-                                        $tags[$tagKey]['name'] = $tag->code . ' - ' . $tag->name;
+                                        $tags[$tagKey]['name'] = $tag->code.' - '.$tag->name;
                                     }
                                     $tagData[$key]['text'] = $category->name;
                                     $tagData[$key]['children'] = $tags;
                                 }
+
                                 return $tagData ?? [];
                             }),
                         TagsInput::make('cfops')
@@ -108,13 +108,12 @@ class NfeEntradaPropriaForm extends Component  implements HasForms
             ]);
         }
 
-
-
         Notification::make()
             ->success()
             ->title('O valores foram salvos com sucesso!')
             ->send();
     }
+
     public function render()
     {
         return view('livewire.organization.configuration.acumulador.nfe-entrada-propria-form');

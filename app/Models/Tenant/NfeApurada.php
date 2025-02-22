@@ -2,14 +2,13 @@
 
 namespace App\Models\Tenant;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 
 class NfeApurada extends Model
 {
-
     use HasUuids;
+
     protected $keyType = 'string';
 
     public $incrementing = false;

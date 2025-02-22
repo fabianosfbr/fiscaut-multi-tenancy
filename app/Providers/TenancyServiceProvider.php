@@ -4,18 +4,16 @@ declare(strict_types=1);
 
 namespace App\Providers;
 
-use Stancl\Tenancy\Jobs;
-use Stancl\Tenancy\Events;
-use Stancl\Tenancy\Listeners;
-use Stancl\Tenancy\Middleware;
-use App\Jobs\CreateTenantMainUser;
-use Stancl\JobPipeline\JobPipeline;
+use App\Jobs\Tenant\CreateFrameworkDirectoriesForTenant;
+use App\Jobs\Tenant\CreateOrganizationAndUserForTenant;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
-use App\Jobs\Tenant\CreateAdminUserAfterRegisterTenant;
-use App\Jobs\Tenant\CreateOrganizationAndUserForTenant;
-use App\Jobs\Tenant\CreateFrameworkDirectoriesForTenant;
+use Stancl\JobPipeline\JobPipeline;
+use Stancl\Tenancy\Events;
+use Stancl\Tenancy\Jobs;
+use Stancl\Tenancy\Listeners;
+use Stancl\Tenancy\Middleware;
 
 class TenancyServiceProvider extends ServiceProvider
 {
@@ -107,9 +105,9 @@ class TenancyServiceProvider extends ServiceProvider
     {
         \Stancl\Tenancy\Middleware\InitializeTenancyByDomain::$onFail = function ($exception, $request, $next) {
             dd('eu');
+
             return redirect('https://my-central-domain.com/');
         };
-
 
         $this->bootEvents();
         $this->mapRoutes();

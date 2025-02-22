@@ -2,19 +2,17 @@
 
 namespace App\Models\Tenant;
 
-use Illuminate\Support\Facades\DB;
-use App\Enums\Tenant\StatusNfeEnum;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Cache;
-use App\Models\Tenant\Concerns\HasTags;
-use Illuminate\Database\Eloquent\Model;
 use App\Enums\Tenant\StatusManifestoNfe;
+use App\Enums\Tenant\StatusNfeEnum;
+use App\Models\Tenant\Concerns\HasTags;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 
 class NotaFiscalEletronica extends Model
 {
-    use HasUuids, HasTags;
+    use HasTags, HasUuids;
 
     protected $table = 'notas_fiscais_eletronica';
 
@@ -25,7 +23,6 @@ class NotaFiscalEletronica extends Model
     protected $guarded = ['id'];
 
     protected $appends = ['tagging_summary'];
-
 
     protected function casts(): array
     {
@@ -42,7 +39,6 @@ class NotaFiscalEletronica extends Model
         ];
     }
 
-
     public function products()
     {
 
@@ -56,7 +52,7 @@ class NotaFiscalEletronica extends Model
 
     public function getTaggingSummaryAttribute()
     {
-        $result = Cache::remember('tagging_summary-' . $this->emitente_cnpj, 300, function () {
+        $result = Cache::remember('tagging_summary-'.$this->emitente_cnpj, 300, function () {
 
             return DB::table('organizations')
                 ->join('notas_fiscais_eletronica', 'organizations.cnpj', '=', 'notas_fiscais_eletronica.destinatario_cnpj')
@@ -75,7 +71,6 @@ class NotaFiscalEletronica extends Model
                 ->orderByDesc('qtde')->get()->toArray();
         });
 
-        return  $result;
+        return $result;
     }
-
 }

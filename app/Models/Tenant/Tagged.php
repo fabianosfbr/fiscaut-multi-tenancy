@@ -2,9 +2,8 @@
 
 namespace App\Models\Tenant;
 
-use App\Models\Traits\Tenantable;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
+use Illuminate\Database\Eloquent\Model;
 
 class Tagged extends Model
 {

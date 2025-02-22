@@ -2,25 +2,22 @@
 
 namespace App\Filament\Client\Pages;
 
+use Filament\Forms\Components\Livewire;
+use Filament\Forms\Components\Tabs;
 use Filament\Forms\Form;
 use Filament\Pages\Page;
-use Filament\Forms\Components\Tabs;
-use Filament\Forms\Components\Livewire;
 
 class Acumuladores extends Page
 {
-
     protected static ?string $navigationGroup = 'Configurações';
 
     protected static ?string $navigationLabel = 'Acumuladores';
 
     protected static ?string $slug = 'configuracoes/acumuladores';
+
     protected static ?int $navigationSort = 2;
 
     protected static string $view = 'filament.client.pages.acumulador';
-
-
-
 
     public function form(Form $form): Form
     {
@@ -41,7 +38,7 @@ class Acumuladores extends Page
                                                 Livewire::make('organization.configuration.acumulador.nfe-entrada-propria-form'),
                                             ]),
 
-                                    ])
+                                    ]),
                             ]),
                         Tabs\Tab::make('CTes')
                             ->schema([
@@ -56,9 +53,9 @@ class Acumuladores extends Page
                                                 Livewire::make('organization.configuration.acumulador.cte-saida-form'),
                                             ]),
 
-                                    ])
+                                    ]),
                             ]),
-                    ])
+                    ]),
             ])
             ->statePath('data');
     }

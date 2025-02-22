@@ -2,24 +2,22 @@
 
 namespace App\Jobs\Sefaz\Cte;
 
+use App\Models\ConhecimentoTransporteEletronico;
+use App\Models\NotaFiscalEletronica;
 use App\Models\Tag;
 use Illuminate\Bus\Queueable;
-use App\Models\NotaFiscalEletronica;
-use Illuminate\Queue\SerializesModels;
-use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
-use App\Models\ConhecimentoTransporteEletronico;
+use Illuminate\Queue\InteractsWithQueue;
+use Illuminate\Queue\SerializesModels;
 
 class CheckNfeData implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-
     public $failOnTimeout = false;
 
     public $timeout = 120000;
-
 
     /**
      * Create a new job instance.
@@ -37,7 +35,7 @@ class CheckNfeData implements ShouldQueue
     {
         $chave_nfe = json_decode($this->cte->nfe_chave, true);
 
-        if (!is_null($chave_nfe)) {
+        if (! is_null($chave_nfe)) {
 
             foreach ($chave_nfe as $key => $chave) {
 
@@ -46,7 +44,7 @@ class CheckNfeData implements ShouldQueue
                     $this->proccessedTagged($chave);
 
                     $this->proccessedMetaData($chave);
-                } else if (is_array($chave)) {
+                } elseif (is_array($chave)) {
 
                     foreach ($chave as $value) {
 
@@ -103,7 +101,7 @@ class CheckNfeData implements ShouldQueue
             $this->cte->update([
                 'metadata' => [
                     $meta,
-                ]
+                ],
             ]);
         }
     }

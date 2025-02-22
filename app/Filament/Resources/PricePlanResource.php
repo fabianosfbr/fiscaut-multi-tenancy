@@ -2,32 +2,27 @@
 
 namespace App\Filament\Resources;
 
-use Filament\Forms;
-use Filament\Tables;
-use Filament\Forms\Form;
-use App\Models\PricePlan;
-use Filament\Tables\Table;
-use Filament\Resources\Resource;
-use Filament\Forms\Components\Select;
-use Filament\Forms\Components\Toggle;
 use App\Enums\Tenant\PricePlanTypEnum;
+use App\Filament\Resources\PricePlanResource\Pages;
+use App\Models\PricePlan;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Textarea;
+use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Toggle;
+use Filament\Forms\Components\ToggleButtons;
+use Filament\Forms\Form;
+use Filament\Resources\Resource;
+use Filament\Tables;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
-use Filament\Forms\Components\TextInput;
-use Illuminate\Database\Eloquent\Builder;
-use Filament\Forms\Components\ToggleButtons;
-use App\Filament\Resources\PricePlanResource\Pages;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
-use App\Filament\Resources\PricePlanResource\RelationManagers;
+use Filament\Tables\Table;
 
 class PricePlanResource extends Resource
 {
     protected static ?string $model = PricePlan::class;
 
-
     protected static ?string $modelLabel = 'Plano';
+
     protected static ?string $pluralLabel = 'Planos';
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
@@ -77,8 +72,7 @@ class PricePlanResource extends Resource
                             ->required()
                             ->label('Badge do pacote'),
 
-
-                    ])
+                    ]),
             ]);
     }
 

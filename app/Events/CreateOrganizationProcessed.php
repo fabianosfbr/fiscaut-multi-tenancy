@@ -3,15 +3,11 @@
 namespace App\Events;
 
 use App\Models\Tenant\User;
-use App\Models\Tenant\Organization;
-use Illuminate\Broadcasting\Channel;
-use Illuminate\Queue\SerializesModels;
+use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Broadcasting\PrivateChannel;
-use Illuminate\Broadcasting\PresenceChannel;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Foundation\Events\Dispatchable;
-use Illuminate\Broadcasting\InteractsWithSockets;
-use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
+use Illuminate\Queue\SerializesModels;
 
 class CreateOrganizationProcessed
 {
@@ -23,8 +19,7 @@ class CreateOrganizationProcessed
     public function __construct(
         public User|Authenticatable $user,
         public array $roles
-    )
-    {
+    ) {
         //
     }
 

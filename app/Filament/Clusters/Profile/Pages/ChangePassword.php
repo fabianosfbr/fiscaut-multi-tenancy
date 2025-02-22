@@ -2,22 +2,22 @@
 
 namespace App\Filament\Clusters\Profile\Pages;
 
-use Filament\Forms\Form;
-use Filament\Pages\Page;
+use App\Filament\Clusters\Profile;
 use Filament\Actions\Action;
 use Filament\Facades\Filament;
-use App\Filament\Clusters\Profile;
-use Illuminate\Support\HtmlString;
-use Illuminate\Support\Facades\Hash;
-use Filament\Support\Enums\Alignment;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Components\TextInput;
-use Illuminate\Validation\Rules\Password;
+use Filament\Forms\Form;
 use Filament\Pages\Concerns\InteractsWithFormActions;
+use Filament\Support\Enums\Alignment;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\HtmlString;
+use Illuminate\Validation\Rules\Password;
 
 class ChangePassword extends BaseProfile
 {
     use InteractsWithFormActions;
+
     protected static ?string $navigationIcon = 'heroicon-o-key';
 
     protected static ?string $navigationLabel = 'Alterar senha';
@@ -27,6 +27,7 @@ class ChangePassword extends BaseProfile
     protected static ?string $slug = 'me/change-password';
 
     protected static ?int $navigationSort = 3;
+
     protected static string $view = 'filament.clusters.profile.pages.change-password';
 
     protected static ?string $cluster = Profile::class;

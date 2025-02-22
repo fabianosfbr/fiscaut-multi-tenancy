@@ -2,21 +2,19 @@
 
 namespace App\Livewire\Organization\Configuration;
 
-use Livewire\Component;
-use Filament\Forms\Form;
+use App\Models\Tenant\ConfiguracaoGeral;
 use App\Models\Tenant\Organization;
-use Filament\Forms\Components\Grid;
-use Filament\Forms\Components\Select;
-use Illuminate\Support\Facades\Cache;
-use Filament\Forms\Components\Section;
-use Filament\Forms\Contracts\HasForms;
 use Filament\Forms\Components\Checkbox;
 use Filament\Forms\Components\Fieldset;
-use App\Models\Tenant\ConfiguracaoGeral;
-use Filament\Forms\Components\TagsInput;
+use Filament\Forms\Components\Grid;
+use Filament\Forms\Components\Section;
+use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
-use Filament\Notifications\Notification;
 use Filament\Forms\Concerns\InteractsWithForms;
+use Filament\Forms\Contracts\HasForms;
+use Filament\Forms\Form;
+use Filament\Notifications\Notification;
+use Livewire\Component;
 
 class ConfiguracoesGeraisForm extends Component implements HasForms
 {
@@ -25,6 +23,7 @@ class ConfiguracoesGeraisForm extends Component implements HasForms
     public ?array $data = [];
 
     public Organization $organization;
+
     public $configuracoes;
 
     public function mount(): void
@@ -33,7 +32,6 @@ class ConfiguracoesGeraisForm extends Component implements HasForms
 
         $this->form->fill($this->configuracoes);
     }
-
 
     public function form(Form $form): Form
     {
@@ -167,15 +165,10 @@ class ConfiguracoesGeraisForm extends Component implements HasForms
                                                     ->columnSpanFull(),
                                             ])->columnSpan(1),
 
-
                                     ])->columnSpan(1),
 
-
-
-
                             ]),
-                    ])
-
+                    ]),
 
             ])
             ->statePath('data');
@@ -194,12 +187,12 @@ class ConfiguracoesGeraisForm extends Component implements HasForms
 
         ConfiguracaoGeral::clearOrganizationCache($organizationId);
 
-
         Notification::make()
             ->success()
             ->title('O valores foram salvos com sucesso!')
             ->send();
     }
+
     public function render()
     {
         return view('livewire.organization.configuration.configuracoes-gerais-form');

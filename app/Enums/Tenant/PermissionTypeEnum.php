@@ -3,18 +3,15 @@
 namespace App\Enums\Tenant;
 
 use Filament\Support\Contracts\HasColor;
-use Filament\Support\Contracts\HasIcon;
 use Filament\Support\Contracts\HasLabel;
 
 enum PermissionTypeEnum: string implements HasColor, HasLabel
 {
-
     case MANIFESTAR_CTE = 'manifestar-cte';
     case MANIFESTAR_NFE = 'manifestar-nfe';
     case CLASSIFICAR_NFE = 'classificar-nfe';
     case CLASSIFICAR_CTE = 'classificar-cte';
     case MARCAR_DOCUMENTO_APURADO = 'marcar-documento-apurado';
-
 
     public function getLabel(): ?string
     {
@@ -37,8 +34,6 @@ enum PermissionTypeEnum: string implements HasColor, HasLabel
             self::MARCAR_DOCUMENTO_APURADO => 'success',
         };
     }
-
-
 
     public static function toArray()
     {

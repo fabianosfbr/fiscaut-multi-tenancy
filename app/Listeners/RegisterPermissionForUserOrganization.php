@@ -2,11 +2,8 @@
 
 namespace App\Listeners;
 
-use App\Models\Tenant\Role;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Queue\InteractsWithQueue;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use App\Events\CreateOrganizationProcessed;
+use Illuminate\Contracts\Queue\ShouldQueue;
 
 class RegisterPermissionForUserOrganization implements ShouldQueue
 {
@@ -27,7 +24,6 @@ class RegisterPermissionForUserOrganization implements ShouldQueue
         $roles = $event->roles;
 
         $user->syncRolesWithOrganization(array_keys($roles), $user->last_organization_id);
-
 
     }
 }

@@ -2,21 +2,18 @@
 
 namespace App\Filament\Fiscal\Resources;
 
-use Filament\Forms;
-use Filament\Tables;
-use Filament\Forms\Form;
-use Filament\Tables\Table;
-use Filament\Resources\Resource;
+use App\Enums\Tenant\StatusManifestoNfe;
+use App\Filament\Fiscal\Resources\NfeEntradaResource\Pages;
+use App\Models\Tenant\NotaFiscalEletronica;
 use App\Tables\Columns\TagColumnNfe;
 use App\Tables\Columns\ViewChaveColumn;
+use Filament\Forms\Form;
+use Filament\Resources\Resource;
+use Filament\Tables;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Columns\ViewColumn;
-use App\Enums\Tenant\StatusManifestoNfe;
+use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
-use App\Models\Tenant\NotaFiscalEletronica;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
-use App\Filament\Fiscal\Resources\NfeEntradaResource\Pages;
-use App\Filament\Fiscal\Resources\NfeEntradaResource\RelationManagers;
 
 class NfeEntradaResource extends Resource
 {

@@ -2,21 +2,19 @@
 
 namespace App\Models\Tenant;
 
-use App\Models\Tenant\User;
-use Filament\Models\Contracts\HasName;
 use App\Observers\Tenant\OrganizationObserver;
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\HasOne;
-use Illuminate\Database\Eloquent\Concerns\HasUuids;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 use Filament\Models\Contracts\HasCurrentTenantLabel;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Filament\Models\Contracts\HasName;
 use Illuminate\Database\Eloquent\Attributes\ObservedBy;
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
-
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 #[ObservedBy([OrganizationObserver::class])]
-class Organization extends Model implements HasName, HasCurrentTenantLabel
+class Organization extends Model implements HasCurrentTenantLabel, HasName
 {
     use HasFactory;
     use HasUuids;
@@ -35,25 +33,20 @@ class Organization extends Model implements HasName, HasCurrentTenantLabel
         ];
     }
 
-
     public function users(): BelongsToMany
     {
         return $this->belongsToMany(User::class)->withPivot(['is_active']);
     }
-
-
 
     public function categoryTags(): HasMany
     {
         return $this->hasMany(CategoryTag::class);
     }
 
-
     public function digitalCertificate(): HasOne
     {
         return $this->hasOne(DigitalCertificate::class);
     }
-
 
     public function getFilamentName(): string
     {
@@ -65,6 +58,4 @@ class Organization extends Model implements HasName, HasCurrentTenantLabel
     {
         return 'Empresa atual';
     }
-
-
 }

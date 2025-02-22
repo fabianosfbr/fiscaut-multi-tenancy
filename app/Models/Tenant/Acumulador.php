@@ -2,15 +2,14 @@
 
 namespace App\Models\Tenant;
 
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Cache;
 
 class Acumulador extends Model
 {
     public $table = 'acumuladores';
 
     protected $guarded = ['id'];
-
 
     protected static function boot()
     {
@@ -28,7 +27,6 @@ class Acumulador extends Model
             Cache::forget("acumuladores_.{$item->organizationId}._all");
         });
     }
-
 
     public static function getAll(string $organizationId)
     {

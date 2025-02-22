@@ -2,26 +2,22 @@
 
 namespace App\Filament\Client\Resources\CategoryTagResource\RelationManagers;
 
-use Filament\Forms;
-use Filament\Tables;
-use Filament\Forms\Form;
-use Filament\Tables\Table;
 use Filament\Forms\Components\Grid;
+use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
-use Illuminate\Support\Facades\Cache;
+use Filament\Forms\Form;
+use Filament\Resources\RelationManagers\RelationManager;
+use Filament\Tables;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
-use Filament\Forms\Components\TextInput;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
-use Filament\Resources\RelationManagers\RelationManager;
+use Filament\Tables\Table;
+use Illuminate\Support\Facades\Cache;
 
 class TagsRelationManager extends RelationManager
 {
     protected static string $relationship = 'tags';
 
     protected static ?string $title = 'Etiquetas';
-
 
     public function form(Form $form): Form
     {
@@ -43,7 +39,7 @@ class TagsRelationManager extends RelationManager
                             ->default(true)
                             ->required()
                             ->columnSpan(1),
-                    ])
+                    ]),
             ]);
     }
 
@@ -93,8 +89,8 @@ class TagsRelationManager extends RelationManager
     protected function clearCache()
     {
         $organizationId = getTenant()->id;
-        Cache::forget('categoryWithDifal-' . $organizationId);
-        Cache::forget('categoryWithTagForSearching-' . $organizationId);
+        Cache::forget('categoryWithDifal-'.$organizationId);
+        Cache::forget('categoryWithTagForSearching-'.$organizationId);
 
         $this->redirect(request()->header('Referer'));
     }

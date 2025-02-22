@@ -2,19 +2,17 @@
 
 namespace App\Services\Tenant;
 
-use Exception;
-use Illuminate\Support\Facades\DB;
 use App\Models\Tenant\Organization;
+use Exception;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
-use App\Events\CreateOrganizationProcessed;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Validation\ValidationException;
 
 class OrganizationService
 {
-
     public function create($data)
     {
         $this->validate($data);
@@ -38,8 +36,7 @@ class OrganizationService
                 $organization->digitalCertificate()->create($data);
             }
 
-
-            Cache::forget('all_valid_organizations_for_user_' . $user->id);
+            Cache::forget('all_valid_organizations_for_user_'.$user->id);
         });
 
         return $organization;
@@ -52,21 +49,20 @@ class OrganizationService
         return $organization;
     }
 
-
     public function readerCertificateFile($data): array
     {
         if (isset($data['certificate'])) {
 
-            $pfxContent = Storage::get('certificates/' . $data['certificate']);
+            $pfxContent = Storage::get('certificates/'.$data['certificate']);
 
             $CertPriv = [];
 
-            if (!openssl_pkcs12_read($pfxContent, $x509certdata, $data['password'])) {
+            if (! openssl_pkcs12_read($pfxContent, $x509certdata, $data['password'])) {
                 Log::error('Erro ao ler o certificado');
                 throw new Exception('Não foi possiível ler o certificado, verifique o formato do arquivo ou a senha informada');
             } else {
 
-                $CertPriv   = openssl_x509_parse(openssl_x509_read($x509certdata['cert']));
+                $CertPriv = openssl_x509_parse(openssl_x509_read($x509certdata['cert']));
 
                 $dadosCertificado = explode(':', $CertPriv['subject']['CN']);
                 $data['razao_social'] = $dadosCertificado[0];
@@ -75,9 +71,8 @@ class OrganizationService
                 $data['content_file'] = $pfxContent;
             }
 
-            Storage::delete('certificates/' . $data['certificate']);
+            Storage::delete('certificates/'.$data['certificate']);
         }
-
 
         return $data;
     }
@@ -90,7 +85,7 @@ class OrganizationService
         }
     }
 
-    protected function validate(array $data, string $context = 'create', Organization $organization = null): void
+    protected function validate(array $data, string $context = 'create', ?Organization $organization = null): void
     {
         $rules = [
             'cnpj' => 'required|string|max:50|unique:organizations,cnpj',

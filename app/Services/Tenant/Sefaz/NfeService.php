@@ -2,20 +2,19 @@
 
 namespace App\Services\Tenant\Sefaz;
 
-use Exception;
-use NFePHP\NFe\Tools;
-use App\Traits\HasXmlReader;
-use NFePHP\Common\Certificate;
-use App\Models\Tenant\Organization;
-use Illuminate\Support\Facades\Log;
-use App\Services\Tenant\Sefaz\Traits\HasNfe;
-use App\Services\Tenant\Sefaz\Traits\HasLogSefaz;
 use App\Jobs\Sefaz\Process\ProcessResponseNfeSefazJob;
+use App\Models\Tenant\Organization;
+use App\Services\Tenant\Sefaz\Traits\HasLogSefaz;
+use App\Services\Tenant\Sefaz\Traits\HasNfe;
+use App\Traits\HasXmlReader;
+use Exception;
+use Illuminate\Support\Facades\Log;
+use NFePHP\Common\Certificate;
+use NFePHP\NFe\Tools;
 
 class NfeService
 {
-
-    use HasNfe, HasLogSefaz, HasXmlReader;
+    use HasLogSefaz, HasNfe, HasXmlReader;
 
     private Tools $tools;
 
@@ -49,14 +48,12 @@ class NfeService
             ],
         ];
 
-
-
         $certificado = Certificate::readPfx($this->organization->digitalCertificate->content_file, $this->organization->digitalCertificate->password);
 
         $this->tools = new Tools(json_encode($config), $certificado);
 
         $this->tools->model('55');
-        //este serviço somente opera em ambiente de produção 1 - produção 2-homoloação
+        // este serviço somente opera em ambiente de produção 1 - produção 2-homoloação
         $this->tools->setEnvironment(config('admin.environment.HAMBIENTE_SEFAZ'));
     }
 
@@ -65,13 +62,14 @@ class NfeService
 
         $this->sefaz();
     }
+
     public function buscarDocumentosFiscaisPorNsu($nsu, $origem = 'SEFAZ')
     {
 
         $this->sefaz();
 
         try {
-            //executa a busca pelos documentos
+            // executa a busca pelos documentos
             $response = $this->tools->sefazDistDFe(0, intval($nsu));
 
             Log::info('Log de consulta NFe - SEFAZ - registro - '.explode(':', $this->organization->razao_social)[0].' : '.$response);
@@ -87,8 +85,7 @@ class NfeService
             return;
         }
 
-        //Processa o lote
+        // Processa o lote
         ProcessResponseNfeSefazJob::dispatch($this->organization, $response, $origem)->onQueue('high');
     }
-
 }

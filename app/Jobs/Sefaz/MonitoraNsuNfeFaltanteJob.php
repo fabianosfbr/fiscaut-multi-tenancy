@@ -47,7 +47,7 @@ class MonitoraNsuNfeFaltanteJob implements ShouldQueue
                 ->get()->pluck('nsu', 'id');
 
             for ($nsu = $min; $nsu < $max; $nsu++) {
-                if (!$nsus->contains($nsu)) {
+                if (! $nsus->contains($nsu)) {
                     $service = app(NfeService::class);
                     $service->issuer($this->issuer);
                     $service->buscarDocumentosFiscaisPorNsu($nsu);

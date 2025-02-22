@@ -2,30 +2,29 @@
 
 namespace App\Livewire\Organization\Configuration;
 
-use Livewire\Component;
-use Filament\Forms\Form;
-use App\Models\Tenant\Cfop;
-use App\Models\Tenant\CategoryTag;
-use Illuminate\Support\Facades\DB;
-use Filament\Forms\Components\Select;
-use Filament\Forms\Contracts\HasForms;
-use Filament\Forms\Components\Repeater;
-use Filament\Forms\Components\TagsInput;
-use Filament\Notifications\Notification;
 use App\Forms\Components\SelectTagGrouped;
+use App\Models\Tenant\CategoryTag;
+use App\Models\Tenant\Cfop;
 use App\Models\Tenant\EntradasCfopsEquivalente;
-use Filament\Forms\Concerns\InteractsWithForms;
 use App\Models\Tenant\GrupoEntradasCfopsEquivalente;
+use Filament\Forms\Components\Repeater;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\TagsInput;
+use Filament\Forms\Concerns\InteractsWithForms;
+use Filament\Forms\Contracts\HasForms;
+use Filament\Forms\Form;
+use Filament\Notifications\Notification;
+use Livewire\Component;
 
 class NfeEntradaTerceiroForm extends Component implements HasForms
 {
     use InteractsWithForms;
+
     private const TIPO = 'nfe-entrada-terceiro';
 
     public ?array $data = [];
 
     public $values;
-
 
     public function mount(): void
     {
@@ -56,16 +55,17 @@ class NfeEntradaTerceiroForm extends Component implements HasForms
 
                                 foreach ($categoryTag as $key => $category) {
                                     $tags = [];
-                                    foreach ($category->tags  as $tagKey => $tag) {
-                                        if (!$tag->is_enable) {
+                                    foreach ($category->tags as $tagKey => $tag) {
+                                        if (! $tag->is_enable) {
                                             continue;
                                         }
                                         $tags[$tagKey]['id'] = $tag->id;
-                                        $tags[$tagKey]['name'] = $tag->code . ' - ' . $tag->name;
+                                        $tags[$tagKey]['name'] = $tag->code.' - '.$tag->name;
                                     }
                                     $tagData[$key]['text'] = $category->name;
                                     $tagData[$key]['children'] = $tags;
                                 }
+
                                 return $tagData ?? [];
                             }),
                         Repeater::make('cfops')
@@ -114,9 +114,6 @@ class NfeEntradaTerceiroForm extends Component implements HasForms
             GrupoEntradasCfopsEquivalente::find($grupo->id)->delete();
         }
 
-
-
-
         foreach ($values['organization_cfop'] as $value) {
             $grupo = GrupoEntradasCfopsEquivalente::create([
                 'tags' => $value['tags'],
@@ -139,8 +136,8 @@ class NfeEntradaTerceiroForm extends Component implements HasForms
             ->send();
     }
 
-
     use InteractsWithForms;
+
     public function render()
     {
         return view('livewire.organization.configuration.nfe-entrada-terceiro-form');

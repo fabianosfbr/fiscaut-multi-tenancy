@@ -2,7 +2,6 @@
 
 namespace App\Services\Tenant\Sefaz\Traits;
 
-use App\Models\NfeProdut;
 use App\Models\Tenant\LogSefazResumoNfe;
 use App\Models\Tenant\NotaFiscalEletronica;
 use App\Models\Tenant\Produto;
@@ -18,7 +17,7 @@ trait HasNfe
             'nat_op' => $element->value('NFe.infNFe.ide.natOp')->sole(),
             'status_nota' => $element->value('protNFe.infProt.cStat')->sole(),
             'vNfe' => $element->value('NFe.infNFe.total.ICMSTot.vNF')->sole(),
-            'data_emissao' => explode('T', $element->value('NFe.infNFe.ide.dhEmi')->sole())[0] . ' ' . explode('-', explode('T', $element->value('NFe.infNFe.ide.dhEmi')->sole())[1])[0],
+            'data_emissao' => explode('T', $element->value('NFe.infNFe.ide.dhEmi')->sole())[0].' '.explode('-', explode('T', $element->value('NFe.infNFe.ide.dhEmi')->sole())[1])[0],
             'chave' => $element->value('protNFe.infProt.chNFe')->sole(),
             'emitente_razao_social' => $element->value('NFe.infNFe.emit.xNome')->sole(),
             'emitente_cnpj' => $this->verificaTipoDePessoaEmitente($element),
@@ -127,7 +126,8 @@ trait HasNfe
 
         $values = array_unique($cfops);
         rsort($values);
-        return  $values;
+
+        return $values;
     }
 
     public function prepareDocs($response, $reader, $origem)
@@ -183,7 +183,7 @@ trait HasNfe
                     'tipo_nfe' => $resumo['tpNF'],
                     'valor_nfe' => $resumo['vNF'],
                     'created_at' => date('Y-m-d h:i:s'),
-                    'dh_emissao' => explode('T', $resumo['dhRecbto'])[0] . ' ' . explode('-', explode('T', $resumo['dhRecbto'])[1])[0],
+                    'dh_emissao' => explode('T', $resumo['dhRecbto'])[0].' '.explode('-', explode('T', $resumo['dhRecbto'])[1])[0],
                     'organization_id' => $this->organization->id,
                     'xml' => $xml,
                 ]
@@ -194,7 +194,7 @@ trait HasNfe
 
         if ($this->checkIsType($xmlReader, 'nfeProc')) {
 
-            Log::info('Registrando/Atualizando NFe no Fiscaut - Chave:  ' . $xmlReader->value('protNFe.infProt.chNFe')->sole());
+            Log::info('Registrando/Atualizando NFe no Fiscaut - Chave:  '.$xmlReader->value('protNFe.infProt.chNFe')->sole());
             $params = $this->preparaDadosNfe($xmlReader);
 
             $params['xml'] = gzcompress($xml);
@@ -239,7 +239,6 @@ trait HasNfe
         return false;
     }
 
-
     public function checkTipoFrete($modFrete)
     {
         $texto = '';
@@ -272,10 +271,10 @@ trait HasNfe
         if (count($element->value('cStat')->get()) > 0) {
             $cStat = $element->value('cStat')->sole();
             if (in_array($cStat, ['137', '656'])) {
-                //137 - Nenhum documento localizado, a SEFAZ está te informando para consultar novamente após uma hora a contar desse momento
-                //656 - Consumo Indevido, a SEFAZ bloqueou o seu acesso por uma hora pois as regras de consultas não foram observadas
-                //nesses dois casos pare as consultas imediatamente e retome apenas daqui a uma hora, pelo menos !!
-                Log::info('Log de consulta NFe - SEFAZ - retorno -  ' . $cStat . ' Empresa: ' . explode(':', $this->issuer->razao_social)[0]);
+                // 137 - Nenhum documento localizado, a SEFAZ está te informando para consultar novamente após uma hora a contar desse momento
+                // 656 - Consumo Indevido, a SEFAZ bloqueou o seu acesso por uma hora pois as regras de consultas não foram observadas
+                // nesses dois casos pare as consultas imediatamente e retome apenas daqui a uma hora, pelo menos !!
+                Log::info('Log de consulta NFe - SEFAZ - retorno -  '.$cStat.' Empresa: '.explode(':', $this->issuer->razao_social)[0]);
 
                 return true;
             }

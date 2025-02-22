@@ -2,9 +2,6 @@
 
 namespace App\Observers\Tenant;
 
-use App\Models\Tenant\Role;
-use App\Models\Tenant\Permission;
-use App\Enums\Tenant\{UserTypeEnum, PermissionTypeEnum};
 use App\Models\Tenant\Organization;
 
 class OrganizationObserver
@@ -12,10 +9,7 @@ class OrganizationObserver
     /**
      * Handle the Organization "created" event.
      */
-    public function created(Organization $organization): void
-    {
-
-    }
+    public function created(Organization $organization): void {}
 
     /**
      * Handle the Organization "updated" event.

@@ -2,30 +2,28 @@
 
 namespace App\Livewire\Component;
 
-use Livewire\Component;
-use Filament\Forms\Form;
-use App\Models\Tenant\User;
-use App\Models\Tenant\Organization;
-use Illuminate\Support\Facades\Auth;
-use Filament\Forms\Components\Select;
-use Illuminate\Support\Facades\Route;
-use Filament\Forms\Contracts\HasForms;
-use Filament\Forms\Concerns\InteractsWithForms;
 use App\Models\Tenant\ShowChoiceOrganizationUrl;
+use App\Models\Tenant\User;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Concerns\InteractsWithForms;
+use Filament\Forms\Contracts\HasForms;
+use Filament\Forms\Form;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Route;
+use Livewire\Component;
 
 class ChoiceOrganization extends Component implements HasForms
 {
     use InteractsWithForms;
 
-
     public User $user;
-    public  $organizations;
+
+    public $organizations;
 
     public ?array $data = [];
 
     public bool $exclude_page = false;
-
 
     public function mount(): void
     {
@@ -77,13 +75,13 @@ class ChoiceOrganization extends Component implements HasForms
     public function urlRenderAvoid()
     {
 
-        $showUrl = Cache::remember('url_render_avoid_' . auth()->user()->id, 60 * 60 * 24, function () {
+        $showUrl = Cache::remember('url_render_avoid_'.auth()->user()->id, 60 * 60 * 24, function () {
             return ShowChoiceOrganizationUrl::show()->get()->toArray();
         });
 
         $routeName = Route::current()->getName();
 
-        //dump($routeName);
+        // dump($routeName);
         $url = [];
         foreach ($showUrl as $key => $values) {
 

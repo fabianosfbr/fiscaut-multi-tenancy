@@ -2,25 +2,24 @@
 
 namespace App\Traits;
 
-use App\Models\Tenant\Tag;
-use Illuminate\Support\Str;
-use Barryvdh\DomPDF\Facade\Pdf;
-use App\Models\Tenant\LogSefazNfeEvent;
-use Illuminate\Support\Facades\DB;
-use NFePHP\NFe\Common\Standardize;
-use App\Models\Tenant\NotaFiscalEletronica;
-use Illuminate\Support\Facades\Cache;
 use App\Models\Tenant\ConhecimentoTransporteEletronico;
+use App\Models\Tenant\LogSefazNfeEvent;
+use App\Models\Tenant\NotaFiscalEletronica;
+use App\Models\Tenant\Tag;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
+use NFePHP\NFe\Common\Standardize;
 
 trait NfeHelper
 {
-
     public function gerarCartaCorrecao($id)
     {
 
         $event = LogSefazNfeEvent::find($id);
 
-        if (!isset($event)) {
+        if (! isset($event)) {
             return null;
         }
 
@@ -28,9 +27,8 @@ trait NfeHelper
 
         $xml = $reader->values();
 
-
-        $filename =  Str::random(8) . '.pdf';
-        $creditos = 'Impresso em ' . date('d/m/Y') . ' as ' . date('H:i:s') . '  ' . env('APP_FOOTER_CREDITS_DANFE');
+        $filename = Str::random(8).'.pdf';
+        $creditos = 'Impresso em '.date('d/m/Y').' as '.date('H:i:s').'  '.env('APP_FOOTER_CREDITS_DANFE');
 
         dd($xml);
         $pdf = PDF::setOptions(['isHtml5ParserEnabled' => true, 'isRemoteEnabled' => true])
@@ -42,9 +40,8 @@ trait NfeHelper
 
         return response()->streamDownload(function () use ($pdf) {
             echo $pdf->output();
-        }, $filename . '.pdf');
+        }, $filename.'.pdf');
     }
-
 
     public function gerarCartaManifestacao($record)
     {
@@ -55,13 +52,13 @@ trait NfeHelper
             ->where('tpEvento', $record->status_manifestacao)
             ->first();
 
-        if (!$event) {
+        if (! $event) {
             return null;
         }
 
-        $filename =  Str::random(8) . '.pdf';
-        $creditos = 'Impresso em ' . date('d/m/Y') . ' as ' . date('H:i:s') . '  ' . env('APP_FOOTER_CREDITS_DANFE');
-        $std =  new Standardize($event->xml);
+        $filename = Str::random(8).'.pdf';
+        $creditos = 'Impresso em '.date('d/m/Y').' as '.date('H:i:s').'  '.env('APP_FOOTER_CREDITS_DANFE');
+        $std = new Standardize($event->xml);
         $xml = xmlNfeToStd($event->xml);
         $pdf = PDF::setOptions(['isHtml5ParserEnabled' => true, 'isRemoteEnabled' => true])
             ->loadView('pdfs.evento-manifesto-nfe', [
@@ -72,7 +69,7 @@ trait NfeHelper
 
         return response()->streamDownload(function () use ($pdf) {
             echo $pdf->output();
-        }, $filename . '.pdf');
+        }, $filename.'.pdf');
     }
 
     public function aplicarEtiqueta($nfeId, $cnpjEmitente, $tagId)
@@ -84,11 +81,10 @@ trait NfeHelper
 
         $this->aplicarTagNoNfe($nfe, $tag);
 
-       // $this->aplicarTagNosCtes($nfe, $tag);
+        // $this->aplicarTagNosCtes($nfe, $tag);
 
-        Cache::forget('tagging_summary-' . $cnpjEmitente);
+        Cache::forget('tagging_summary-'.$cnpjEmitente);
     }
-
 
     private function aplicarTagNoNfe($nfe, $tag)
     {

@@ -2,14 +2,13 @@
 
 namespace App\Models\Tenant;
 
-use Illuminate\Support\Facades\Cache;
-use Illuminate\Database\Eloquent\Model;
 use App\Observers\Tenant\CategoryTagObserver;
-use Illuminate\Database\Eloquent\Concerns\HasUuids;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Attributes\ObservedBy;
-
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Facades\Cache;
 
 #[ObservedBy([CategoryTagObserver::class])]
 class CategoryTag extends Model
@@ -35,7 +34,6 @@ class CategoryTag extends Model
         });
     }
 
-
     public function organization(): BelongsTo
     {
         return $this->belongsTo(Organization::class);
@@ -45,8 +43,6 @@ class CategoryTag extends Model
     {
         return $this->hasMany(Tag::class, 'category_id');
     }
-
-
 
     public static function getAllEnabled(string $organizationId)
     {

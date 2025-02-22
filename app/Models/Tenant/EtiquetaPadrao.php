@@ -2,9 +2,9 @@
 
 namespace App\Models\Tenant;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 
 class EtiquetaPadrao extends Model
 {
@@ -15,7 +15,6 @@ class EtiquetaPadrao extends Model
     public $incrementing = false;
 
     protected $guarded = ['id'];
-
 
     protected $table = 'etiqueta_padrao';
 

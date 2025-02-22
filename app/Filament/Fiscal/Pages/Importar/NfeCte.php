@@ -3,21 +3,22 @@
 namespace App\Filament\Fiscal\Pages\Importar;
 
 use App\Models\Tenant\Organization;
-use Filament\Forms\Form;
-use Filament\Pages\Page;
-use Illuminate\Support\Str;
-use Filament\Actions\Action;
-use Filament\Forms\Components\Section;
-use Illuminate\Support\Facades\Storage;
-use Filament\Notifications\Notification;
 use App\Services\Tenant\Sefaz\NfeService;
+use Filament\Actions\Action;
 use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\Section;
 use Filament\Forms\Components\ToggleButtons;
+use Filament\Forms\Form;
+use Filament\Notifications\Notification;
 use Filament\Pages\Concerns\InteractsWithFormActions;
+use Filament\Pages\Page;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class NfeCte extends Page
 {
     use InteractsWithFormActions;
+
     protected static ?string $navigationGroup = 'Ferramentas';
 
     protected static ?string $modelLabel = 'Importar XML';
@@ -29,6 +30,7 @@ class NfeCte extends Page
     protected static string $view = 'filament.fiscal.pages.importar.nfe-cte';
 
     public $filesToImport = [];
+
     public $xml_type = [];
 
     public function form(Form $form): Form
@@ -55,7 +57,7 @@ class NfeCte extends Page
                             ->directory(function () {
                                 $issuer = Organization::find(auth()->user()->last_organization_id);
 
-                                return 'documentos/' . $issuer->cnpj . '/upload-xml';
+                                return 'documentos/'.$issuer->cnpj.'/upload-xml';
                             })
                             ->uploadProgressIndicatorPosition('left')
                             ->maxFiles(25)
@@ -89,7 +91,6 @@ class NfeCte extends Page
     //         array_push($filesData, $data);
     //     }
 
-
     //     XmlImportJob::dispatch($filesData, $issuer)->onQueue('high');
 
     //     unset($this->filesToImport);
@@ -102,18 +103,17 @@ class NfeCte extends Page
     //         ->send();
     // }
 
-
     public function import(): void
     {
 
         $issuer = Organization::find(auth()->user()->last_organization_id);
 
         $filesData = [];
-        $directory = 'documentos/' .  $issuer->cnpj . '/upload-xml/' . Str::random(40);
+        $directory = 'documentos/'.$issuer->cnpj.'/upload-xml/'.Str::random(40);
 
         foreach ($this->filesToImport as $file) {
 
-            //Todo codigo auxilia no debug
+            // Todo codigo auxilia no debug
             // $xml = Storage::get($file->storeAs($directory, $file->getClientOriginalName()));
             // $element = loadXmlReader($xml);
             // dd($element->value('procEventoNFe')->get());
@@ -130,10 +130,8 @@ class NfeCte extends Page
 
         foreach ($filesData as $file) {
 
-
             $xml = Storage::get($file['path']);
             $xmlReader = loadXmlReader($xml);
-
 
             if ($this->xml_type == 'cte') {
 
@@ -145,9 +143,6 @@ class NfeCte extends Page
 
             $service->exec($xmlReader, $xml, 'Importação');
         }
-
-
-
 
         //  XmlImportJob::dispatch($filesData, $issuer)->onQueue('high');
 

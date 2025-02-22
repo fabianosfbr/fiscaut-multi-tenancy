@@ -2,14 +2,12 @@
 
 namespace App\Services\Tenant\Sefaz\Traits;
 
-
-
-use Illuminate\Support\Facades\Log;
-use App\Models\Tenant\LogSefazCteEvent;
-use App\Models\Tenant\LogSefazNfeEvent;
 use App\Models\Tenant\LogSefazCteContent;
+use App\Models\Tenant\LogSefazCteEvent;
 use App\Models\Tenant\LogSefazNfeContent;
+use App\Models\Tenant\LogSefazNfeEvent;
 use App\Models\Tenant\NotaFiscalEletronica;
+use Illuminate\Support\Facades\Log;
 
 trait HasLogSefaz
 {
@@ -28,7 +26,7 @@ trait HasLogSefaz
             ]
         );
 
-        Log::notice('CTe NSU consulta SEFAZ: ' . $numnsu . ' maxnsu: ' . $maxNSU . ' Empresa: ' . $organization->razao_social);
+        Log::notice('CTe NSU consulta SEFAZ: '.$numnsu.' maxnsu: '.$maxNSU.' Empresa: '.$organization->razao_social);
 
         return $logContent;
     }
@@ -48,7 +46,7 @@ trait HasLogSefaz
             ]
         );
 
-        Log::notice('NFe NSU consulta SEFAZ: ' . $numnsu . ' maxnsu: ' . $maxNSU . ' Empresa: ' . $organization->razao_social);
+        Log::notice('NFe NSU consulta SEFAZ: '.$numnsu.' maxnsu: '.$maxNSU.' Empresa: '.$organization->razao_social);
 
         return $logContent;
     }
@@ -66,7 +64,7 @@ trait HasLogSefaz
                 'chave' => $element->value('eventoCTe.infEvento.chCTe')->sole(),
                 'tp_evento' => $element->value('eventoCTe.infEvento.tpEvento')->sole(),
                 'n_seq_evento' => $element->value('eventoCTe.infEvento.nSeqEvento')->sole(),
-                'dh_evento' => explode('T', $element->value('eventoCTe.infEvento.dhEvento')->sole())[0] . ' ' . explode('-', explode('T', $element->value('eventoCTe.infEvento.dhEvento')->sole())[1])[0],
+                'dh_evento' => explode('T', $element->value('eventoCTe.infEvento.dhEvento')->sole())[0].' '.explode('-', explode('T', $element->value('eventoCTe.infEvento.dhEvento')->sole())[1])[0],
                 'xml' => $xml,
                 'organization_id' => $organization->id,
             ]
@@ -87,7 +85,7 @@ trait HasLogSefaz
                 'chave' => $element->value('procEventoNFe.evento.chNFe')->sole(),
                 'tp_evento' => $element->value('procEventoNFe.evento.tpEvento')->sole(),
                 'n_seq_evento' => $element->value('procEventoNFe.evento.nSeqEvento')->sole(),
-                'dh_evento' => explode('T', $element->value('procEventoNFe.evento.dhEvento')->sole())[0] . ' ' . explode('-', explode('T', $element->value('procEventoNFe.evento.dhEvento')->sole())[1])[0],
+                'dh_evento' => explode('T', $element->value('procEventoNFe.evento.dhEvento')->sole())[0].' '.explode('-', explode('T', $element->value('procEventoNFe.evento.dhEvento')->sole())[1])[0],
                 'x_evento' => $element->value('procEventoNFe.evento.detEvento.descEvento')->sole(),
                 'xml' => $xml,
                 'organization_id' => $organization->id,
@@ -98,13 +96,12 @@ trait HasLogSefaz
 
         if ($log->tp_evento == 110110 && $nfe) {
 
-
-            if (isset($nfe->carta_correcao) && !empty($nfe->carta_correcao)) {
+            if (isset($nfe->carta_correcao) && ! empty($nfe->carta_correcao)) {
 
                 $carta_correcao = $nfe->carta_correcao;
             }
 
-            if (!in_array($log->id, $carta_correcao)) {
+            if (! in_array($log->id, $carta_correcao)) {
                 $carta_correcao[] = $log->id;
             }
 
@@ -125,10 +122,10 @@ trait HasLogSefaz
                 'chave' => $element->value('resEvento.chNFe')->sole(),
                 'tp_evento' => $element->value('resEvento.tpEvento')->sole(),
                 'n_seq_evento' => $element->value('resEvento.nSeqEvento')->sole(),
-                'dh_evento' => explode('T', $element->value('resEvento.dhRecbto')->sole())[0] . ' ' . explode('-', explode('T', $element->value('resEvento.dhRecbto')->sole())[1])[0],
+                'dh_evento' => explode('T', $element->value('resEvento.dhRecbto')->sole())[0].' '.explode('-', explode('T', $element->value('resEvento.dhRecbto')->sole())[1])[0],
                 'x_evento' => $element->value('resEvento.xEvento')->sole(),
                 'xml' => $xml,
-               'organization_id' => $organization->id,
+                'organization_id' => $organization->id,
             ]
         );
     }

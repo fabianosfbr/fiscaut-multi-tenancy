@@ -2,7 +2,6 @@
 
 namespace App\Models\Tenant;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class EntradasImpostosEquivalente extends Model
@@ -13,6 +12,4 @@ class EntradasImpostosEquivalente extends Model
         'status_icms' => 'boolean',
         'status_ipi' => 'boolean',
     ];
-
-
 }

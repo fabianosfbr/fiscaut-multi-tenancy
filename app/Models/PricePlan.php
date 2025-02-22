@@ -3,8 +3,8 @@
 namespace App\Models;
 
 use App\Enums\Tenant\PricePlanTypEnum;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 
 class PricePlan extends Model
 {
@@ -22,6 +22,6 @@ class PricePlan extends Model
 
     public function plan_features()
     {
-        return $this->hasMany(PlanFeature::class,'plan_id','id');
+        return $this->hasMany(PlanFeature::class, 'plan_id', 'id');
     }
 }

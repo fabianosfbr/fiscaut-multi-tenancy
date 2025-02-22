@@ -2,34 +2,33 @@
 
 namespace App\Filament\Client\Pages;
 
-use Filament\Pages\Page;
-use App\Models\Tenant\Tag;
-use Filament\Tables\Table;
-use App\Models\Tenant\CategoryTag;
-use Filament\Tables\Actions\Action;
-use Filament\Forms\Components\Select;
-use Filament\Forms\Components\Toggle;
-use Illuminate\Support\Facades\Cache;
-use Filament\Tables\Columns\TextColumn;
-use Filament\Tables\Contracts\HasTable;
-use Filament\Notifications\Notification;
-use Filament\Tables\Columns\ToggleColumn;
 use App\Forms\Components\SelectTagGrouped;
-use Filament\Tables\Concerns\InteractsWithTable;
 use App\Models\Tenant\EntradasImpostosEquivalente;
+use App\Models\Tenant\Tag;
+use Filament\Forms\Components\Toggle;
+use Filament\Notifications\Notification;
+use Filament\Pages\Page;
+use Filament\Tables\Actions\Action;
+use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Columns\ToggleColumn;
+use Filament\Tables\Concerns\InteractsWithTable;
+use Filament\Tables\Contracts\HasTable;
+use Filament\Tables\Table;
+use Illuminate\Support\Facades\Cache;
 
 class ImpostosEquivalente extends Page implements HasTable
 {
     use InteractsWithTable;
+
     protected static ?string $navigationGroup = 'Configurações';
 
     protected static ?string $navigationLabel = 'Impostos Equivalentes';
 
     protected static ?string $slug = 'configuracoes/impostos-equivalentes';
+
     protected static string $view = 'filament.client.pages.impostos-equivalentes';
 
     protected static ?int $navigationSort = 4;
-
 
     public function table(Table $table): Table
     {

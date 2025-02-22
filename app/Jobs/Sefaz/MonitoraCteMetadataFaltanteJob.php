@@ -2,16 +2,13 @@
 
 namespace App\Jobs\Sefaz;
 
-use Carbon\Carbon;
-use Illuminate\Bus\Queueable;
-use App\Models\LogSefazCteContent;
-use App\Services\Sefaz\CteService;
+use App\Models\ConhecimentoTransporteEletronico;
 use App\Models\NotaFiscalEletronica;
-use Illuminate\Queue\SerializesModels;
-use Illuminate\Queue\InteractsWithQueue;
+use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
-use App\Models\ConhecimentoTransporteEletronico;
+use Illuminate\Queue\InteractsWithQueue;
+use Illuminate\Queue\SerializesModels;
 
 class MonitoraCteMetadataFaltanteJob implements ShouldQueue
 {
@@ -46,7 +43,6 @@ class MonitoraCteMetadataFaltanteJob implements ShouldQueue
 
                     if (isset($chave_nfe) && is_array($chave_nfe)) {
 
-
                         foreach ($chave_nfe as $chaveNfe) {
 
                             if (is_array($chaveNfe)) {
@@ -74,7 +70,7 @@ class MonitoraCteMetadataFaltanteJob implements ShouldQueue
                                 $cte->update([
                                     'metadata' => [
                                         $meta,
-                                    ]
+                                    ],
                                 ]);
                             }
                         }

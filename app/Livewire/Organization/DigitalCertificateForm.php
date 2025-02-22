@@ -2,24 +2,22 @@
 
 namespace App\Livewire\Organization;
 
+use App\Services\Tenant\OrganizationService;
 use Closure;
 use Exception;
-use Livewire\Component;
-use Filament\Forms\Form;
-use Filament\Facades\Filament;
-use App\Services\Tenant\OrganizationService;
-use Filament\Forms\Components\Section;
-use Filament\Forms\Contracts\HasForms;
-use Illuminate\Support\Facades\Storage;
-use Filament\Forms\Components\TextInput;
-use Filament\Notifications\Notification;
 use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\Section;
+use Filament\Forms\Components\TextInput;
 use Filament\Forms\Concerns\InteractsWithForms;
+use Filament\Forms\Contracts\HasForms;
+use Filament\Forms\Form;
+use Filament\Notifications\Notification;
+use Illuminate\Support\Facades\Storage;
+use Livewire\Component;
 
 class DigitalCertificateForm extends Component implements HasForms
 {
     use InteractsWithForms;
-
 
     public ?array $data = [];
 
@@ -29,7 +27,6 @@ class DigitalCertificateForm extends Component implements HasForms
     {
         $this->organization = $organization;
     }
-
 
     public function form(Form $form): Form
     {
@@ -47,10 +44,10 @@ class DigitalCertificateForm extends Component implements HasForms
                             ->rules([
                                 fn (): Closure => function (string $attribute, $value, Closure $fail) {
                                     $extension = $value->getClientOriginalExtension();
-                                    if (!in_array($extension, ['pfx', 'p12'])) {
-                                        $fail('Erro: arquivo inválido. O arquivo deve ser do tipo .pfx ou .p12' . $extension);
+                                    if (! in_array($extension, ['pfx', 'p12'])) {
+                                        $fail('Erro: arquivo inválido. O arquivo deve ser do tipo .pfx ou .p12'.$extension);
                                     } else {
-                                        Storage::put('certificates/' . $value->getClientOriginalName(), $value->get());
+                                        Storage::put('certificates/'.$value->getClientOriginalName(), $value->get());
                                     }
                                 },
                             ])
@@ -73,7 +70,7 @@ class DigitalCertificateForm extends Component implements HasForms
                             ->revealable()
                             ->required()
                             ->columnSpan(1),
-                    ])->columns(2)
+                    ])->columns(2),
             ])
             ->statePath('data');
     }
@@ -103,6 +100,7 @@ class DigitalCertificateForm extends Component implements HasForms
                 ->title('Erro ao ler o certificado digital')
                 ->body($e->getMessage())
                 ->send();
+
             return;
         }
 

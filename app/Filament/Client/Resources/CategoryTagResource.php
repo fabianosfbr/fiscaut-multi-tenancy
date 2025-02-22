@@ -2,25 +2,23 @@
 
 namespace App\Filament\Client\Resources;
 
-use Filament\Tables;
-use Filament\Forms\Form;
-use Filament\Tables\Table;
-use Filament\Resources\Resource;
+use App\Filament\Client\Resources\CategoryTagResource\Pages;
+use App\Filament\Client\Resources\CategoryTagResource\RelationManagers\TagsRelationManager;
 use App\Models\Tenant\CategoryTag;
-use Filament\Forms\Components\Grid;
-use Filament\Forms\Components\Select;
-use Filament\Forms\Components\Toggle;
-use Filament\Forms\Components\Section;
 use App\Tables\Columns\ColorNameColumn;
+use Filament\Forms\Components\ColorPicker;
+use Filament\Forms\Components\Section;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Toggle;
+use Filament\Forms\Form;
+use Filament\Resources\Resource;
+use Filament\Tables;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
-use Illuminate\Database\Eloquent\Model;
-use Filament\Forms\Components\TextInput;
-use Filament\Forms\Components\ColorPicker;
+use Filament\Tables\Table;
 use Illuminate\Contracts\Database\Eloquent\Builder;
-use App\Filament\Client\Resources\CategoryTagResource\Pages;
-use App\Filament\Client\Resources\CategoryTagResource\RelationManagers;
-use App\Filament\Client\Resources\CategoryTagResource\RelationManagers\TagsRelationManager;
+use Illuminate\Database\Eloquent\Model;
 
 class CategoryTagResource extends Resource
 {
@@ -32,8 +30,6 @@ class CategoryTagResource extends Resource
 
     protected static ?string $navigationGroup = 'Configurações';
 
-
-
     public static function form(Form $form): Form
     {
         return $form->schema(self::getFormSchema());
@@ -43,7 +39,7 @@ class CategoryTagResource extends Resource
     {
         return $table
             ->recordUrl(null)
-            ->modifyQueryUsing(fn(Builder $query) => $query->where('organization_id', auth()->user()->last_organization_id))
+            ->modifyQueryUsing(fn (Builder $query) => $query->where('organization_id', auth()->user()->last_organization_id))
             ->reorderable('order')
             ->columns(self::getColumnTableSchema())
             ->filters([
@@ -130,8 +126,6 @@ class CategoryTagResource extends Resource
                         ->default(false)
                         ->required()
                         ->columnSpan(1),
-
-
 
                 ])->columns(3),
 

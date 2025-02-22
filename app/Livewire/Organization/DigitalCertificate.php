@@ -6,7 +6,6 @@ use Livewire\Component;
 
 class DigitalCertificate extends Component
 {
-
     public mixed $organization;
 
     public array $state = [];
@@ -20,7 +19,7 @@ class DigitalCertificate extends Component
 
     public function updateOrganizationName(): void
     {
-       dd($this->state);
+        dd($this->state);
     }
 
     public function render()

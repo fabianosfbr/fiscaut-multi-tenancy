@@ -15,7 +15,7 @@ trait HasXmlReader
     public function extractDocs($response)
     {
 
-        $dom = new DOMDocument();
+        $dom = new DOMDocument;
         $dom->loadXML($response);
         $node = $dom->getElementsByTagName('retDistDFeInt')->item(0);
         $lote = $node->getElementsByTagName('loteDistDFeInt')->item(0);

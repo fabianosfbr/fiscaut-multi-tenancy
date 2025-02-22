@@ -1,6 +1,5 @@
 <?php
 
-
 return [
     'environment' => [
         'HAMBIENTE_SEFAZ' => 1,

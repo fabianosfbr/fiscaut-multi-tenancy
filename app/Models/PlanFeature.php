@@ -11,9 +11,8 @@ class PlanFeature extends Model
 
     protected $guarded = ['id'];
 
-
     public function plan()
     {
-        return $this->belongsTo(PricePlan::class,'plan_id','id');
+        return $this->belongsTo(PricePlan::class, 'plan_id', 'id');
     }
 }

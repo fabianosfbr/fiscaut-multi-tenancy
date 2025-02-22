@@ -2,22 +2,21 @@
 
 namespace App\Filament\Client\Pages;
 
-use Filament\Forms\Form;
-use Filament\Pages\Page;
-use App\Models\Tenant\Organization;
-use Filament\Forms\Components\Tabs;
-use Filament\Forms\Components\Livewire;
-use App\Livewire\Organization\Configuration\CteSaidaForm;
-use App\Livewire\Organization\Configuration\Acumulador\CteSaidaForm as AcumuladorCteSaidaForm;
-use App\Livewire\Organization\Configuration\CteEntradaForm;
 use App\Livewire\Organization\Configuration\Acumulador\CteEntradaForm as AcumuladorCteEntradaForm;
-use App\Livewire\Organization\Configuration\ProdutoGenericoForm;
-use App\Livewire\Organization\Configuration\NfeEntradaPropriaForm;
+use App\Livewire\Organization\Configuration\Acumulador\CteSaidaForm as AcumuladorCteSaidaForm;
 use App\Livewire\Organization\Configuration\Acumulador\NfeEntradaPropriaForm as AcumuladorNfeEntradaPropriaForm;
-use App\Livewire\Organization\Configuration\NfeEntradaTerceiroForm;
 use App\Livewire\Organization\Configuration\Acumulador\NfeEntradaTerceiroForm as AcumuladorNfeEntradaTerceiroForm;
 use App\Livewire\Organization\Configuration\ConfiguracoesGeraisForm;
+use App\Livewire\Organization\Configuration\CteEntradaForm;
+use App\Livewire\Organization\Configuration\CteSaidaForm;
 use App\Livewire\Organization\Configuration\ImpostoEquivalenteEntradaForm;
+use App\Livewire\Organization\Configuration\NfeEntradaPropriaForm;
+use App\Livewire\Organization\Configuration\NfeEntradaTerceiroForm;
+use App\Livewire\Organization\Configuration\ProdutoGenericoForm;
+use Filament\Forms\Components\Livewire;
+use Filament\Forms\Components\Tabs;
+use Filament\Forms\Form;
+use Filament\Pages\Page;
 
 class ConfiguracoesGerais extends Page
 {
@@ -32,8 +31,6 @@ class ConfiguracoesGerais extends Page
     protected static string $view = 'filament.client.pages.configuracoes-gerais';
 
     protected static ?int $navigationSort = 1;
-
-
 
     public function form(Form $form): Form
     {
@@ -74,7 +71,7 @@ class ConfiguracoesGerais extends Page
 
                                                                             ]),
 
-                                                                    ])
+                                                                    ]),
                                                             ]),
                                                         Tabs\Tab::make('CTe')
                                                             ->schema([
@@ -92,11 +89,11 @@ class ConfiguracoesGerais extends Page
                                                                                 Livewire::make(component: CteSaidaForm::class),
                                                                             ]),
 
-                                                                    ])
+                                                                    ]),
                                                             ]),
 
                                                     ])
-                                                    ->persistTabInQueryString('cfops-tab')
+                                                    ->persistTabInQueryString('cfops-tab'),
                                             ]),
 
                                         Tabs\Tab::make('Acumuladores')
@@ -120,7 +117,7 @@ class ConfiguracoesGerais extends Page
 
                                                                             ]),
 
-                                                                    ])
+                                                                    ]),
                                                             ]),
                                                         Tabs\Tab::make('CTe')
                                                             ->schema([
@@ -138,11 +135,11 @@ class ConfiguracoesGerais extends Page
                                                                                 Livewire::make(component: AcumuladorCteSaidaForm::class),
                                                                             ]),
 
-                                                                    ])
+                                                                    ]),
                                                             ]),
 
                                                     ])
-                                                    ->persistTabInQueryString('cfops-tab')
+                                                    ->persistTabInQueryString('cfops-tab'),
                                             ]),
                                         Tabs\Tab::make('Produtos Genéricos')
                                             ->schema([

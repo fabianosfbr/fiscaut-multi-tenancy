@@ -2,11 +2,11 @@
 
 namespace App\Filament\Clusters\Profile\Pages;
 
-use Exception;
-use Filament\Pages\Page;
 use App\Filament\Clusters\Profile;
-use Illuminate\Database\Eloquent\Model;
+use Exception;
 use Filament\Notifications\Notification;
+use Filament\Pages\Page;
+use Illuminate\Database\Eloquent\Model;
 
 class BaseProfile extends Page
 {

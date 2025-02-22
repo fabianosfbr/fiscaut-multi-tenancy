@@ -2,30 +2,28 @@
 
 namespace App\Livewire\Organization\Configuration;
 
-use Livewire\Component;
-use App\Models\Tenant\Tag;
-use Filament\Tables\Table;
-use App\Models\Tenant\CategoryTag;
-use Filament\Tables\Actions\Action;
-use Filament\Forms\Components\Toggle;
-
-use Illuminate\Support\Facades\Cache;
-use Filament\Forms\Contracts\HasForms;
-use Filament\Tables\Columns\TextColumn;
-use Filament\Tables\Contracts\HasTable;
-use Filament\Notifications\Notification;
-use Filament\Tables\Actions\DeleteAction;
-use Filament\Tables\Columns\ToggleColumn;
 use App\Forms\Components\SelectTagGrouped;
-use Filament\Forms\Concerns\InteractsWithForms;
+use App\Models\Tenant\CategoryTag;
 use App\Models\Tenant\ImpostoEquivalenteEntrada;
+use App\Models\Tenant\Tag;
+use Filament\Forms\Components\Toggle;
+use Filament\Forms\Concerns\InteractsWithForms;
+use Filament\Forms\Contracts\HasForms;
+use Filament\Notifications\Notification;
+use Filament\Tables\Actions\Action;
+use Filament\Tables\Actions\DeleteAction;
+use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Columns\ToggleColumn;
 use Filament\Tables\Concerns\InteractsWithTable;
+use Filament\Tables\Contracts\HasTable;
+use Filament\Tables\Table;
+use Illuminate\Support\Facades\Cache;
+use Livewire\Component;
 
 class ImpostoEquivalenteEntradaForm extends Component implements HasForms, HasTable
 {
     use InteractsWithForms;
     use InteractsWithTable;
-
 
     public function table(Table $table): Table
     {
@@ -35,11 +33,11 @@ class ImpostoEquivalenteEntradaForm extends Component implements HasForms, HasTa
             ->searchDebounce(750)
             ->columns([
                 TextColumn::make('tag')
-                ->label('Etiqueta')
-                ->formatStateUsing(function (ImpostoEquivalenteEntrada $record) {
-                    return $record->tag . ' - ' . $record->tag_description;
-                })
-                ->searchable(),
+                    ->label('Etiqueta')
+                    ->formatStateUsing(function (ImpostoEquivalenteEntrada $record) {
+                        return $record->tag.' - '.$record->tag_description;
+                    })
+                    ->searchable(),
 
                 TextColumn::make('description')
                     ->label('Descrição')
@@ -54,24 +52,24 @@ class ImpostoEquivalenteEntradaForm extends Component implements HasForms, HasTa
             ])
             ->actions([
                 Action::make('edit')
-                ->label('Editar')
-                ->modalWidth('lg')
-                ->closeModalByEscaping(false)
-                ->modalSubmitActionLabel('Salvar')
-                ->fillForm(function (ImpostoEquivalenteEntrada $record) {
+                    ->label('Editar')
+                    ->modalWidth('lg')
+                    ->closeModalByEscaping(false)
+                    ->modalSubmitActionLabel('Salvar')
+                    ->fillForm(function (ImpostoEquivalenteEntrada $record) {
 
-                    return [
-                        'tag' => $record->tag_id,
-                        'status_icms' => $record->status_icms,
-                        'status_ipi' => $record->status_ipi,
+                        return [
+                            'tag' => $record->tag_id,
+                            'status_icms' => $record->status_icms,
+                            'status_ipi' => $record->status_ipi,
 
-                    ];
-                })
-                ->form(self::getFormSchema())
-                ->action(function (array $data) {
+                        ];
+                    })
+                    ->form(self::getFormSchema())
+                    ->action(function (array $data) {
 
-                    $this->updateOrCreate($data);
-                }),
+                        $this->updateOrCreate($data);
+                    }),
                 DeleteAction::make(),
             ])
             ->bulkActions([
@@ -109,16 +107,17 @@ class ImpostoEquivalenteEntradaForm extends Component implements HasForms, HasTa
 
                     foreach ($categoryTag as $key => $category) {
                         $tags = [];
-                        foreach ($category->tags  as $tagKey => $tag) {
-                            if (!$tag->is_enable) {
+                        foreach ($category->tags as $tagKey => $tag) {
+                            if (! $tag->is_enable) {
                                 continue;
                             }
                             $tags[$tagKey]['id'] = $tag->id;
-                            $tags[$tagKey]['name'] = $tag->code . ' - ' . $tag->name;
+                            $tags[$tagKey]['name'] = $tag->code.' - '.$tag->name;
                         }
                         $tagData[$key]['text'] = $category->name;
                         $tagData[$key]['children'] = $tags;
                     }
+
                     return $tagData ?? [];
                 }),
 
@@ -129,7 +128,6 @@ class ImpostoEquivalenteEntradaForm extends Component implements HasForms, HasTa
             Toggle::make('status_ipi')
                 ->label('Modifica IPI')
                 ->default(true),
-
 
         ];
     }
@@ -144,7 +142,7 @@ class ImpostoEquivalenteEntradaForm extends Component implements HasForms, HasTa
         ImpostoEquivalenteEntrada::updateOrCreate(
             [
                 'tag' => $tag->code,
-                'organization_id' => $organization_id
+                'organization_id' => $organization_id,
             ],
             [
                 'tag' => $tag->code,
@@ -156,7 +154,7 @@ class ImpostoEquivalenteEntradaForm extends Component implements HasForms, HasTa
             ]
         );
 
-        Cache::forget('entradas_impostos_equivalentes_'. $organization_id);
+        Cache::forget('entradas_impostos_equivalentes_'.$organization_id);
 
         Notification::make()
             ->title('Etiqueta salva com sucesso')

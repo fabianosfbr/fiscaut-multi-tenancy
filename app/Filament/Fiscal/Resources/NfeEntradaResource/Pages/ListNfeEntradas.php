@@ -2,13 +2,12 @@
 
 namespace App\Filament\Fiscal\Resources\NfeEntradaResource\Pages;
 
-use Filament\Actions;
+use App\Filament\Fiscal\Resources\NfeEntradaResource;
 use App\Models\Tenant\Organization;
 use Filament\Resources\Components\Tab;
 use Filament\Resources\Pages\ListRecords;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Contracts\Pagination\Paginator;
-use App\Filament\Fiscal\Resources\NfeEntradaResource;
+use Illuminate\Database\Eloquent\Builder;
 
 class ListNfeEntradas extends ListRecords
 {

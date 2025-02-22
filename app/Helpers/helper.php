@@ -2,25 +2,21 @@
 
 use App\Models\Issuer;
 use App\Models\PlanoDeConta;
+use App\Models\Tenant\ConfiguracaoGeral;
 use Illuminate\Support\Carbon;
-use Saloon\XmlWrangler\XmlReader;
-use Illuminate\Support\Facades\DB;
-use NFePHP\NFe\Common\Standardize;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
-use App\Models\Tenant\ConfiguracaoGeral;
-
-
-
+use Illuminate\Support\Facades\DB;
+use NFePHP\NFe\Common\Standardize;
 
 function percent($number)
 {
-    return number_format($number * 100, 2, ',', '.') . ' %';
+    return number_format($number * 100, 2, ',', '.').' %';
 }
 
 function formatar_moeda($valor)
 {
-    return 'R$ ' . number_format($valor, 2, ',', '.');
+    return 'R$ '.number_format($valor, 2, ',', '.');
 }
 
 function issuersViewHelper()
@@ -66,9 +62,6 @@ function tipoDocumentoNaoFiscal($tipo)
     return $array[$tipo];
 }
 
-
-
-
 function formatar_cnpj_cpf($value)
 {
     $CPF_LENGTH = 11;
@@ -83,13 +76,13 @@ function formatar_cnpj_cpf($value)
 
 function formatar_cep($value)
 {
-    return substr($value, 0, 5) . '-' . substr($value, 5, 3);
+    return substr($value, 0, 5).'-'.substr($value, 5, 3);
 }
 
 function formatar_telefone($numero)
 {
     // primeiro substr pega apenas o DDD e coloca dentro do (), segundo subtr pega os números do 3º até faltar 4, insere o hifem, e o ultimo pega apenas o 4 ultimos digitos
-    $number = '(' . substr($numero, 0, 2) . ') ' . substr($numero, 2, -4) . '-' . substr($numero, -4);
+    $number = '('.substr($numero, 0, 2).') '.substr($numero, 2, -4).'-'.substr($numero, -4);
 
     return $number;
 }
@@ -124,11 +117,11 @@ function getTagValue($theObj, $keyName, $extraTextBefore = '', $extraTextAfter =
     if (isset($vct)) {
         $value = trim($vct->nodeValue);
         if (strpos($value, '&') !== false) {
-            //existe um & na string, então deve ser uma entidade
+            // existe um & na string, então deve ser uma entidade
             $value = html_entity_decode($value);
         }
 
-        return $extraTextBefore . $value . $extraTextAfter;
+        return $extraTextBefore.$value.$extraTextAfter;
     }
 
     return '';
@@ -136,14 +129,14 @@ function getTagValue($theObj, $keyName, $extraTextBefore = '', $extraTextAfter =
 
 function getTagDate($theObj, $keyName, $extraText = '')
 {
-    if (!isset($theObj) || !is_object($theObj)) {
+    if (! isset($theObj) || ! is_object($theObj)) {
         return '';
     }
     $vct = $theObj->getElementsByTagName($keyName)->item(0);
     if (isset($vct)) {
         $theDate = explode('-', $vct->nodeValue);
 
-        return $extraText . $theDate[2] . '/' . $theDate[1] . '/' . $theDate[0];
+        return $extraText.$theDate[2].'/'.$theDate[1].'/'.$theDate[0];
     }
 
     return '';
@@ -154,7 +147,7 @@ function formatField($campo = '', $mascara = '')
     if ($campo == '' || $mascara == '') {
         return $campo;
     }
-    //remove qualquer formatação que ainda exista
+    // remove qualquer formatação que ainda exista
     $sLimpo = preg_replace("(/[' '-./ t]/)", '', $campo);
     // pega o tamanho da string e da mascara
     $tCampo = strlen($sLimpo);
@@ -164,7 +157,7 @@ function formatField($campo = '', $mascara = '')
     } else {
         $tMaior = $tMask;
     }
-    //contar o numero de cerquilhas da mascara
+    // contar o numero de cerquilhas da mascara
     $aMask = str_split($mascara);
     $z = 0;
     $flag = false;
@@ -174,17 +167,17 @@ function formatField($campo = '', $mascara = '')
         }
     }
     if ($z > $tCampo) {
-        //o campo é menor que esperado
+        // o campo é menor que esperado
         $flag = true;
     }
-    //cria uma variável grande o suficiente para conter os dados
+    // cria uma variável grande o suficiente para conter os dados
     $sRetorno = '';
     $sRetorno = str_pad($sRetorno, $tCampo + $tMask, ' ', STR_PAD_LEFT);
-    //pega o tamanho da string de retorno
+    // pega o tamanho da string de retorno
     $tRetorno = strlen($sRetorno);
-    //se houve entrada de dados
+    // se houve entrada de dados
     if ($sLimpo != '' && $mascara != '') {
-        //inicia com a posição do ultimo digito da mascara
+        // inicia com a posição do ultimo digito da mascara
         $x = $tMask;
         $y = $tCampo;
         $cI = 0;
@@ -198,14 +191,14 @@ function formatField($campo = '', $mascara = '')
                 } else {
                     $digMask = '#';
                 }
-                //se o fim do campo for atingido antes do fim da mascara
-                //verificar se é ( se não for não use
+                // se o fim do campo for atingido antes do fim da mascara
+                // verificar se é ( se não for não use
                 if ($digMask == '#') {
                     $cI++;
                     if ($y > 0) {
                         $sRetorno[--$tRetorno] = $sLimpo[--$y];
                     } else {
-                        //$sRetorno[--$tRetorno] = '';
+                        // $sRetorno[--$tRetorno] = '';
                     }
                 } else {
                     if ($y > 0) {
@@ -219,9 +212,9 @@ function formatField($campo = '', $mascara = '')
                 }
             }
         }
-        if (!$flag) {
+        if (! $flag) {
             if ($mascara[0] != '#') {
-                $sRetorno = '(' . trim($sRetorno);
+                $sRetorno = '('.trim($sRetorno);
             }
         }
 
@@ -230,8 +223,6 @@ function formatField($campo = '', $mascara = '')
         return '';
     }
 }
-
-
 
 // function getPlanoDeContas($issuer_id)
 // {
@@ -252,16 +243,12 @@ function formatField($campo = '', $mascara = '')
 //     return $planoDeContasFiltered;
 // }
 
-
-
-
-
-
 function sanitize(?string $data): ?string
 {
     if (is_null($data)) {
         return null;
     }
+
     return (string) preg_replace('/[^A-Za-z0-9]/', '', $data);
 }
 
@@ -269,7 +256,6 @@ function getMesesAnterioresEPosteriores(): array
 {
     $meses = [];
     $dataAtual = Carbon::now();
-
 
     // Adiciona os 6 meses anteriores
     for ($i = 6; $i > 0; $i--) {
@@ -297,7 +283,7 @@ function getMesesAnterioresEPosteriores(): array
     return $meses;
 }
 
-if (!function_exists('config_system')) {
+if (! function_exists('config_system')) {
     function config_system($key, $organizationId = null, $default = null)
     {
         if (is_null($organizationId)) {

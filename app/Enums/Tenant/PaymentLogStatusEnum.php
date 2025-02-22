@@ -3,17 +3,13 @@
 namespace App\Enums\Tenant;
 
 use Filament\Support\Contracts\HasColor;
-use Filament\Support\Contracts\HasIcon;
 use Filament\Support\Contracts\HasLabel;
 
-enum PaymentLogStatusEnum:string implements HasColor, HasLabel
+enum PaymentLogStatusEnum: string implements HasColor, HasLabel
 {
-
-
     case PENDING = 'pending';
     case PAID = 'paid';
     case CANCELED = 'canceled';
-
 
     public function getLabel(): ?string
     {
@@ -32,7 +28,4 @@ enum PaymentLogStatusEnum:string implements HasColor, HasLabel
             self::CANCELED => 'danger',
         };
     }
-
-
-
 }

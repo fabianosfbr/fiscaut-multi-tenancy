@@ -2,7 +2,4 @@
 
 namespace App\Services\Tenant;
 
-class UserService
-{
-
-}
+class UserService {}

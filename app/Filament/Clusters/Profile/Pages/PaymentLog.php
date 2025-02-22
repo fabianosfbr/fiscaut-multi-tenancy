@@ -2,22 +2,20 @@
 
 namespace App\Filament\Clusters\Profile\Pages;
 
-use App\Models\User;
-use Filament\Pages\Page;
-use Filament\Tables\Table;
-use App\Models\Tenant\PaymentLog as PaymentLogModel;
 use App\Filament\Clusters\Profile;
+use App\Models\Tenant\PaymentLog as PaymentLogModel;
+use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
 use Filament\Tables\Columns\TextColumn;
-use Filament\Tables\Contracts\HasTable;
-use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Tables\Concerns\InteractsWithTable;
-use Filament\Pages\Concerns\InteractsWithFormActions;
+use Filament\Tables\Contracts\HasTable;
+use Filament\Tables\Table;
 
 class PaymentLog extends BaseProfile implements HasForms, HasTable
 {
-    use InteractsWithTable;
     use InteractsWithForms;
+    use InteractsWithTable;
+
     protected static ?string $navigationIcon = 'heroicon-o-document-text';
 
     protected static bool $shouldRegisterNavigation = true;
@@ -38,11 +36,11 @@ class PaymentLog extends BaseProfile implements HasForms, HasTable
             ->query(PaymentLogModel::query())
             ->columns([
                 TextColumn::make('package_name')
-                ->label('Nome do Pacote'),
+                    ->label('Nome do Pacote'),
                 TextColumn::make('status')
-                ->label('Status'),
+                    ->label('Status'),
                 TextColumn::make('start_date')
-                ->label('Data Início')
+                    ->label('Data Início'),
             ])
             ->filters([
                 // ...

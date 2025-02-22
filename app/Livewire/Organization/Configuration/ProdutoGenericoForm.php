@@ -2,20 +2,19 @@
 
 namespace App\Livewire\Organization\Configuration;
 
-use Livewire\Component;
-use Filament\Forms\Form;
-use App\Models\Tenant\CategoryTag;
-use Illuminate\Support\Facades\Cache;
-use Filament\Forms\Components\Section;
-use Filament\Forms\Contracts\HasForms;
-use Filament\Forms\Components\Repeater;
-use Filament\Forms\Components\TagsInput;
-use Filament\Forms\Components\TextInput;
-use Filament\Notifications\Notification;
 use App\Forms\Components\SelectTagGrouped;
+use App\Models\Tenant\CategoryTag;
 use App\Models\Tenant\EntradasProdutosGenerico;
-use Filament\Forms\Concerns\InteractsWithForms;
 use App\Models\Tenant\GrupoEntradasProdutosGenerico;
+use Filament\Forms\Components\Repeater;
+use Filament\Forms\Components\Section;
+use Filament\Forms\Components\TextInput;
+use Filament\Forms\Concerns\InteractsWithForms;
+use Filament\Forms\Contracts\HasForms;
+use Filament\Forms\Form;
+use Filament\Notifications\Notification;
+use Illuminate\Support\Facades\Cache;
+use Livewire\Component;
 
 class ProdutoGenericoForm extends Component implements HasForms
 {
@@ -54,16 +53,17 @@ class ProdutoGenericoForm extends Component implements HasForms
 
                                         foreach ($categoryTag as $key => $category) {
                                             $tags = [];
-                                            foreach ($category->tags  as $tagKey => $tag) {
-                                                if (!$tag->is_enable) {
+                                            foreach ($category->tags as $tagKey => $tag) {
+                                                if (! $tag->is_enable) {
                                                     continue;
                                                 }
                                                 $tags[$tagKey]['id'] = $tag->id;
-                                                $tags[$tagKey]['name'] = $tag->code . ' - ' . $tag->name;
+                                                $tags[$tagKey]['name'] = $tag->code.' - '.$tag->name;
                                             }
                                             $tagData[$key]['text'] = $category->name;
                                             $tagData[$key]['children'] = $tags;
                                         }
+
                                         return $tagData ?? [];
                                     }),
                                 Repeater::make('produtos')
@@ -88,7 +88,7 @@ class ProdutoGenericoForm extends Component implements HasForms
                             ])
                             ->collapsible()
                             ->addActionLabel('Adicionar Produto Genérico'),
-                    ])
+                    ]),
             ])
             ->statePath('data');
     }
@@ -121,13 +121,14 @@ class ProdutoGenericoForm extends Component implements HasForms
             }
         }
 
-        Cache::forget('grupo_entradas_produtos_genericos_' . auth()->user()->last_organization_id);
+        Cache::forget('grupo_entradas_produtos_genericos_'.auth()->user()->last_organization_id);
 
         Notification::make()
             ->success()
             ->title('O valores foram salvos com sucesso!')
             ->send();
     }
+
     public function render()
     {
         return view('livewire.organization.configuration.produto-generico-form');

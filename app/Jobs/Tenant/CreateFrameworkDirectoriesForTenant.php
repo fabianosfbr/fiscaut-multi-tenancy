@@ -2,13 +2,9 @@
 
 namespace App\Jobs\Tenant;
 
-use Illuminate\Support\Facades\Log;
-use Stancl\Tenancy\Contracts\Tenant;
-use Illuminate\Queue\SerializesModels;
-use Illuminate\Queue\InteractsWithQueue;
-use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Foundation\Bus\Dispatchable;
+use Illuminate\Foundation\Queue\Queueable;
+use Stancl\Tenancy\Contracts\Tenant;
 
 class CreateFrameworkDirectoriesForTenant implements ShouldQueue
 {

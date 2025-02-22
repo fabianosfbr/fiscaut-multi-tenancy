@@ -2,15 +2,14 @@
 
 namespace App\Jobs\Sefaz\Process;
 
+use App\Services\Tenant\Sefaz\Traits\HasLogSefaz;
+use App\Services\Tenant\Sefaz\Traits\HasNfe;
 use App\Traits\HasXmlReader;
-
 use Illuminate\Bus\Queueable;
-use Illuminate\Queue\SerializesModels;
-use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
-use App\Services\Tenant\Sefaz\Traits\HasNfe;
-use App\Services\Tenant\Sefaz\Traits\HasLogSefaz;
+use Illuminate\Queue\InteractsWithQueue;
+use Illuminate\Queue\SerializesModels;
 
 class ProcessXmlResponseNfeSefazJob implements ShouldQueue
 {

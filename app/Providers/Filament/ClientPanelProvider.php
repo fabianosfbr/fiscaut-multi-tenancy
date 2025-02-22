@@ -2,37 +2,32 @@
 
 namespace App\Providers\Filament;
 
-use Filament\Pages;
-use Filament\Panel;
-use Filament\Widgets;
-use Filament\PanelProvider;
-use App\Models\Tenant\Issuer;
-use Filament\Facades\Filament;
-use Filament\Navigation\MenuItem;
-use Filament\Support\Colors\Color;
-use App\Models\Tenant\Organization;
-use Filament\View\PanelsRenderHook;
-use Illuminate\Support\Facades\Blade;
-use Filament\Http\Middleware\Authenticate;
 use App\Filament\Client\Pages\Auth\LoginPage;
-use Illuminate\Session\Middleware\StartSession;
-use App\Filament\Client\Pages\Auth\RegisterPage;
-use App\Models\Tenant\ShowChoiceOrganizationUrl;
-use Illuminate\Cookie\Middleware\EncryptCookies;
 use App\Filament\Client\Pages\Auth\PasswordReset;
-use App\Http\Middleware\CheckUserHasOrganization;
+use App\Filament\Client\Pages\Auth\RegisterPage;
 use App\Filament\Clusters\Profile\Pages\ViewProfile;
+use App\Http\Middleware\CheckUserHasOrganization;
+use Filament\Http\Middleware\Authenticate;
+use Filament\Http\Middleware\DisableBladeIconComponents;
+use Filament\Http\Middleware\DispatchServingFilamentEvent;
+use Filament\Navigation\MenuItem;
+use Filament\Pages;
+use Filament\Pages\Auth\EmailVerification\EmailVerificationPrompt;
+use Filament\Panel;
+use Filament\PanelProvider;
+use Filament\Support\Colors\Color;
+use Filament\View\PanelsRenderHook;
+use Filament\Widgets;
+use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
+use Illuminate\Cookie\Middleware\EncryptCookies;
+use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\AuthenticateSession;
+use Illuminate\Session\Middleware\StartSession;
+use Illuminate\Support\Facades\Blade;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
-use App\Filament\App\Pages\Tenancy\EditOrganizationPage;
-use Filament\Http\Middleware\DisableBladeIconComponents;
 use Stancl\Tenancy\Middleware\InitializeTenancyByDomain;
-use Filament\Http\Middleware\DispatchServingFilamentEvent;
-use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
-use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Stancl\Tenancy\Middleware\PreventAccessFromCentralDomains;
-use Filament\Pages\Auth\EmailVerification\EmailVerificationPrompt;
 
 class ClientPanelProvider extends PanelProvider
 {
@@ -71,11 +66,11 @@ class ClientPanelProvider extends PanelProvider
                 MenuItem::make()
                     ->label('Meu Perfil')
                     ->icon('heroicon-o-user')
-                    ->url(fn(): string => ViewProfile::getUrl()),
+                    ->url(fn (): string => ViewProfile::getUrl()),
             ])
             ->renderHook(
                 PanelsRenderHook::CONTENT_START,
-                fn(): string => Blade::render('@livewire(\'component.choice-organization\')'),
+                fn (): string => Blade::render('@livewire(\'component.choice-organization\')'),
             )
             ->middleware([
                 EncryptCookies::class,
@@ -93,7 +88,7 @@ class ClientPanelProvider extends PanelProvider
                 InitializeTenancyByDomain::class,
                 PreventAccessFromCentralDomains::class,
                 CheckUserHasOrganization::class,
-                \Hasnayeen\Themes\Http\Middleware\SetTheme::class
+                \Hasnayeen\Themes\Http\Middleware\SetTheme::class,
             ], isPersistent: true)
             ->authMiddleware([
                 Authenticate::class,

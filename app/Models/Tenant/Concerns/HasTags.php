@@ -53,15 +53,14 @@ trait HasTags
     public function tagNamesWithCode(): array
     {
         return $this->tagged->map(function ($item) {
-            return $item->tag->code . ' - ' . $item->tag_name;
+            return $item->tag->code.' - '.$item->tag_name;
         })->toArray();
     }
 
     public function tagAtrributes(): array
     {
         return $this->tagged->map(function ($item) {
-            return $item->tag->code . ' - ' . $item->tag_name . ' | ' . $item->value . ' | ' . $item->products;
+            return $item->tag->code.' - '.$item->tag_name.' | '.$item->value.' | '.$item->products;
         })->toArray();
     }
-
 }

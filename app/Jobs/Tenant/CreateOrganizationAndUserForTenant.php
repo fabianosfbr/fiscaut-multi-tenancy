@@ -2,22 +2,17 @@
 
 namespace App\Jobs\Tenant;
 
+use App\Enums\Tenant\PermissionTypeEnum;
+use App\Enums\Tenant\UserTypeEnum;
+use App\Events\CreateOrganizationProcessed;
 use App\Models\Tenant;
+use App\Models\Tenant\Organization;
+use App\Models\Tenant\Permission;
 use App\Models\Tenant\Role;
 use App\Models\Tenant\User;
-use App\Models\Tenant\Client;
-use App\Models\Tenant\Permission;
-use App\Enums\Tenant\UserTypeEnum;
-use Illuminate\Support\Facades\DB;
-use App\Models\Tenant\Organization;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Queue\SerializesModels;
-use App\Enums\Tenant\PermissionTypeEnum;
-use Illuminate\Queue\InteractsWithQueue;
-use Illuminate\Foundation\Queue\Queueable;
-use App\Events\CreateOrganizationProcessed;
 use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Foundation\Bus\Dispatchable;
+use Illuminate\Foundation\Queue\Queueable;
+use Illuminate\Support\Facades\DB;
 
 class CreateOrganizationAndUserForTenant implements ShouldQueue
 {
@@ -48,7 +43,7 @@ class CreateOrganizationAndUserForTenant implements ShouldQueue
                 ]);
 
                 $organization = Organization::create([
-                    'razao_social' => $this->tenant->razao_social . ':' . $this->tenant->cnpj,
+                    'razao_social' => $this->tenant->razao_social.':'.$this->tenant->cnpj,
                     'cnpj' => $this->tenant->cnpj,
                 ]);
 
@@ -60,7 +55,6 @@ class CreateOrganizationAndUserForTenant implements ShouldQueue
                 $roles = $this->registerRolesAndPermissionsForUser();
 
                 event(new CreateOrganizationProcessed($user, $roles));
-
 
                 DB::commit();
             } catch (\Exception $e) {

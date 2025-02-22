@@ -20,7 +20,7 @@ class TagObserver
      */
     public function updated(Tag $tag): void
     {
-        Cache::forget('category_with_tag_for_searching_' . $tag->category()?->organization_id);
+        Cache::forget('category_with_tag_for_searching_'.$tag->category()?->organization_id);
     }
 
     /**

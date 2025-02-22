@@ -2,30 +2,28 @@
 
 namespace App\Filament\Client\Pages\Tenant;
 
-use Closure;
-use Exception;
-use Filament\Forms\Form;
-use Filament\Pages\Page;
-use Filament\Actions\Action;
-use Filament\Facades\Filament;
+use App\Enums\Tenant\AtividadesEmpresariaisEnum;
+use App\Enums\Tenant\RegimesEmpresariaisEnum;
 use App\Enums\Tenant\UserTypeEnum;
-use Illuminate\Support\HtmlString;
-use Illuminate\Support\Facades\Auth;
-use Filament\Forms\Components\Select;
-use Filament\Forms\Components\Toggle;
-use Filament\Forms\Components\Wizard;
-use Illuminate\Support\Facades\Blade;
-use Filament\Forms\Components\Section;
-use Filament\Forms\Contracts\HasForms;
-use Illuminate\Support\Facades\Storage;
-use Filament\Forms\Components\TextInput;
-use Filament\Notifications\Notification;
-use Filament\Forms\Components\FileUpload;
 use App\Events\CreateOrganizationProcessed;
 use App\Services\Tenant\OrganizationService;
-use App\Enums\Tenant\RegimesEmpresariaisEnum;
-use App\Enums\Tenant\AtividadesEmpresariaisEnum;
+use Closure;
+use Exception;
+use Filament\Actions\Action;
 use Filament\Forms\Components\Actions\Action as WizardAction;
+use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\Section;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Toggle;
+use Filament\Forms\Components\Wizard;
+use Filament\Forms\Contracts\HasForms;
+use Filament\Forms\Form;
+use Filament\Notifications\Notification;
+use Filament\Pages\Page;
+use Illuminate\Support\Facades\Blade;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\HtmlString;
 
 class RegisterOrganizationPage extends Page
 {
@@ -54,19 +52,16 @@ class RegisterOrganizationPage extends Page
                         ]),
                 ])
                     ->nextAction(
-                        fn(WizardAction $action) => $action->label('Avançar'),
+                        fn (WizardAction $action) => $action->label('Avançar'),
                     )
-                    ->submitAction(new HtmlString(Blade::render(<<<BLADE
+                    ->submitAction(new HtmlString(Blade::render(<<<'BLADE'
                                                                             <x-filament::button
                                                                                 type="submit"
                                                                                 size="sm"
                                                                             >
                                                                                 Salvar
                                                                             </x-filament::button>
-                                                                        BLADE)))
-
-
-
+                                                                        BLADE))),
 
             ])
             ->statePath('data');
@@ -90,7 +85,6 @@ class RegisterOrganizationPage extends Page
             $user->last_organization_id = $organization?->id;
             $user->saveQuietly();
 
-
             $roles = UserTypeEnum::toArray();
             event(new CreateOrganizationProcessed($user, $roles));
 
@@ -100,9 +94,9 @@ class RegisterOrganizationPage extends Page
                 ->title('Erro ao criar a organização')
                 ->body($e->getMessage())
                 ->send();
+
             return;
         }
-
 
         Notification::make()
             ->success()
@@ -124,7 +118,7 @@ class RegisterOrganizationPage extends Page
     {
         return Action::make('save')
             ->label('Salvar')
-            ->action(fn() => $this->create());
+            ->action(fn () => $this->create());
     }
 
     public static function getOrganizationDataForm()
@@ -172,7 +166,6 @@ class RegisterOrganizationPage extends Page
                         ->options(AtividadesEmpresariaisEnum::class)
                         ->columnSpan(2),
 
-
                 ])->columns(6),
 
             Section::make('Serviços Habilitados')
@@ -211,12 +204,12 @@ class RegisterOrganizationPage extends Page
                         ->minSize(1)
                         ->maxSize(20)
                         ->rules([
-                            fn(): Closure => function (string $attribute, $value, Closure $fail) {
+                            fn (): Closure => function (string $attribute, $value, Closure $fail) {
                                 $extension = $value->getClientOriginalExtension();
-                                if (!in_array($extension, ['pfx', 'p12'])) {
-                                    $fail('Erro: arquivo inválido. O arquivo deve ser do tipo .pfx ou .p12' . $extension);
+                                if (! in_array($extension, ['pfx', 'p12'])) {
+                                    $fail('Erro: arquivo inválido. O arquivo deve ser do tipo .pfx ou .p12'.$extension);
                                 } else {
-                                    Storage::put('certificates/' . $value->getClientOriginalName(), $value->get());
+                                    Storage::put('certificates/'.$value->getClientOriginalName(), $value->get());
                                 }
                             },
                         ])
@@ -237,7 +230,7 @@ class RegisterOrganizationPage extends Page
                         ->password()
                         ->revealable()
                         ->columnSpan(1),
-                ])->columns(2)
+                ])->columns(2),
 
         ];
     }

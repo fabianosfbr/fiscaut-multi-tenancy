@@ -36,7 +36,7 @@ class ProcessResponseNfeSefazJob implements ShouldQueue
         $maxNSU = $reader->value('maxNSU')->sole();
         foreach ($reader->value('docZip')->get() as $key => $doc) {
 
-            //Cada doc vira um job de processamento
+            // Cada doc vira um job de processamento
             ProcessXmlResponseNfeSefazJob::dispatch($this->issuer, $this->response, $key, $this->origem, $maxNSU)
                 ->onQueue('low');
         }

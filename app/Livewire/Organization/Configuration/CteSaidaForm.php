@@ -2,31 +2,28 @@
 
 namespace App\Livewire\Organization\Configuration;
 
-use Livewire\Component;
-use Filament\Forms\Form;
 use App\Models\Tenant\Cfop;
-use App\Models\Tenant\CategoryTag;
-use Illuminate\Support\Facades\DB;
-use Filament\Forms\Components\Select;
-use Filament\Forms\Contracts\HasForms;
+use App\Models\Tenant\EntradasCfopsEquivalente;
+use App\Models\Tenant\GrupoEntradasCfopsEquivalente;
 use Filament\Forms\Components\Checkbox;
 use Filament\Forms\Components\Repeater;
+use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TagsInput;
-use Filament\Notifications\Notification;
-use App\Forms\Components\SelectTagGrouped;
-use App\Models\Tenant\EntradasCfopsEquivalente;
 use Filament\Forms\Concerns\InteractsWithForms;
-use App\Models\Tenant\GrupoEntradasCfopsEquivalente;
+use Filament\Forms\Contracts\HasForms;
+use Filament\Forms\Form;
+use Filament\Notifications\Notification;
+use Livewire\Component;
 
 class CteSaidaForm extends Component implements HasForms
 {
     use InteractsWithForms;
+
     private const TIPO = 'cte-saida';
 
     public ?array $data = [];
 
     public $values;
-
 
     public function mount(): void
     {
@@ -68,7 +65,7 @@ class CteSaidaForm extends Component implements HasForms
                                     // ->visible(function () {
                                     //     return getIssuerGeneralSettings(getCurrentIssuer(), 'verificar_uf_emitente_destinatario');
                                     // })
-                                    ->inline(false)
+                                    ->inline(false),
                             ])
                             ->addActionLabel('Adicionar CFOP')
                             ->columns(5),
@@ -101,9 +98,6 @@ class CteSaidaForm extends Component implements HasForms
             GrupoEntradasCfopsEquivalente::find($grupo->id)->delete();
         }
 
-
-
-
         foreach ($values['organization_cfop'] as $value) {
             $grupo = GrupoEntradasCfopsEquivalente::create([
                 'tags' => $value['tags'] ?? null,
@@ -126,6 +120,7 @@ class CteSaidaForm extends Component implements HasForms
             ->title('O valores foram salvos com sucesso!')
             ->send();
     }
+
     public function render()
     {
         return view('livewire.organization.configuration.cte-saida-form');

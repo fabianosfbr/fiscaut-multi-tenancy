@@ -2,14 +2,13 @@
 
 namespace Database\Seeders;
 
-use App\Models\User;
-use App\Models\Tenant;
-use App\Models\PricePlan;
-use Illuminate\Support\Str;
-use Illuminate\Database\Seeder;
-use App\Models\PaymentLog;
 use App\Enums\Tenant\PaymentLogStatusEnum;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+use App\Models\PaymentLog;
+use App\Models\PricePlan;
+use App\Models\Tenant;
+use App\Models\User;
+use Illuminate\Database\Seeder;
+use Illuminate\Support\Str;
 
 class TenantSeeder extends Seeder
 {
@@ -45,7 +44,7 @@ class TenantSeeder extends Seeder
             'tenant_id' => $tenant->id,
             'start_date' => now(),
             'expire_date' => '2100-12-31',
-            'track' => Str::random(10) . Str::random(10),
+            'track' => Str::random(10).Str::random(10),
 
         ];
 

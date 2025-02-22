@@ -54,7 +54,7 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->middleware([
                 'universal',
-                \Hasnayeen\Themes\Http\Middleware\SetTheme::class
+                \Hasnayeen\Themes\Http\Middleware\SetTheme::class,
             ])
             ->authMiddleware([
                 Authenticate::class,

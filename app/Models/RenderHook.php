@@ -8,7 +8,6 @@ class RenderHook extends Model
 {
     protected $guarded = ['id'];
 
-
     public function renderHookUrl()
     {
         return $this->hasMany(RenderHookUrl::class);

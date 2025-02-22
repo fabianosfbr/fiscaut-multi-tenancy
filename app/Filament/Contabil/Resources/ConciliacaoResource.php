@@ -3,15 +3,11 @@
 namespace App\Filament\Contabil\Resources;
 
 use App\Filament\Contabil\Resources\ConciliacaoResource\Pages;
-use App\Filament\Contabil\Resources\ConciliacaoResource\RelationManagers;
 use App\Models\Tenant\User;
-use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class ConciliacaoResource extends Resource
 {
