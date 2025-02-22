@@ -144,6 +144,10 @@ class ConfiguracoesGerais extends Page
                                                     ])
                                                     ->persistTabInQueryString('cfops-tab')
                                             ]),
+                                        Tabs\Tab::make('Produtos Genéricos')
+                                            ->schema([
+                                                Livewire::make(ProdutoGenericoForm::class),
+                                            ]),
                                     ])
                                     ->persistTabInQueryString('settings-tab-entradas')
                                     ->contained(false),
