@@ -2,25 +2,26 @@
 
 namespace App\Providers\Filament;
 
-use Filament\Http\Middleware\Authenticate;
-use Filament\Http\Middleware\DisableBladeIconComponents;
-use Filament\Http\Middleware\DispatchServingFilamentEvent;
-use Filament\Navigation\MenuItem;
 use Filament\Pages;
 use Filament\Panel;
+use Filament\Widgets;
 use Filament\PanelProvider;
+use Filament\Navigation\MenuItem;
 use Filament\Support\Colors\Color;
 use Filament\View\PanelsRenderHook;
-use Filament\Widgets;
-use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
+use Illuminate\Support\Facades\Blade;
+use Filament\Http\Middleware\Authenticate;
+use Illuminate\Session\Middleware\StartSession;
 use Illuminate\Cookie\Middleware\EncryptCookies;
-use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
+use App\Http\Middleware\CheckUserHasOrganization;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\AuthenticateSession;
-use Illuminate\Session\Middleware\StartSession;
-use Illuminate\Support\Facades\Blade;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
+use Filament\Http\Middleware\DisableBladeIconComponents;
 use Stancl\Tenancy\Middleware\InitializeTenancyByDomain;
+use Filament\Http\Middleware\DispatchServingFilamentEvent;
+use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
+use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Stancl\Tenancy\Middleware\PreventAccessFromCentralDomains;
 
 class FiscalPanelProvider extends PanelProvider
@@ -34,6 +35,7 @@ class FiscalPanelProvider extends PanelProvider
             ->colors([
                 'primary' => Color::Amber,
             ])
+            ->viteTheme('resources/css/filament/fiscal/theme.css')
             ->discoverResources(in: app_path('Filament/Fiscal/Resources'), for: 'App\\Filament\\Fiscal\\Resources')
             ->discoverPages(in: app_path('Filament/Fiscal/Pages'), for: 'App\\Filament\\Fiscal\\Pages')
             ->pages([
@@ -50,10 +52,10 @@ class FiscalPanelProvider extends PanelProvider
                     ->icon('heroicon-o-user')
                     ->url(fn (): string => 'app/profile/me'),
             ])
-            // ->renderHook(
-            //     PanelsRenderHook::CONTENT_START,
-            //     fn(): string => Blade::render('@livewire(\'component.choice-organization\')'),
-            // )
+            ->renderHook(
+                PanelsRenderHook::CONTENT_START,
+                fn (): string => Blade::render('@livewire(\'component.choice-organization\')'),
+            )
             ->middleware([
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,
@@ -69,10 +71,16 @@ class FiscalPanelProvider extends PanelProvider
                 'web',
                 InitializeTenancyByDomain::class,
                 PreventAccessFromCentralDomains::class,
-                // CheckUserHasOrganization::class,
+                CheckUserHasOrganization::class,
+                \Hasnayeen\Themes\Http\Middleware\SetTheme::class,
             ], isPersistent: true)
             ->authMiddleware([
                 Authenticate::class,
-            ]);
+            ])
+            ->plugins([
+                \Hasnayeen\Themes\ThemesPlugin::make(),
+               // HooksHelperPlugin::make(),
+            ])
+            ->databaseNotifications();
     }
 }

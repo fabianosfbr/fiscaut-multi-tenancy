@@ -50,9 +50,10 @@ class AppServiceProvider extends ServiceProvider
             $panelSwitch
                 ->modalHeading('Escolha o módulo')
                 ->modalWidth('md')
-                ->excludes(['admin'])
+                ->panels(['client', 'contabil', 'fiscal'])
                 ->iconSize(16)
                 ->simple()
+                ->renderHook('panels::sidebar.nav.start')
                 ->labels([
                     'client' => __('Configuração'),
                     'fiscal' => __('Fiscal'),

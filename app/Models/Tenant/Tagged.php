@@ -2,8 +2,10 @@
 
 namespace App\Models\Tenant;
 
-use Illuminate\Database\Eloquent\Concerns\HasUuids;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
 
 class Tagged extends Model
 {
@@ -25,6 +27,30 @@ class Tagged extends Model
         'product' => 'array',
     ];
 
+    protected static function boot()
+    {
+        parent::boot();
+
+
+        static::saved(function ($category) {
+            $organizationId = auth()->user()->last_organization_id;
+            $cacheKey = 'taggeds_for_filter_organization_' . $organizationId;
+            Cache::forget($cacheKey);
+        });
+
+        static::deleted(function ($category) {
+            $organizationId = auth()->user()->last_organization_id;
+            $cacheKey = 'taggeds_for_filter_organization_' . $organizationId;
+            Cache::forget($cacheKey);
+        });
+
+        static::updated(function ($category) {
+            $organizationId = auth()->user()->last_organization_id;
+            $cacheKey = 'taggeds_for_filter_organization_' . $organizationId;
+            Cache::forget($cacheKey);
+        });
+    }
+
     public function taggable()
     {
         return $this->morphTo();
@@ -39,7 +65,7 @@ class Tagged extends Model
     public function tagNamesWithCode(): array
     {
         return $this->tagged->map(function ($item) {
-            return $item->tag->code.' - '.$item->tag_name;
+            return $item->tag->code . ' - ' . $item->tag_name;
         })->toArray();
     }
 }

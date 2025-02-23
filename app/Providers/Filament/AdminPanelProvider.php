@@ -62,6 +62,7 @@ class AdminPanelProvider extends PanelProvider
             ->plugin(
                 \Hasnayeen\Themes\ThemesPlugin::make()
             )
-            ->authGuard('lords');
+            ->authGuard('lords')
+            ->databaseNotifications();
     }
 }

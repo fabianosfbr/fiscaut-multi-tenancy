@@ -2,32 +2,33 @@
 
 namespace App\Providers\Filament;
 
-use App\Filament\Client\Pages\Auth\LoginPage;
-use App\Filament\Client\Pages\Auth\PasswordReset;
-use App\Filament\Client\Pages\Auth\RegisterPage;
-use App\Filament\Clusters\Profile\Pages\ViewProfile;
-use App\Http\Middleware\CheckUserHasOrganization;
-use Filament\Http\Middleware\Authenticate;
-use Filament\Http\Middleware\DisableBladeIconComponents;
-use Filament\Http\Middleware\DispatchServingFilamentEvent;
-use Filament\Navigation\MenuItem;
 use Filament\Pages;
-use Filament\Pages\Auth\EmailVerification\EmailVerificationPrompt;
 use Filament\Panel;
+use Filament\Widgets;
 use Filament\PanelProvider;
+use Filament\Navigation\MenuItem;
 use Filament\Support\Colors\Color;
 use Filament\View\PanelsRenderHook;
-use Filament\Widgets;
-use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
+use Illuminate\Support\Facades\Blade;
+use Filament\Http\Middleware\Authenticate;
+use App\Filament\Client\Pages\Auth\LoginPage;
+use Illuminate\Session\Middleware\StartSession;
+use App\Filament\Client\Pages\Auth\RegisterPage;
 use Illuminate\Cookie\Middleware\EncryptCookies;
-use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
+use App\Filament\Client\Pages\Auth\PasswordReset;
+use App\Http\Middleware\CheckUserHasOrganization;
+use Agencetwogether\HooksHelper\HooksHelperPlugin;
+use App\Filament\Clusters\Profile\Pages\ViewProfile;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\AuthenticateSession;
-use Illuminate\Session\Middleware\StartSession;
-use Illuminate\Support\Facades\Blade;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
+use Filament\Http\Middleware\DisableBladeIconComponents;
 use Stancl\Tenancy\Middleware\InitializeTenancyByDomain;
+use Filament\Http\Middleware\DispatchServingFilamentEvent;
+use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
+use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Stancl\Tenancy\Middleware\PreventAccessFromCentralDomains;
+use Filament\Pages\Auth\EmailVerification\EmailVerificationPrompt;
 
 class ClientPanelProvider extends PanelProvider
 {
@@ -94,8 +95,9 @@ class ClientPanelProvider extends PanelProvider
                 Authenticate::class,
 
             ])
-            ->plugin(
-                \Hasnayeen\Themes\ThemesPlugin::make()
-            );
+            ->plugins([
+                \Hasnayeen\Themes\ThemesPlugin::make(),
+               // HooksHelperPlugin::make(),
+            ]);
     }
 }
