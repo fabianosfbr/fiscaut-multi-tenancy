@@ -10,6 +10,7 @@ use Filament\Tables\Table;
 use Filament\Resources\Resource;
 use App\Enums\Tenant\DocTypeEnum;
 use App\Models\Tenant\FileUpload;
+use App\Enums\Tenant\UserTypeEnum;
 use App\Models\Tenant\CategoryTag;
 use Illuminate\Support\HtmlString;
 use App\Models\Tenant\Organization;
@@ -28,9 +29,9 @@ use Illuminate\Support\Facades\Storage;
 use App\Models\Tenant\ConfiguracaoGeral;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
+
+
 use Filament\Tables\Filters\SelectFilter;
-
-
 use Illuminate\Database\Eloquent\Builder;
 use App\Forms\Components\SelectTagGrouped;
 use Filament\Forms\Components\Placeholder;
@@ -187,7 +188,13 @@ class FileUploadResource extends Resource
 
                         Toggle::make('processed')
                             ->label('Apurado')
-
+                            ->visible(function () {
+                                $user = auth()->user();
+                                if ($user->hasRole(UserTypeEnum::ADMIN->value, UserTypeEnum::ACCOUNTING->value)) {
+                                    return true;
+                                }
+                                return false;
+                            })
                             ->inline()
                             ->columnSpan(1),
 
@@ -328,14 +335,14 @@ class FileUploadResource extends Resource
                         ->label('Apurar')
                         ->icon('heroicon-o-currency-dollar')
                         ->modalSubmitActionLabel('Sim, apurar')
-                        // ->visible(function () {
-                        //     $user = auth()->user();
-                        //     if ($user->hasRole('super-admin', 'admin', 'contabilidade') && $user->hasPermission('marcar-documento-como-apurado')) {
-                        //         return true;
-                        //     }
+                        ->visible(function () {
+                            $user = auth()->user();
+                            if ($user->hasRole(UserTypeEnum::ADMIN->value, UserTypeEnum::ACCOUNTING->value)) {
+                                return true;
+                            }
 
-                        //     return false;
-                        // })
+                            return false;
+                        })
 
                         ->requiresConfirmation()
                         ->action(function (Collection $records) {
@@ -383,6 +390,7 @@ class FileUploadResource extends Resource
                                 ->inline(),
                         ])
                         ->action(function (Collection $records, array $data) {
+
 
                             DownloadLoteUploadFile::dispatch($records, $data, auth()->user()->id);
 
