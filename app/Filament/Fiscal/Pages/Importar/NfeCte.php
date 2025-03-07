@@ -7,12 +7,11 @@ use Filament\Forms\Form;
 use Filament\Pages\Page;
 use Illuminate\Support\Str;
 use Filament\Actions\Action;
-use App\Livewire\ResultadoImportacaoXmlModal;
 use Illuminate\Support\HtmlString;
 use App\Models\Tenant\Organization;
 use Filament\Forms\Components\View;
-
 use Illuminate\Support\Facades\Log;
+
 use Filament\Support\Enums\Alignment;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Livewire;
@@ -23,9 +22,13 @@ use App\Services\Tenant\Sefaz\NfeService;
 use Filament\Forms\Components\FileUpload;
 use App\Models\Tenant\NotaFiscalEletronica;
 use Filament\Forms\Components\ToggleButtons;
+use App\Livewire\ResultadoImportacaoXmlModal;
+use App\Services\Tenant\Xml\XmlCteReaderService;
 use App\Services\Tenant\Xml\XmlExtractorService;
 use App\Services\Tenant\Xml\XmlNfeReaderService;
+use App\Services\Tenant\Xml\XmlIdentifierService;
 use Filament\Pages\Concerns\InteractsWithFormActions;
+use App\Models\Tenant\ConhecimentoTransporteEletronico;
 use Filament\Notifications\Actions\Action as NotificationAction;
 
 class NfeCte extends Page
@@ -63,7 +66,7 @@ class NfeCte extends Page
                         FileUpload::make('xmlFiles')
                             ->label('Arquivos XML/ZIP')
                             ->multiple()
-                            ->helperText('Você pode enviar arquivos XML individuais ou um arquivo ZIP contendo vários XMLs')
+                            ->helperText('Você pode enviar arquivos XML (NFe ou CTe) individuais ou um arquivo ZIP contendo vários XMLs')
                             ->maxSize(50000) // 50MB
                             ->required(),
                     ]),
@@ -84,10 +87,18 @@ class NfeCte extends Page
 
         try {
             $resultados = [
-                'sucessos' => [],
-                'atualizacoes' => [],
-                'falhas' => [],
-                'total' => 0,
+                'nfe' => [
+                    'sucessos' => [],
+                    'atualizacoes' => [],
+                    'falhas' => [],
+                    'total' => 0,
+                ],
+                'cte' => [
+                    'sucessos' => [],
+                    'atualizacoes' => [],
+                    'falhas' => [],
+                    'total' => 0,
+                ],
                 'arquivos_processados' => 0,
             ];
 
@@ -103,48 +114,27 @@ class NfeCte extends Page
                             $xmlContent = $xmlData['content'];
                             $nomeArquivo = $xmlData['filename'];
 
-                            // Verifica se já existe uma nota com essa chave antes de salvar
-                            $xmlReader = (new XmlNfeReaderService())
-                                ->loadXml($xmlContent)
-                                ->parse();
-
-                            $chaveAcesso = $xmlReader->getData()['chave_acesso'];
-                            $existente = NotaFiscalEletronica::where('chave_acesso', $chaveAcesso)->first();
-
-                            $nfe = $xmlReader->save();
+                            $tipoXml = XmlIdentifierService::identificarTipoXml($xmlContent);
 
 
-                            if ($existente) {
-                                $resultados['atualizacoes'][] = [
-                                    'arquivo' => $nomeArquivo,
-                                    'chave' => $nfe->chave_acesso,
-                                    'numero' => $nfe->numero,
-                                    'emitente' => $nfe->nome_emitente,
-                                    'status_anterior' => $existente->status_nota,
-                                    'status_novo' => $nfe->status_nota,
-                                ];
+                            if ($tipoXml === XmlIdentifierService::TIPO_NFE) {
+                                $this->processarNfe($xmlContent, $nomeArquivo, $resultados['nfe']);
                             } else {
-                                $resultados['sucessos'][] = [
-                                    'arquivo' => $nomeArquivo,
-                                    'chave' => $nfe->chave_acesso,
-                                    'numero' => $nfe->numero,
-                                    'emitente' => $nfe->nome_emitente,
-                                    'valor' => number_format($nfe->valor_total, 2, ',', '.'),
-                                ];
+                                $this->processarCte($xmlContent, $nomeArquivo, $resultados['cte']);
                             }
-                            $resultados['total']++;
                         } catch (Exception $e) {
                             $resultados['falhas'][] = [
-                                'arquivo' => $nomeArquivo,
-                                'erro' => $e->getMessage()
+                                'arquivo' => $file->getClientOriginalName(),
+                                'erro' => "Erro ao processar arquivo: " . $e->getMessage()
                             ];
-                            $resultados['total']++;
+                            $resultados['arquivos_processados']++;
                         }
                     }
 
                     $resultados['arquivos_processados']++;
                 } catch (Exception $e) {
-                    $resultados['falhas'][] = [
+                    // Se não conseguir extrair o arquivo, considera como NFe por padrão
+                    $resultados['nfe']['falhas'][] = [
                         'arquivo' => $file->getClientOriginalName(),
                         'erro' => "Erro ao processar arquivo: " . $e->getMessage()
                     ];
@@ -161,10 +151,13 @@ class NfeCte extends Page
             Log::error('Erro no processamento de XMLs: ' . $e->getMessage());
         }
 
+        // Reseta o formulário
+        $this->form->fill();
+
 
         $this->dispatch('openModal', $resultados);
 
-       
+
         // Determina o tipo de notificação com base nos resultados
         // if (empty($resultados['falhas'])) {
         //     // Sucesso total
@@ -213,11 +206,75 @@ class NfeCte extends Page
         // }
 
 
-        // Reseta o formulário
-        $this->form->fill();
+
     }
 
 
+    private function processarNfe(string $xmlContent, string $nomeArquivo, array &$resultados): void
+    {
+        $xmlReader = (new XmlNfeReaderService())
+            ->loadXml($xmlContent)
+            ->parse();
+
+        $dadosXml = $xmlReader->getData();
+        $chaveAcesso = $dadosXml['chave_acesso'];
+
+        $existente = NotaFiscalEletronica::where('chave_acesso', $chaveAcesso)->first();
+        $nfe = $xmlReader->save();
+
+        if ($existente) {
+            $resultados['atualizacoes'][] = [
+                'arquivo' => $nomeArquivo,
+                'chave' => $nfe->chave_acesso,
+                'numero' => $nfe->numero,
+                'emitente' => $nfe->nome_emitente,
+                'status_anterior' => $existente->status_nota,
+                'status_novo' => $nfe->status_nota,
+            ];
+        } else {
+            $resultados['sucessos'][] = [
+                'arquivo' => $nomeArquivo,
+                'chave' => $nfe->chave_acesso,
+                'numero' => $nfe->numero,
+                'emitente' => $nfe->nome_emitente,
+                'valor' => number_format($nfe->valor_total, 2, ',', '.'),
+            ];
+        }
+        $resultados['total']++;
+    }
+
+    private function processarCte(string $xmlContent, string $nomeArquivo, array &$resultados): void
+    {
+        $xmlReader = (new XmlCteReaderService())
+            ->loadXml($xmlContent)
+            ->parse();
+
+        $dadosXml = $xmlReader->getData();
+        $chaveAcesso = $dadosXml['chave_acesso'];
+
+        $existente = ConhecimentoTransporteEletronico::where('chave_acesso', $chaveAcesso)->first();
+        $cte = $xmlReader->save();
+
+        if ($existente) {
+            $resultados['atualizacoes'][] = [
+                'arquivo' => $nomeArquivo,
+                'chave' => $cte->chave_acesso,
+                'numero' => $cte->numero,
+                'emitente' => $cte->nome_emitente,
+                'status_anterior' => $existente->status_cte,
+                'status_novo' => $cte->status_cte,
+            ];
+        } else {
+            $resultados['sucessos'][] = [
+                'arquivo' => $nomeArquivo,
+                'chave' => $cte->chave_acesso,
+                'numero' => $cte->numero,
+                'emitente' => $cte->nome_emitente,
+                'valor' => number_format($cte->valor_total, 2, ',', '.'),
+            ];
+        }
+        $resultados['total']++;
+    }
 
     protected function getFormActions(): array
     {

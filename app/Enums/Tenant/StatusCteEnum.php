@@ -5,27 +5,33 @@ namespace App\Enums\Tenant;
 use Filament\Support\Contracts\HasColor;
 use Filament\Support\Contracts\HasLabel;
 
-enum StatusCteEnum: int implements HasColor, HasLabel
+enum StatusCteEnum: string implements HasColor, HasLabel
 {
-    case ATIVA = 100;
-    case CANCELADA = 101;
-    case DENEGADA = 302;
+    case EMITIDO = 'EMITIDO';
+    case AUTORIZADO = 'AUTORIZADO';
+    case CANCELADO = 'CANCELADO';
+    case DENEGADO = 'DENEGADO';
+    case INUTILIZADO = 'INUTILIZADO';
 
     public function getLabel(): ?string
     {
         return match ($this) {
-            self::ATIVA => 'Ativa',
-            self::CANCELADA => 'Cancelada',
-            self::DENEGADA => 'Denegada',
+            self::EMITIDO => 'Emitido',
+            self::AUTORIZADO => 'Autorizado',
+            self::CANCELADO => 'Cancelado',
+            self::DENEGADO => 'Denegado',
+            self::INUTILIZADO => 'Inutilizado',
         };
     }
 
     public function getColor(): string|array|null
     {
         return match ($this) {
-            self::ATIVA => 'success',
-            self::CANCELADA => 'danger',
-            self::DENEGADA => 'danger',
+            self::EMITIDO => 'warning',
+            self::AUTORIZADO => 'success',
+            self::CANCELADO => 'danger',
+            self::DENEGADO => 'danger',
+            self::INUTILIZADO => 'gray',
         };
     }
 }
