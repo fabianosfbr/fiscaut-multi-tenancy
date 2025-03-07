@@ -2,13 +2,14 @@
 
 namespace App\Providers;
 
-use BezhanSalleh\PanelSwitch\PanelSwitch;
-use Filament\Support\Assets\Css;
-use Filament\Support\Assets\Js;
-use Filament\Support\Facades\FilamentAsset;
-use Filament\Tables\Enums\FiltersLayout;
 use Filament\Tables\Table;
+use Filament\Support\Assets\Js;
+use Filament\Support\Assets\Css;
+use App\Services\TenantDatabaseManager;
 use Illuminate\Support\ServiceProvider;
+use Filament\Tables\Enums\FiltersLayout;
+use BezhanSalleh\PanelSwitch\PanelSwitch;
+use Filament\Support\Facades\FilamentAsset;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -17,7 +18,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+       // $this->app->singleton(TenantDatabaseManager::class);
     }
 
     /**

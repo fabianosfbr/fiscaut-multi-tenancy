@@ -22,11 +22,16 @@ class Tenant extends BaseTenant implements TenantWithDatabase
             'razao_social',
             'cnpj',
             'domain',
+            'db_host',
+            'db_username',
+            'db_password',
+            'db_name',
         ];
     }
 
     protected $hidden = [
         'password',
+        'db_password',
     ];
 
     public function payment_log(): HasOne

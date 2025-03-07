@@ -23,6 +23,7 @@ use Filament\Http\Middleware\DispatchServingFilamentEvent;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Stancl\Tenancy\Middleware\PreventAccessFromCentralDomains;
+use App\Filament\Fiscal\Pages\Importar\NfeCte;
 
 class FiscalPanelProvider extends PanelProvider
 {
@@ -40,6 +41,7 @@ class FiscalPanelProvider extends PanelProvider
             ->discoverPages(in: app_path('Filament/Fiscal/Pages'), for: 'App\\Filament\\Fiscal\\Pages')
             ->pages([
                 Pages\Dashboard::class,
+                NfeCte::class,
             ])
             ->discoverWidgets(in: app_path('Filament/Fiscal/Widgets'), for: 'App\\Filament\\Fiscal\\Widgets')
             ->widgets([

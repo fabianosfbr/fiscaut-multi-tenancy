@@ -2,18 +2,31 @@
 
 namespace App\Filament\Fiscal\Pages\Importar;
 
-use App\Models\Tenant\Organization;
-use App\Services\Tenant\Sefaz\NfeService;
-use Filament\Actions\Action;
-use Filament\Forms\Components\FileUpload;
-use Filament\Forms\Components\Section;
-use Filament\Forms\Components\ToggleButtons;
+use Exception;
 use Filament\Forms\Form;
-use Filament\Notifications\Notification;
-use Filament\Pages\Concerns\InteractsWithFormActions;
 use Filament\Pages\Page;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Filament\Actions\Action;
+use App\Livewire\ResultadoImportacaoXmlModal;
+use Illuminate\Support\HtmlString;
+use App\Models\Tenant\Organization;
+use Filament\Forms\Components\View;
+
+use Illuminate\Support\Facades\Log;
+use Filament\Support\Enums\Alignment;
+use Filament\Forms\Components\Section;
+use Filament\Forms\Components\Livewire;
+use Illuminate\Support\Facades\Storage;
+use Filament\Forms\Components\ViewField;
+use Filament\Notifications\Notification;
+use App\Services\Tenant\Sefaz\NfeService;
+use Filament\Forms\Components\FileUpload;
+use App\Models\Tenant\NotaFiscalEletronica;
+use Filament\Forms\Components\ToggleButtons;
+use App\Services\Tenant\Xml\XmlExtractorService;
+use App\Services\Tenant\Xml\XmlNfeReaderService;
+use Filament\Pages\Concerns\InteractsWithFormActions;
+use Filament\Notifications\Actions\Action as NotificationAction;
 
 class NfeCte extends Page
 {
@@ -25,7 +38,7 @@ class NfeCte extends Page
 
     protected static ?string $navigationLabel = 'Importar XML';
 
-    protected static ?string $title = '';
+    protected static ?string $title = 'Importar NF-e/CT-e';
 
     protected static string $view = 'filament.fiscal.pages.importar.nfe-cte';
 
@@ -33,141 +46,186 @@ class NfeCte extends Page
 
     public $xml_type = [];
 
+    public ?array $data = [];
+
+    public function mount(): void
+    {
+        $this->form->fill();
+    }
+
     public function form(Form $form): Form
     {
         return $form
             ->schema([
-                Section::make('Enviar arquivo para upload')
-                    ->description('Os dados do xml estará disponível para todas as partes interessadas. (emitente, destinatário e transportador)')
+                Section::make('Upload de XML')
+                    ->description('Selecione um ou mais arquivos XML de NF-e para importar')
                     ->schema([
-                        ToggleButtons::make('xml_type')
-                            ->label('Tipo de xml')
-                            ->options([
-                                'nfe' => 'NFe',
-                                'cte' => 'CTe',
-                            ])
-                            ->required()
-                            ->grouped()
-                            ->inline(),
-                        FileUpload::make('filesToImport')
-                            ->label('')
+                        FileUpload::make('xmlFiles')
+                            ->label('Arquivos XML/ZIP')
                             ->multiple()
-                            ->preserveFilenames()
-                            ->required()
-                            ->directory(function () {
-                                $issuer = Organization::find(auth()->user()->last_organization_id);
-
-                                return 'documentos/'.$issuer->cnpj.'/upload-xml';
-                            })
-                            ->uploadProgressIndicatorPosition('left')
-                            ->maxFiles(25)
-                            ->columnSpanFull(),
-                    ])->columns(2),
-
-            ]);
+                            ->helperText('Você pode enviar arquivos XML individuais ou um arquivo ZIP contendo vários XMLs')
+                            ->maxSize(50000) // 50MB
+                            ->required(),
+                    ]),
+                Livewire::make(
+                    ResultadoImportacaoXmlModal::class,
+                    [
+                        'id' => 'importar_xml',
+                        'width' => '2xl',
+                    ]
+                )
+            ])
+            ->statePath('data');
     }
 
-    // public function import(): void
-    // {
-
-    //     $issuer = Issuer::find(getCurrentIssuer());
-    //     $filesData = [];
-    //     $directory = 'documentos/' . $issuer->tenant_id . '/' . $issuer->cnpj . '/upload-xml/' . Str::random(40);
-
-    //     foreach ($this->filesToImport as $file) {
-
-    //         //Todo codigo auxilia no debug
-    //         // $xml = Storage::get($file->storeAs($directory, $file->getClientOriginalName()));
-    //         // $element = loadXmlReader($xml);
-    //         // dd($element->value('procEventoNFe')->get());
-
-    //         $data = [
-    //             'name' => $file->getClientOriginalName(),
-    //             'extension' => explode('.', $file->getClientOriginalName())[1],
-    //             'path' => $file->storeAs($directory, $file->getClientOriginalName()),
-    //             'directory' => $directory,
-    //         ];
-
-    //         array_push($filesData, $data);
-    //     }
-
-    //     XmlImportJob::dispatch($filesData, $issuer)->onQueue('high');
-
-    //     unset($this->filesToImport);
-
-    //     $this->form->fill([]);
-
-    //     Notification::make()
-    //         ->title('Arquivos serão processados')
-    //         ->success()
-    //         ->send();
-    // }
-
-    public function import(): void
+    public function processarXmls(): void
     {
+        $this->validate();
 
-        $issuer = Organization::find(auth()->user()->last_organization_id);
-
-        $filesData = [];
-        $directory = 'documentos/'.$issuer->cnpj.'/upload-xml/'.Str::random(40);
-
-        foreach ($this->filesToImport as $file) {
-
-            // Todo codigo auxilia no debug
-            // $xml = Storage::get($file->storeAs($directory, $file->getClientOriginalName()));
-            // $element = loadXmlReader($xml);
-            // dd($element->value('procEventoNFe')->get());
-
-            $data = [
-                'name' => $file->getClientOriginalName(),
-                'extension' => explode('.', $file->getClientOriginalName())[1],
-                'path' => $file->storeAs($directory, $file->getClientOriginalName()),
-                'directory' => $directory,
+        try {
+            $resultados = [
+                'sucessos' => [],
+                'atualizacoes' => [],
+                'falhas' => [],
+                'total' => 0,
+                'arquivos_processados' => 0,
             ];
 
-            array_push($filesData, $data);
-        }
+            $xmlExtractor = app(XmlExtractorService::class);
 
-        foreach ($filesData as $file) {
+            foreach ($this->data['xmlFiles'] as $file) {
 
-            $xml = Storage::get($file['path']);
-            $xmlReader = loadXmlReader($xml);
+                try {
+                    $xmlContents = $xmlExtractor->extract($file);
 
-            if ($this->xml_type == 'cte') {
+                    foreach ($xmlContents as $xmlData) {
+                        try {
+                            $xmlContent = $xmlData['content'];
+                            $nomeArquivo = $xmlData['filename'];
 
-                //  $service = app(CteService::class)->issuer($issuer);
-            } else {
+                            // Verifica se já existe uma nota com essa chave antes de salvar
+                            $xmlReader = (new XmlNfeReaderService())
+                                ->loadXml($xmlContent)
+                                ->parse();
 
-                $service = app(NfeService::class)->issuer($issuer);
+                            $chaveAcesso = $xmlReader->getData()['chave_acesso'];
+                            $existente = NotaFiscalEletronica::where('chave_acesso', $chaveAcesso)->first();
+
+                            $nfe = $xmlReader->save();
+
+
+                            if ($existente) {
+                                $resultados['atualizacoes'][] = [
+                                    'arquivo' => $nomeArquivo,
+                                    'chave' => $nfe->chave_acesso,
+                                    'numero' => $nfe->numero,
+                                    'emitente' => $nfe->nome_emitente,
+                                    'status_anterior' => $existente->status_nota,
+                                    'status_novo' => $nfe->status_nota,
+                                ];
+                            } else {
+                                $resultados['sucessos'][] = [
+                                    'arquivo' => $nomeArquivo,
+                                    'chave' => $nfe->chave_acesso,
+                                    'numero' => $nfe->numero,
+                                    'emitente' => $nfe->nome_emitente,
+                                    'valor' => number_format($nfe->valor_total, 2, ',', '.'),
+                                ];
+                            }
+                            $resultados['total']++;
+                        } catch (Exception $e) {
+                            $resultados['falhas'][] = [
+                                'arquivo' => $nomeArquivo,
+                                'erro' => $e->getMessage()
+                            ];
+                            $resultados['total']++;
+                        }
+                    }
+
+                    $resultados['arquivos_processados']++;
+                } catch (Exception $e) {
+                    $resultados['falhas'][] = [
+                        'arquivo' => $file->getClientOriginalName(),
+                        'erro' => "Erro ao processar arquivo: " . $e->getMessage()
+                    ];
+                    $resultados['arquivos_processados']++;
+                }
             }
+        } catch (Exception $e) {
+            Notification::make()
+                ->danger()
+                ->title('Erro no Processamento')
+                ->body('Ocorreu um erro inesperado durante o processamento dos arquivos.')
+                ->send();
 
-            $service->exec($xmlReader, $xml, 'Importação');
+            Log::error('Erro no processamento de XMLs: ' . $e->getMessage());
         }
 
-        //  XmlImportJob::dispatch($filesData, $issuer)->onQueue('high');
 
-        unset($this->filesToImport);
+        $this->dispatch('openModal', $resultados);
 
-        $this->form->fill([]);
+       
+        // Determina o tipo de notificação com base nos resultados
+        // if (empty($resultados['falhas'])) {
+        //     // Sucesso total
+        //     Notification::make()
+        //         ->success()
+        //         ->title('Importação Concluída')
+        //         ->body("Todas as {$resultados['total']} notas foram importadas com sucesso!")
+        //         ->actions([
+        //             NotificationAction::make('ver_detalhes')
+        //                 ->label('Ver Detalhes')
+        //                 ->color('success')
+        //                 ->dispatch('openModal', data: ['resultados' => 111]),
+        //         ])
+        //         ->send();
+        // } elseif (empty($resultados['sucessos'])) {
+        //     // Falha total
+        //     Notification::make()
+        //         ->danger()
+        //         ->title('Falha na Importação')
+        //         ->body("Nenhuma nota foi importada. Todas as {$resultados['total']} tentativas falharam.")
+        //         ->actions([
+        //             NotificationAction::make('ver_erros')
+        //                 ->label('Ver Erros')
+        //                 ->color('danger')
+        //                 ->dispatch('openModal', $resultados)
+        //         ])
+        //         ->send();
+        // } else {
+        //     // Resultado parcial
+        //     Notification::make()
+        //         ->warning()
+        //         ->title('Importação Parcialmente Concluída')
+        //         ->body(sprintf(
+        //             "Processadas: %d | Sucesso: %d | Falhas: %d",
+        //             $resultados['total'],
+        //             count($resultados['sucessos']),
+        //             count($resultados['falhas'])
+        //         ))
+        //         ->actions([
+        //             NotificationAction::make('ver_resultados')
+        //                 ->label('Ver Resultados')
+        //                 ->color('warning')
+        //                 ->dispatch('openModal', ['resultados' => $resultados])
+        //         ])
+        //         ->send();
+        // }
 
-        Notification::make()
-            ->title('Arquivos serão processados')
-            ->success()
-            ->send();
+
+        // Reseta o formulário
+        $this->form->fill();
     }
+
+
 
     protected function getFormActions(): array
     {
         return [
-            $this->getSaveFormAction(),
+            Action::make('processarXmls')
+                ->label('Importar')
+                ->action('processarXmls')
+                ->color('primary')
         ];
-    }
-
-    protected function getSaveFormAction(): Action
-    {
-        return Action::make('importar')
-            ->label('Importar')
-            ->submit('import')
-            ->keyBindings(['mod+s']);
     }
 }

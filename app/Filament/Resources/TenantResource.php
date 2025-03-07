@@ -42,7 +42,7 @@ class TenantResource extends Resource
                             ->validationAttribute('Razão Social')
                             ->required()
                             ->live(onBlur: true)
-                            ->afterStateUpdated(fn (Set $set, ?string $state) => $set('domains', Str::slug($state)))
+                            ->afterStateUpdated(fn(Set $set, ?string $state) => $set('domains', Str::slug($state)))
                             ->columnSpan(1),
                         TextInput::make('cnpj')
                             ->label('CNPJ')
@@ -50,7 +50,7 @@ class TenantResource extends Resource
                             ->validationAttribute('CNPJ')
                             ->unique(ignoreRecord: true)
                             ->rules([
-                                fn (): Closure => function (string $attribute, $value, Closure $fail) {
+                                fn(): Closure => function (string $attribute, $value, Closure $fail) {
                                     $value = str_replace(['-', '.', '/'], '', $value);
                                     $domain = Tenant::where('cnpj', $value)->first();
                                     if ($domain) {
@@ -83,7 +83,7 @@ class TenantResource extends Resource
                             ->disabledOn('edit')
                             ->required()
                             ->rules([
-                                fn (): Closure => function (string $attribute, $value, Closure $fail) {
+                                fn(): Closure => function (string $attribute, $value, Closure $fail) {
                                     $domain = Tenant::where('domain', $value)->first();
                                     if ($domain) {
                                         $fail('Este domínio já está sendo utilizado por outra empresa.');
@@ -94,6 +94,29 @@ class TenantResource extends Resource
                             ->prefix('https://')
                             ->suffix('.localhost'),
                     ])->columns(2),
+
+                Section::make('Configuração do Banco de Dados')
+                    ->schema([
+                        TextInput::make('db_host')
+                            ->label('Host do Banco de Dados')
+                            ->placeholder('localhost')
+                            ->helperText('Deixe em branco para usar o padrão do sistema')
+                            ->columnSpan(1),
+                        TextInput::make('db_name')
+                            ->label('Nome do Banco')
+                            ->helperText('Deixe em branco para usar o padrão do sistema')
+                            ->columnSpan(1),
+                        TextInput::make('db_username')
+                            ->label('Usuário do Banco')
+                            ->helperText('Deixe em branco para usar o padrão do sistema')
+                            ->columnSpan(1),
+                        TextInput::make('db_password')
+                            ->label('Senha do Banco')
+                            ->password()
+                            ->revealable()
+                            ->helperText('Deixe em branco para usar o padrão do sistema')
+                            ->columnSpan(1),
+                    ])->columns(2)
             ]);
     }
 
@@ -145,7 +168,7 @@ class TenantResource extends Resource
                             'tenant_id' => $tenant->id,
                             'start_date' => now(),
                             'expire_date' => '2100-12-31',
-                            'track' => Str::random(10).Str::random(10),
+                            'track' => Str::random(10) . Str::random(10),
 
                         ];
 

@@ -19,9 +19,10 @@ use Illuminate\Support\Str;
 
 Artisan::command('play', function () {
 
-    dd(ShowChoiceOrganizationUrl::show()->get()->toArray());
+    
+    $tenant = Tenant::where('id', '1d337146-652e-4c26-8838-7ab0f49beb64')->first();
 
-    $tenant = Tenant::where('id', 'e1b1da9a-7ea7-4653-99ec-6972dc34244a')->first();
+    dd($tenant);
 
     $tenant->run(function ($tenant) {
 

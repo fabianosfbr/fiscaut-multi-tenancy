@@ -11,12 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('notifications', function (Blueprint $table) {
+        Schema::create('nota_fiscal_eletronica_historicos', function (Blueprint $table) {
             $table->uuid('id')->primary();
-            $table->string('type');
-            $table->uuidMorphs('notifiable');
-            $table->text('data');
-            $table->timestamp('read_at')->nullable();
+            $table->foreignUuid('nfe_id')->constrained('notas_fiscais_eletronica')->cascadeOnDelete();
+            $table->datetime('data_alteracao');
+            $table->json('campos_alterados');
+            $table->uuid('usuario_id')->nullable();
             $table->timestamps();
         });
     }
@@ -26,6 +26,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('notifications');
+        Schema::dropIfExists('nota_fiscal_eletronica_historicos');
     }
 };

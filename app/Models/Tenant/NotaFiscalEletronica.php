@@ -2,13 +2,15 @@
 
 namespace App\Models\Tenant;
 
-use App\Enums\Tenant\StatusManifestoNfe;
-use App\Enums\Tenant\StatusNfeEnum;
-use App\Models\Tenant\Concerns\HasTags;
-use Illuminate\Database\Eloquent\Concerns\HasUuids;
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use App\Enums\Tenant\OrigemNfeEnum;
+use App\Enums\Tenant\StatusNfeEnum;
+use Illuminate\Support\Facades\Cache;
+use App\Models\Tenant\Concerns\HasTags;
+use Illuminate\Database\Eloquent\Model;
+use App\Enums\Tenant\StatusManifestoNfe;
+use App\Enums\Tenant\StatusManifestoNfeEnum;
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
 
 class NotaFiscalEletronica extends Model
 {
@@ -32,10 +34,29 @@ class NotaFiscalEletronica extends Model
             'pagamento' => 'array',
             'cobranca' => 'array',
             'cfops' => 'array',
-            'data_emissao' => 'datetime',
+
             'data_entrada' => 'datetime',
             'status_nota' => StatusNfeEnum::class,
-            'status_manifestacao' => StatusManifestoNfe::class,
+            'status_manifestacao' => StatusManifestoNfeEnum::class,
+            'origem' => OrigemNfeEnum::class,
+
+            'data_emissao' => 'datetime',
+            'valor_total' => 'decimal:2',
+            'valor_produtos' => 'decimal:2',
+            'valor_base_icms' => 'decimal:2',
+            'valor_icms' => 'decimal:2',
+            'valor_icms_desonerado' => 'decimal:2',
+            'valor_fcp' => 'decimal:2',
+            'valor_base_icms_st' => 'decimal:2',
+            'valor_icms_st' => 'decimal:2',
+            'valor_fcp_st' => 'decimal:2',
+            'valor_base_ipi' => 'decimal:2',
+            'valor_ipi' => 'decimal:2',
+            'valor_base_pis' => 'decimal:2',
+            'valor_pis' => 'decimal:2',
+            'valor_base_cofins' => 'decimal:2',
+            'valor_cofins' => 'decimal:2',
+            'valor_aproximado_tributos' => 'decimal:2',
         ];
     }
 
@@ -52,7 +73,7 @@ class NotaFiscalEletronica extends Model
 
     public function getTaggingSummaryAttribute()
     {
-        $result = Cache::remember('tagging_summary-'.$this->emitente_cnpj, 300, function () {
+        $result = Cache::remember('tagging_summary-' . $this->emitente_cnpj, 300, function () {
 
             return DB::table('organizations')
                 ->join('notas_fiscais_eletronica', 'organizations.cnpj', '=', 'notas_fiscais_eletronica.destinatario_cnpj')
@@ -72,5 +93,33 @@ class NotaFiscalEletronica extends Model
         });
 
         return $result;
+    }
+
+
+    public function itens()
+    {
+        return $this->hasMany(NotaFiscalEletronicaItem::class, 'nfe_id');
+    }
+
+    public function impostos()
+    {
+        return $this->hasOne(NotaFiscalEletronicaImposto::class, 'nfe_id');
+    }
+
+    // Método auxiliar para calcular o total de impostos
+    public function getTotalImpostosAttribute(): float
+    {
+        return $this->valor_icms +
+            $this->valor_icms_st +
+            $this->valor_ipi +
+            $this->valor_pis +
+            $this->valor_cofins +
+            $this->valor_fcp +
+            $this->valor_fcp_st;
+    }
+
+    public function historicos()
+    {
+        return $this->hasMany(NotaFiscalEletronicaHistorico::class, 'nfe_id');
     }
 }
