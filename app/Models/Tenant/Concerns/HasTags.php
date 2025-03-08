@@ -2,6 +2,7 @@
 
 namespace App\Models\Tenant\Concerns;
 
+use App\Models\Tenant\Tag;
 use App\Models\Tenant\Tagged;
 
 trait HasTags
@@ -19,13 +20,21 @@ trait HasTags
         }
     }
 
-    public function tag($tag, $value, $product = null)
+    public function tag($tag_id, $value, $product = null)
     {
+        $tag = Tag::find($tag_id);
+
+        if (! $tag) {
+            throw new \Exception('Tag não encontrada');
+        }
+
         $tagged = new Tagged([
             'tag_id' => $tag->id,
             'tag_name' => $tag->name,
             'value' => $value,
             'product' => $product,
+            'created_at' => now(),
+            'updated_at' => now(),
         ]);
 
         $this->tagged()->save($tagged);

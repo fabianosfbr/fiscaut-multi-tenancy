@@ -8,7 +8,10 @@ use Filament\Forms\Form;
 use Filament\Tables\Table;
 use Filament\Resources\Resource;
 use App\Enums\Tenant\OrigemNfeEnum;
+use App\Tables\Columns\TagColumnNfe;
+use App\Tables\Columns\ViewChaveColumn;
 use Filament\Tables\Columns\TextColumn;
+use App\Models\Tenant\ConfiguracaoGeral;
 use Filament\Tables\Actions\ActionGroup;
 use Filament\Tables\Columns\BadgeColumn;
 use Illuminate\Database\Eloquent\Builder;
@@ -17,6 +20,7 @@ use App\Models\Tenant\NotaFiscalEletronicaItem;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use App\Filament\Fiscal\Resources\NotaFiscalEletronicaResource\Pages;
 use App\Filament\Fiscal\Resources\NotaFiscalEletronicaResource\RelationManagers;
+use App\Filament\Fiscal\Resources\NotaFiscalEletronicaResource\Actions\ClassificarNotaAction;
 
 class NotaFiscalEletronicaResource extends Resource
 {
@@ -35,19 +39,12 @@ class NotaFiscalEletronicaResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+            ->recordUrl(null)
             ->columns([
                 TextColumn::make('numero')
                     ->label('Nº')
                     ->searchable()
                     ->sortable(),
-
-
-                TextColumn::make('chave_acesso')
-                    ->label('Chave de Acesso')
-                    ->searchable()
-                    ->toggleable(isToggledHiddenByDefault: true),
-
-
 
                 TextColumn::make('nome_emitente')
                     ->label('Empresa')
@@ -73,11 +70,6 @@ class NotaFiscalEletronicaResource extends Resource
                     ->money('BRL')
                     ->sortable(),
 
-                TextColumn::make('data_emissao')
-                    ->label('Data Emissão')
-                    ->date('d/m/Y')
-                    ->sortable(),
-
                 TextColumn::make('cfops')
                     ->label('CFOPs')
                     ->searchable(query: function (Builder $query, string $search): Builder {
@@ -86,6 +78,43 @@ class NotaFiscalEletronicaResource extends Resource
                         });
                     })
                     ->toggleable(),
+
+                TextColumn::make('data_emissao')
+                    ->label('Emissão')
+                    ->date('d/m/Y')
+                    ->sortable(),
+
+                TextColumn::make('data_entrada')
+                    ->label('Entrada')
+                    ->sortable()
+                    ->toggleable()
+                    ->date('d/m/Y'),
+
+                TextColumn::make('status_nota')
+                    ->label('Status')
+                    ->badge()
+                    ->sortable(),
+
+                TagColumnNfe::make('tagged')
+                    ->label('Etiqueta')
+                    ->alignCenter()
+                    ->toggleable()
+                    ->showTagCode(function () {
+                        return ConfiguracaoGeral::getValue('isNfeMostrarEtiquetaComNomeAbreviado', auth()->user()->last_organization_id);
+                    }),
+
+                TextColumn::make('status_manifestacao')
+                    ->label('Manifestação')
+                    ->badge()
+
+                    ->sortable(),
+
+                ViewChaveColumn::make('chave_acesso')
+                    ->label('Chave')
+                    ->searchable()
+                    ->alignCenter(),
+
+
 
 
 
@@ -99,9 +128,9 @@ class NotaFiscalEletronicaResource extends Resource
                 ActionGroup::make([
                     Tables\Actions\ViewAction::make()
                         ->label('Detalhes'),
-                ])
-                    ->link()
-                    ->label('Ações'),
+                    ClassificarNotaAction::make()
+                        ->label('Classificar'),
+                ]),
 
             ])
             ->bulkActions([

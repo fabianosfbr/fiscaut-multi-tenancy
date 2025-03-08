@@ -72,18 +72,10 @@ trait NfeHelper
         }, $filename.'.pdf');
     }
 
-    public function aplicarEtiqueta($nfeId, $cnpjEmitente, $tagId)
+    public function aplicarEtiqueta()
     {
-        $tag = Tag::find($tagId);
-        $nfe = NotaFiscalEletronica::where('id', $nfeId)
-            ->select(['id', 'vNfe'])
-            ->first();
-
-        $this->aplicarTagNoNfe($nfe, $tag);
-
-        // $this->aplicarTagNosCtes($nfe, $tag);
-
-        Cache::forget('tagging_summary-'.$cnpjEmitente);
+        dd('aplicarEtiqueta');
+        
     }
 
     private function aplicarTagNoNfe($nfe, $tag)

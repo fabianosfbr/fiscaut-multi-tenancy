@@ -33,9 +33,9 @@
                                         {{ $tag->qtde }}
                                     </td>
                                     <td class="px-6 py-1 pr-3">
-                                        <div x-data="{ tooltip: 'Aplicar etiqueta' }">
+                                        <div x-data="{ tooltip: 'Aplicar etiqueta', tag: @js($tag->tag_id), nfe: @js($record->id) }">
                                             <x-heroicon-o-check-circle x-tooltip="tooltip" x-on:click="open = !open"
-                                                wire:click="aplicarEtiqueta({{ $record->id }}, {{ $record->emitente_cnpj }},  {{ $tag->tag_id }} )"
+                                                @click="$dispatch('apply-tag-nfe', { tag: tag, nfe: nfe })"
                                                 class="cursor-pointer w-4 h-4" />
                                         </div>
                                     </td>

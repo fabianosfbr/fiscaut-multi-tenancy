@@ -2,6 +2,7 @@
 
 namespace App\Tables\Columns;
 
+use Closure;
 use Filament\Tables\Columns\Column;
 
 class TagColumnNfe extends Column
@@ -10,9 +11,13 @@ class TagColumnNfe extends Column
 
     protected bool $mostrarCodigo = false;
 
-    public function showTagCode(bool $mostrarCodigo): static
+    public function showTagCode(bool|Closure $mostrarCodigo): static
     {
-        $this->mostrarCodigo = $mostrarCodigo;
+        if ($mostrarCodigo instanceof Closure) {
+            $this->mostrarCodigo = $mostrarCodigo();
+        } else {
+            $this->mostrarCodigo = $mostrarCodigo;
+        }
 
         return $this;
     }

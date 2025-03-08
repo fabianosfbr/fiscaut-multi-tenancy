@@ -73,24 +73,25 @@ class NotaFiscalEletronica extends Model
 
     public function getTaggingSummaryAttribute()
     {
-        $result = Cache::remember('tagging_summary-' . $this->emitente_cnpj, 300, function () {
-
+        $result = Cache::remember('tagging_summary_' . $this->cnpj_emitente, now()->addDay(), function () {
             return DB::table('organizations')
-                ->join('notas_fiscais_eletronica', 'organizations.cnpj', '=', 'notas_fiscais_eletronica.destinatario_cnpj')
-                ->leftJoin('tagging_tagged', 'notas_fiscais_eletronica.id', '=', 'tagging_tagged.taggable_id')
-                ->leftJoin('tags', 'tags.id', '=', 'tagging_tagged.tag_id')
-                ->select(
-                    'tagging_tagged.tag_id',
-                    'tagging_tagged.tag_name',
-                    'tags.code',
-                    DB::raw('COUNT(*) AS qtde')
-                )
-                ->where('notas_fiscais_eletronica.emitente_cnpj', $this->emitente_cnpj)
-                ->where('tagging_tagged.taggable_type', 'App\Models\Tenant\NotaFiscalEletronica')
-                ->groupBy('tagging_tagged.tag_id', 'tagging_tagged.tag_name')
-                ->havingRaw('COUNT(*) >= 1')
-                ->orderByDesc('qtde')->get()->toArray();
+            ->join('notas_fiscais_eletronica', 'organizations.cnpj', '=', 'notas_fiscais_eletronica.cnpj_destinatario')
+            ->leftJoin('tagging_tagged', 'notas_fiscais_eletronica.id', '=', 'tagging_tagged.taggable_id')
+            ->leftJoin('tags', 'tags.id', '=', 'tagging_tagged.tag_id')
+            ->select(
+                'tagging_tagged.tag_id',
+                'tagging_tagged.tag_name',
+                'tags.code',
+                DB::raw('COUNT(*) AS qtde')
+            )
+            ->where('notas_fiscais_eletronica.cnpj_emitente', $this->cnpj_emitente)
+            ->where('tagging_tagged.taggable_type', $this->getMorphClass())
+            ->groupBy('tagging_tagged.tag_id', 'tagging_tagged.tag_name')
+            ->havingRaw('COUNT(*) >= 1')
+            ->orderByDesc('qtde')->get()->toArray();
         });
+    
+ 
 
         return $result;
     }
@@ -151,5 +152,11 @@ class NotaFiscalEletronica extends Model
             ->pluck('cfop')
             ->sort()
             ->implode(', ');
+    }
+
+    public function retag(string $tag)
+    {
+        $this->untag();
+        $this->tag($tag, $this->valor_total);
     }
 }
