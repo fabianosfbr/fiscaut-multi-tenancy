@@ -122,4 +122,34 @@ class NotaFiscalEletronica extends Model
     {
         return $this->hasMany(NotaFiscalEletronicaHistorico::class, 'nfe_id');
     }
+
+    public function getEnderecoEmitenteCompletoAttribute(): string
+    {
+        $endereco = $this->logradouro_emitente;
+        if ($this->numero_emitente) $endereco .= ", {$this->numero_emitente}";
+        if ($this->complemento_emitente) $endereco .= " - {$this->complemento_emitente}";
+        if ($this->bairro_emitente) $endereco .= " - {$this->bairro_emitente}";
+
+        return $endereco;
+    }
+
+    public function getEnderecoDestinatarioCompletoAttribute(): string
+    {
+        $endereco = $this->logradouro_destinatario;
+        if ($this->numero_destinatario) $endereco .= ", {$this->numero_destinatario}";
+        if ($this->complemento_destinatario) $endereco .= " - {$this->complemento_destinatario}";
+        if ($this->bairro_destinatario) $endereco .= " - {$this->bairro_destinatario}";
+
+        return $endereco;
+    }
+
+    public function getCfopsAttribute(): string
+    {
+        return $this->itens()
+            ->select('cfop')
+            ->distinct()
+            ->pluck('cfop')
+            ->sort()
+            ->implode(', ');
+    }
 }

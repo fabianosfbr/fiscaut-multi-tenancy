@@ -97,38 +97,72 @@ class XmlNfeReaderService
                 }
             }
 
+            $enderEmit = $this->xml->NFe->infNFe->emit->enderEmit;
+            $enderDest = $this->xml->NFe->infNFe->dest->enderDest;
+
             $this->data = [
                 'chave_acesso' => str_replace('NFe', '', $this->xml->NFe->infNFe['Id']),
                 'numero' => (string) $ide->nNF,
                 'serie' => (string) $ide->serie,
                 'data_emissao' => Carbon::parse((string) $ide->dhEmi),
                 'cnpj_emitente' => (string) $emit->CNPJ,
+                'ie_emitente' => (string) ($emit->IE ?? ''),
                 'nome_emitente' => (string) $emit->xNome,
                 'cnpj_destinatario' => (string) ($dest->CNPJ ?? $dest->CPF),
+                'ie_destinatario' => (string) ($dest->IE ?? ''),
                 'nome_destinatario' => (string) $dest->xNome,
+                'natureza_operacao' => (string) $this->xml->NFe->infNFe->ide->natOp,
                 
                 // Valores
-                'valor_total' => (float) $total->vNF,
-                'valor_produtos' => (float) $total->vProd,
                 'valor_base_icms' => (float) $total->vBC,
                 'valor_icms' => (float) $total->vICMS,
+                'valor_total' => (float) $total->vNF,
                 'valor_icms_desonerado' => (float) ($total->vICMSDeson ?? 0),
+                'valor_fundo_combate_uf_dest' => (float) ($total->vFCPUFDest ?? 0),
+                'valor_icms_uf_dest' => (float) ($total->vICMSUFDest ?? 0),
+                'valor_icms_uf_remet' => (float) ($total->vICMSUFRemet ?? 0),
                 'valor_fcp' => (float) ($total->vFCP ?? 0),
                 'valor_base_icms_st' => (float) $total->vBCST,
                 'valor_icms_st' => (float) $total->vST,
                 'valor_fcp_st' => (float) ($total->vFCPST ?? 0),
-                'valor_base_ipi' => (float) ($total->vIPI ?? 0),
+                'valor_fcp_st_ret' => (float) ($total->vFCPSTRet ?? 0),
+                'valor_produtos' => (float) $total->vProd,
+                'valor_frete' => (float) $total->vFrete,
+                'valor_seguro' => (float) $total->vSeg,
+                'valor_desconto' => (float) $total->vDesc,
+                'valor_outras_despesas' => (float) $total->vOutro,
+                'valor_imposto_importacao' => (float) ($total->vII ?? 0),                                            
                 'valor_ipi' => (float) ($total->vIPI ?? 0),
-                'valor_base_pis' => (float) ($total->vPIS ?? 0),
-                'valor_pis' => (float) $total->vPIS,
-                'valor_base_cofins' => (float) ($total->vCOFINS ?? 0),
+                'valor_ipi_devolucao' => (float) ($total->vIPIDevol ?? 0),
+                'valor_pis' => (float) $total->vPIS,                
                 'valor_cofins' => (float) $total->vCOFINS,
                 'valor_aproximado_tributos' => (float) ($total->vTotTrib ?? 0),
+            
                 
                 'status_nota' => $status,
                 'status_manifestacao' => $statusManifesto,
                 'origem' => 'IMPORTADO', // Pode ser: IMPORTADO, SEFAZ ou SIEG
                 'xml_content' => $this->rawXml,
+
+                // Dados do Emitente
+                'logradouro_emitente' => (string) $enderEmit->xLgr,
+                'numero_emitente' => (string) $enderEmit->nro,
+                'complemento_emitente' => (string) $enderEmit->xCpl,
+                'bairro_emitente' => (string) $enderEmit->xBairro,
+                'municipio_emitente' => (string) $enderEmit->xMun,
+                'uf_emitente' => (string) $enderEmit->UF,
+                'cep_emitente' => (string) $enderEmit->CEP,
+
+                // Dados do Destinatário
+                'logradouro_destinatario' => (string) $enderDest->xLgr,
+                'numero_destinatario' => (string) $enderDest->nro,
+                'complemento_destinatario' => (string) $enderDest->xCpl,
+                'bairro_destinatario' => (string) $enderDest->xBairro,
+                'municipio_destinatario' => (string) $enderDest->xMun,
+                'uf_destinatario' => (string) $enderDest->UF,
+                'cep_destinatario' => (string) $enderDest->CEP,
+                'telefone_destinatario' => (string) $dest->telefone,
+                'email_destinatario' => (string) $dest->email,
             ];
 
             // Extrai os itens
@@ -189,6 +223,8 @@ class XmlNfeReaderService
 
                 $this->data['itens'][] = $item;
             }
+
+         
 
             return $this;
         } catch (Exception $e) {
