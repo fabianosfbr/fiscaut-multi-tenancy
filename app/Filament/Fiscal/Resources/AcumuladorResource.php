@@ -2,13 +2,14 @@
 
 namespace App\Filament\Fiscal\Resources;
 
-use App\Filament\Fiscal\Resources\AcumuladorResource\Pages;
-use App\Models\Tenant\Acumulador;
 use Filament\Forms\Form;
-use Filament\Resources\Resource;
-use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
+use Filament\Resources\Resource;
+use App\Models\Tenant\Acumulador;
+use Illuminate\Support\Facades\Auth;
+use Filament\Tables\Columns\TextColumn;
 use Illuminate\Database\Eloquent\Builder;
+use App\Filament\Fiscal\Resources\AcumuladorResource\Pages;
 
 class AcumuladorResource extends Resource
 {
@@ -34,7 +35,7 @@ class AcumuladorResource extends Resource
     {
         return $table
             ->modifyQueryUsing(function (Builder $query) {
-                return $query->where('organization_id', auth()->user()->last_organization_id);
+                return $query->where('organization_id', Auth::user()->last_organization_id);
             })
             ->columns([
                 TextColumn::make('codi_acu')

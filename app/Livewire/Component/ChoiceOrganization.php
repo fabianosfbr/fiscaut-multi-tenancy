@@ -62,7 +62,14 @@ class ChoiceOrganization extends Component implements HasForms
                     ->afterStateUpdated(function (?string $state) {
                         if (filled($state)) {
 
-                            Auth::user()->update(['last_organization_id' => $state]);
+                            $user = Auth::user();
+
+                            $cacheKey = "organization_{$state}_{$user->id}";
+
+                            $user->last_organization_id = $state;
+                            $user->saveQuietly();
+                                                       
+                            Cache::forget($cacheKey);
 
                             $this->redirect(request()->header('Referer'));
                         }

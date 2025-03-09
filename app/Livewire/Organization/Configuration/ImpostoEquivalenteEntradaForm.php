@@ -2,23 +2,24 @@
 
 namespace App\Livewire\Organization\Configuration;
 
-use App\Forms\Components\SelectTagGrouped;
-use App\Models\Tenant\CategoryTag;
-use App\Models\Tenant\ImpostoEquivalenteEntrada;
-use App\Models\Tenant\Tag;
-use Filament\Forms\Components\Toggle;
-use Filament\Forms\Concerns\InteractsWithForms;
-use Filament\Forms\Contracts\HasForms;
-use Filament\Notifications\Notification;
-use Filament\Tables\Actions\Action;
-use Filament\Tables\Actions\DeleteAction;
-use Filament\Tables\Columns\TextColumn;
-use Filament\Tables\Columns\ToggleColumn;
-use Filament\Tables\Concerns\InteractsWithTable;
-use Filament\Tables\Contracts\HasTable;
-use Filament\Tables\Table;
-use Illuminate\Support\Facades\Cache;
 use Livewire\Component;
+use App\Models\Tenant\Tag;
+use Filament\Tables\Table;
+use App\Models\Tenant\CategoryTag;
+use Filament\Tables\Actions\Action;
+use Illuminate\Support\Facades\Auth;
+use Filament\Forms\Components\Toggle;
+use Illuminate\Support\Facades\Cache;
+use Filament\Forms\Contracts\HasForms;
+use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Contracts\HasTable;
+use Filament\Notifications\Notification;
+use Filament\Tables\Actions\DeleteAction;
+use Filament\Tables\Columns\ToggleColumn;
+use App\Forms\Components\SelectTagGrouped;
+use Filament\Forms\Concerns\InteractsWithForms;
+use App\Models\Tenant\ImpostoEquivalenteEntrada;
+use Filament\Tables\Concerns\InteractsWithTable;
 
 class ImpostoEquivalenteEntradaForm extends Component implements HasForms, HasTable
 {
@@ -103,7 +104,7 @@ class ImpostoEquivalenteEntradaForm extends Component implements HasForms, HasTa
                 ->columnSpan(1)
                 ->multiple(false)
                 ->options(function () {
-                    $categoryTag = CategoryTag::getAllEnabled(auth()->user()->last_organization_id);
+                    $categoryTag = CategoryTag::getAllEnabled(Auth::user()->last_organization_id);
 
                     foreach ($categoryTag as $key => $category) {
                         $tags = [];

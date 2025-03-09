@@ -2,19 +2,20 @@
 
 namespace App\Livewire\Organization\Configuration;
 
-use App\Models\Tenant\ConfiguracaoGeral;
+use Livewire\Component;
+use Filament\Forms\Form;
 use App\Models\Tenant\Organization;
+use Filament\Forms\Components\Grid;
+use Illuminate\Support\Facades\Auth;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Section;
+use Filament\Forms\Contracts\HasForms;
 use Filament\Forms\Components\Checkbox;
 use Filament\Forms\Components\Fieldset;
-use Filament\Forms\Components\Grid;
-use Filament\Forms\Components\Section;
-use Filament\Forms\Components\Select;
+use App\Models\Tenant\ConfiguracaoGeral;
 use Filament\Forms\Components\TextInput;
-use Filament\Forms\Concerns\InteractsWithForms;
-use Filament\Forms\Contracts\HasForms;
-use Filament\Forms\Form;
 use Filament\Notifications\Notification;
-use Livewire\Component;
+use Filament\Forms\Concerns\InteractsWithForms;
 
 class ConfiguracoesGeraisForm extends Component implements HasForms
 {
@@ -28,7 +29,7 @@ class ConfiguracoesGeraisForm extends Component implements HasForms
 
     public function mount(): void
     {
-        $this->configuracoes = ConfiguracaoGeral::getMany(auth()->user()->last_organization_id);
+        $this->configuracoes = ConfiguracaoGeral::getMany(Auth::user()->last_organization_id);
 
         $this->form->fill($this->configuracoes);
     }

@@ -5,6 +5,7 @@ namespace App\Filament\Fiscal\Resources\NotaFiscalEletronicaResource\Actions;
 use App\Models\Tenant\Tag;
 use App\Models\Tenant\CategoryTag;
 use Filament\Tables\Actions\Action;
+use Illuminate\Support\Facades\Auth;
 use Filament\Forms\Components\Select;
 use Illuminate\Database\Eloquent\Model;
 use App\Models\Tenant\ConfiguracaoGeral;
@@ -40,7 +41,7 @@ class ClassificarNotaAction extends Action
                     ->default(now())
                     ->displayFormat('d/m/Y')
                     ->visible(function () {
-                        $isShow = ConfiguracaoGeral::getValue('isNfeClassificarNaEntrada', auth()->user()->last_organization_id);
+                        $isShow = ConfiguracaoGeral::getValue('isNfeClassificarNaEntrada', Auth::user()->last_organization_id);
                         return $isShow;
                     }),
                 SelectTagGrouped::make('tags')
@@ -48,7 +49,7 @@ class ClassificarNotaAction extends Action
                     ->columnSpan(1)
                     ->multiple(false)
                     ->options(function () {
-                        $categoryTag = CategoryTag::getAllEnabled(auth()->user()->last_organization_id);
+                        $categoryTag = CategoryTag::getAllEnabled(Auth::user()->last_organization_id);
 
                         foreach ($categoryTag as $key => $category) {
                             $tags = [];

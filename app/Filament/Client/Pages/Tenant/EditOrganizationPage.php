@@ -45,7 +45,7 @@ class EditOrganizationPage extends Page
     protected function getViewData(): array
     {
         return [
-            'organization' => getTenant(),
+            'organization' => getOrganizationCached(),
         ];
     }
 }

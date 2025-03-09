@@ -2,23 +2,24 @@
 
 namespace App\Filament\Fiscal\Resources;
 
-use App\Filament\Fiscal\Resources\CategoryTagResource\Pages;
-use App\Filament\Fiscal\Resources\CategoryTagResource\RelationManagers\TagsRelationManager;
-use App\Models\Tenant\CategoryTag;
-use App\Tables\Columns\ColorNameColumn;
-use Filament\Forms\Components\ColorPicker;
-use Filament\Forms\Components\Section;
-use Filament\Forms\Components\Select;
-use Filament\Forms\Components\TextInput;
-use Filament\Forms\Components\Toggle;
-use Filament\Forms\Form;
-use Filament\Resources\Resource;
 use Filament\Tables;
+use Filament\Forms\Form;
+use Filament\Tables\Table;
+use Filament\Resources\Resource;
+use App\Models\Tenant\CategoryTag;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Toggle;
+use Filament\Forms\Components\Section;
+use App\Tables\Columns\ColorNameColumn;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
-use Filament\Tables\Table;
-use Illuminate\Contracts\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Filament\Forms\Components\TextInput;
+use Illuminate\Container\Attributes\Auth;
+use Filament\Forms\Components\ColorPicker;
+use Illuminate\Contracts\Database\Eloquent\Builder;
+use App\Filament\Fiscal\Resources\CategoryTagResource\Pages;
+use App\Filament\Fiscal\Resources\CategoryTagResource\RelationManagers\TagsRelationManager;
 
 class CategoryTagResource extends Resource
 {
@@ -41,7 +42,7 @@ class CategoryTagResource extends Resource
     {
         return $table
             ->recordUrl(null)
-            ->modifyQueryUsing(fn (Builder $query) => $query->where('organization_id', auth()->user()->last_organization_id))
+            ->modifyQueryUsing(fn (Builder $query) => $query->where('organization_id', Auth::user()->last_organization_id))
             ->reorderable('order')
             ->columns(self::getColumnTableSchema())
             ->filters([

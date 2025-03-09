@@ -2,12 +2,13 @@
 
 namespace App\Filament\Fiscal\Resources\CategoryTagResource\Pages;
 
-use App\Filament\Fiscal\Resources\CategoryTagResource;
-use App\Models\Tenant\CategoryTag;
-use App\Models\Tenant\Tag;
 use Filament\Actions;
+use App\Models\Tenant\Tag;
+use App\Models\Tenant\CategoryTag;
+use Illuminate\Support\Facades\Auth;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ListRecords;
+use App\Filament\Fiscal\Resources\CategoryTagResource;
 
 class ListCategoryTags extends ListRecords
 {
@@ -20,7 +21,7 @@ class ListCategoryTags extends ListRecords
             Actions\Action::make('issuers')
                 ->color('success')
                 ->label('Gerar Etiqueta')
-                ->hidden(CategoryTag::where('organization_id', auth()->user()->last_organization_id)->get()->count() > 0)
+                ->hidden(CategoryTag::where('organization_id', Auth::user()->last_organization_id)->get()->count() > 0)
                 ->action(function () {
 
                     $categoryData = config('tags.default');
@@ -31,7 +32,7 @@ class ListCategoryTags extends ListRecords
                         $category->order = $cat['order'];
                         $category->name = $cat['name'];
                         $category->color = $cat['color'];
-                        $category->organization_id = auth()->user()->last_organization_id;
+                        $category->organization_id = Auth::user()->last_organization_id;
 
                         $category->save();
 

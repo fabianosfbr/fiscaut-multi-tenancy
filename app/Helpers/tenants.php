@@ -5,17 +5,15 @@ use App\Models\Tenant\FileUpload;
 use Saloon\XmlWrangler\XmlReader;
 use App\Models\Tenant\CategoryTag;
 use App\Models\Tenant\Organization;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 
-if (! function_exists('getTenant')) {
-    function getTenant($last_organization_id = null)
+if (! function_exists('getOrganizationCached')) {
+    function getOrganizationCached()
     {
+        $user = Auth::user();
 
-        if ($last_organization_id) {
-            return Organization::find($last_organization_id);
-        }
-
-        return Organization::find(Auth()->user()->last_organization_id);
+        return Organization::getCached($user->last_organization_id, $user->id);
     }
 }
 

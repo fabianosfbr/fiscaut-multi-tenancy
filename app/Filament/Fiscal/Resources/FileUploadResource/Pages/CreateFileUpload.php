@@ -5,6 +5,7 @@ namespace App\Filament\Fiscal\Resources\FileUploadResource\Pages;
 use Filament\Actions;
 use App\Models\Tenant\Tag;
 use Filament\Actions\Action;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Storage;
 use Filament\Resources\Pages\CreateRecord;
@@ -19,9 +20,9 @@ class CreateFileUpload extends CreateRecord
 
     protected function mutateFormDataBeforeCreate(array $data): array
     {
-        $data['user_id'] = auth()->user()->id;
+        $data['user_id'] = Auth::user()->id;
         $data['doc_type'] = intval($data['doc_type']);
-        $data['organization_id'] = auth()->user()->last_organization_id;
+        $data['organization_id'] = Auth::user()->last_organization_id;
         $mimeType = Storage::disk('public')->mimeType($data['arquivo']);
         $data['extension'] = explode('/', $mimeType)[1];
 

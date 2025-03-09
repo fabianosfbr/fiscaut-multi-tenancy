@@ -8,9 +8,11 @@ use Filament\Forms\Form;
 use Filament\Tables\Table;
 use Filament\Resources\Resource;
 use App\Enums\Tenant\OrigemNfeEnum;
+use Filament\Tables\Actions\Action;
 use App\Tables\Columns\TagColumnNfe;
 use App\Tables\Columns\ViewChaveColumn;
 use Filament\Tables\Columns\TextColumn;
+use Illuminate\Database\Eloquent\Model;
 use App\Models\Tenant\ConfiguracaoGeral;
 use Filament\Tables\Actions\ActionGroup;
 use Filament\Tables\Columns\BadgeColumn;
@@ -20,7 +22,10 @@ use App\Models\Tenant\NotaFiscalEletronicaItem;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use App\Filament\Fiscal\Resources\NotaFiscalEletronicaResource\Pages;
 use App\Filament\Fiscal\Resources\NotaFiscalEletronicaResource\RelationManagers;
+use App\Filament\Fiscal\Resources\NotaFiscalEletronicaResource\Actions\DownloadXmlAction;
 use App\Filament\Fiscal\Resources\NotaFiscalEletronicaResource\Actions\ClassificarNotaAction;
+use App\Models\Tenant\Organization;
+use Illuminate\Support\Facades\Auth;
 
 class NotaFiscalEletronicaResource extends Resource
 {
@@ -39,6 +44,10 @@ class NotaFiscalEletronicaResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+            ->modifyQueryUsing(function (Builder $query) {
+                $organization = getOrganizationCached();
+                return $query->where('cnpj_destinatario', $organization->cnpj);
+            })
             ->recordUrl(null)
             ->columns([
                 TextColumn::make('numero')
@@ -100,7 +109,7 @@ class NotaFiscalEletronicaResource extends Resource
                     ->alignCenter()
                     ->toggleable()
                     ->showTagCode(function () {
-                        return ConfiguracaoGeral::getValue('isNfeMostrarEtiquetaComNomeAbreviado', auth()->user()->last_organization_id);
+                        return ConfiguracaoGeral::getValue('isNfeMostrarEtiquetaComNomeAbreviado', Auth::user()->last_organization_id);
                     }),
 
                 TextColumn::make('status_manifestacao')
@@ -130,6 +139,8 @@ class NotaFiscalEletronicaResource extends Resource
                         ->label('Detalhes'),
                     ClassificarNotaAction::make()
                         ->label('Classificar'),
+                    DownloadXmlAction::make()
+                        ->label('Download XML'),
                 ]),
 
             ])

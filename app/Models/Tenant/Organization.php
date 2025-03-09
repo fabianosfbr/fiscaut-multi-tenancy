@@ -2,16 +2,17 @@
 
 namespace App\Models\Tenant;
 
-use App\Observers\Tenant\OrganizationObserver;
-use Filament\Models\Contracts\HasCurrentTenantLabel;
+use Illuminate\Support\Facades\Cache;
 use Filament\Models\Contracts\HasName;
-use Illuminate\Database\Eloquent\Attributes\ObservedBy;
-use Illuminate\Database\Eloquent\Concerns\HasUuids;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use App\Observers\Tenant\OrganizationObserver;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Filament\Models\Contracts\HasCurrentTenantLabel;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Attributes\ObservedBy;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 #[ObservedBy([OrganizationObserver::class])]
 class Organization extends Model implements HasCurrentTenantLabel, HasName
@@ -57,5 +58,13 @@ class Organization extends Model implements HasCurrentTenantLabel, HasName
     public function getCurrentTenantLabel(): string
     {
         return 'Empresa atual';
+    }
+
+    public static function getCached(string $organizationId, string $userId)
+    {
+        $cacheKey = "organization_{$organizationId}_{$userId}";
+        return Cache::remember($cacheKey, now()->addDay(), function () use ($organizationId) {
+            return static::where('id', $organizationId)->first();
+        });
     }
 }

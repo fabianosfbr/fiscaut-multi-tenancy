@@ -2,18 +2,19 @@
 
 namespace App\Livewire\Organization\Configuration;
 
+use Livewire\Component;
+use Filament\Forms\Form;
 use App\Models\Tenant\Cfop;
-use App\Models\Tenant\EntradasCfopsEquivalente;
-use App\Models\Tenant\GrupoEntradasCfopsEquivalente;
+use Illuminate\Support\Facades\Auth;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Contracts\HasForms;
 use Filament\Forms\Components\Checkbox;
 use Filament\Forms\Components\Repeater;
-use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TagsInput;
-use Filament\Forms\Concerns\InteractsWithForms;
-use Filament\Forms\Contracts\HasForms;
-use Filament\Forms\Form;
 use Filament\Notifications\Notification;
-use Livewire\Component;
+use App\Models\Tenant\EntradasCfopsEquivalente;
+use Filament\Forms\Concerns\InteractsWithForms;
+use App\Models\Tenant\GrupoEntradasCfopsEquivalente;
 
 class CteSaidaForm extends Component implements HasForms
 {
@@ -31,7 +32,7 @@ class CteSaidaForm extends Component implements HasForms
             ->whereHas('cfops', function ($query) {
                 $query->where('tipo', self::TIPO);
             })
-            ->where('organization_id', auth()->user()->last_organization_id)->get();
+            ->where('organization_id', Auth::user()->last_organization_id)->get();
 
         $this->form->fill([
             'organization_cfop' => $this->values,
@@ -101,7 +102,7 @@ class CteSaidaForm extends Component implements HasForms
         foreach ($values['organization_cfop'] as $value) {
             $grupo = GrupoEntradasCfopsEquivalente::create([
                 'tags' => $value['tags'] ?? null,
-                'organization_id' => auth()->user()->last_organization_id,
+                'organization_id' => Auth::user()->last_organization_id,
             ]);
 
             foreach ($value['cfops'] as $cfop) {

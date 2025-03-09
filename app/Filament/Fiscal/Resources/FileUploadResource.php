@@ -15,6 +15,7 @@ use App\Models\Tenant\CategoryTag;
 use Illuminate\Support\HtmlString;
 use App\Models\Tenant\Organization;
 use Filament\Tables\Filters\Filter;
+use Illuminate\Support\Facades\Auth;
 use App\Tables\Columns\TagColumnDocs;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Toggle;
@@ -28,9 +29,9 @@ use Filament\Tables\Columns\TextColumn;
 use Illuminate\Support\Facades\Storage;
 use App\Models\Tenant\ConfiguracaoGeral;
 use Filament\Forms\Components\TextInput;
+
+
 use Filament\Notifications\Notification;
-
-
 use Filament\Tables\Filters\SelectFilter;
 use Illuminate\Database\Eloquent\Builder;
 use App\Forms\Components\SelectTagGrouped;
@@ -70,7 +71,7 @@ class FileUploadResource extends Resource
                             ->label('Empresa')
                             ->content(function () {
 
-                                $organization = Organization::find(auth()->user()->last_organization_id);
+                                $organization = getOrganizationCached();
 
                                 return $organization->razao_social;
                             })
@@ -133,7 +134,7 @@ class FileUploadResource extends Resource
                                     ->columnSpan(1)
                                     ->multiple(true)
                                     ->options(function () {
-                                        $categoryTag = CategoryTag::getAllEnabled(auth()->user()->last_organization_id);
+                                        $categoryTag = CategoryTag::getAllEnabled(Auth::user()->last_organization_id);
 
                                         foreach ($categoryTag as $key => $category) {
                                             $tags = [];
@@ -175,7 +176,7 @@ class FileUploadResource extends Resource
                             ->visibility('private')
                             ->maxSize(51200)
                             ->directory(function ($get) {
-                                $organization = Organization::find(auth()->user()->last_organization_id);
+                                $organization = getOrganizationCached();
                                 $periodo = explode('-', $get('periodo_exercicio'));
                                 return 'documentos/' . $organization->cnpj . '/docs-nao-fiscais/' . $periodo[0] . '-' . $periodo[1];
                             })
@@ -213,7 +214,7 @@ class FileUploadResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
-            ->modifyQueryUsing(fn(Builder $query) => $query->where('organization_id', auth()->user()->last_organization_id)->orderBy('created_at', 'DESC'))
+            ->modifyQueryUsing(fn(Builder $query) => $query->where('organization_id', Auth::user()->last_organization_id)->orderBy('created_at', 'DESC'))
             ->recordUrl(null)
             ->columns([
                 TextColumn::make('title')
@@ -244,7 +245,7 @@ class FileUploadResource extends Resource
                 TagColumnDocs::make('tagged')
                     ->label('Etiqueta')
                     ->showTagCode(function () {
-                        $isShow = ConfiguracaoGeral::getValue('isNfeMostrarEtiquetaComNomeAbreviado', auth()->user()->last_organization_id);
+                        $isShow = ConfiguracaoGeral::getValue('isNfeMostrarEtiquetaComNomeAbreviado', Auth::user()->last_organization_id);
                         return $isShow;
                     })
                     ->alignCenter(),

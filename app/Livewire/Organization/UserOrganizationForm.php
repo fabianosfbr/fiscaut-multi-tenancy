@@ -37,7 +37,7 @@ class UserOrganizationForm extends Component implements HasForms, HasTable
 
     public function mount(): void
     {
-        $this->organization = Organization::find(auth()->user()->last_organization_id);
+        $this->organization = getOrganizationCached();
     }
 
     public function table(Table $table): Table

@@ -2,19 +2,20 @@
 
 namespace App\Livewire\Organization\Configuration;
 
-use App\Forms\Components\SelectTagGrouped;
-use App\Models\Tenant\CategoryTag;
-use App\Models\Tenant\Cfop;
-use App\Models\Tenant\EntradasCfopsEquivalente;
-use App\Models\Tenant\GrupoEntradasCfopsEquivalente;
-use Filament\Forms\Components\Repeater;
-use Filament\Forms\Components\Select;
-use Filament\Forms\Components\TagsInput;
-use Filament\Forms\Concerns\InteractsWithForms;
-use Filament\Forms\Contracts\HasForms;
-use Filament\Forms\Form;
-use Filament\Notifications\Notification;
 use Livewire\Component;
+use Filament\Forms\Form;
+use App\Models\Tenant\Cfop;
+use App\Models\Tenant\CategoryTag;
+use Illuminate\Support\Facades\Auth;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Contracts\HasForms;
+use Filament\Forms\Components\Repeater;
+use Filament\Forms\Components\TagsInput;
+use Filament\Notifications\Notification;
+use App\Forms\Components\SelectTagGrouped;
+use App\Models\Tenant\EntradasCfopsEquivalente;
+use Filament\Forms\Concerns\InteractsWithForms;
+use App\Models\Tenant\GrupoEntradasCfopsEquivalente;
 
 class CteEntradaForm extends Component implements HasForms
 {
@@ -32,7 +33,7 @@ class CteEntradaForm extends Component implements HasForms
             ->whereHas('cfops', function ($query) {
                 $query->where('tipo', self::TIPO);
             })
-            ->where('organization_id', auth()->user()->last_organization_id)->get();
+            ->where('organization_id', Auth::user()->last_organization_id)->get();
 
         $this->form->fill([
             'organization_cfop' => $this->values,
@@ -51,7 +52,7 @@ class CteEntradaForm extends Component implements HasForms
                             ->columnSpan(1)
                             ->multiple(true)
                             ->options(function () {
-                                $categoryTag = CategoryTag::getAllEnabled(auth()->user()->last_organization_id);
+                                $categoryTag = CategoryTag::getAllEnabled(Auth::user()->last_organization_id);
 
                                 foreach ($categoryTag as $key => $category) {
                                     $tags = [];
@@ -117,7 +118,7 @@ class CteEntradaForm extends Component implements HasForms
         foreach ($values['organization_cfop'] as $value) {
             $grupo = GrupoEntradasCfopsEquivalente::create([
                 'tags' => $value['tags'],
-                'organization_id' => auth()->user()->last_organization_id,
+                'organization_id' => Auth::user()->last_organization_id,
             ]);
 
             foreach ($value['cfops'] as $cfop) {

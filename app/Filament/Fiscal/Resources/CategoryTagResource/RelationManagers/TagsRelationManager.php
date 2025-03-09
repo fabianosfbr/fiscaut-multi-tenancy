@@ -88,7 +88,7 @@ class TagsRelationManager extends RelationManager
 
     protected function clearCache()
     {
-        $organizationId = getTenant()->id;
+        $organizationId = getOrganizationCached()->id;
         Cache::forget('categoryWithDifal-'.$organizationId);
         Cache::forget('categoryWithTagForSearching-'.$organizationId);
 

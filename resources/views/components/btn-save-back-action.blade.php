@@ -1,6 +1,6 @@
 <div class="flex gap-4 text-left mt-6">
     @php
-        $tenant = getTenant();
+        $tenant = getOrganizationCached();
     @endphp
     <x-filament::button type="submit">
         Salvar

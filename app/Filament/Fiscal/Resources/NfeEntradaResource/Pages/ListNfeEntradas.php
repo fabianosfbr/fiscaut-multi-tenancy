@@ -2,12 +2,13 @@
 
 namespace App\Filament\Fiscal\Resources\NfeEntradaResource\Pages;
 
-use App\Filament\Fiscal\Resources\NfeEntradaResource;
 use App\Models\Tenant\Organization;
+use Illuminate\Support\Facades\Auth;
 use Filament\Resources\Components\Tab;
 use Filament\Resources\Pages\ListRecords;
-use Illuminate\Contracts\Pagination\Paginator;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Contracts\Pagination\Paginator;
+use App\Filament\Fiscal\Resources\NfeEntradaResource;
 
 class ListNfeEntradas extends ListRecords
 {
@@ -27,7 +28,7 @@ class ListNfeEntradas extends ListRecords
 
     public function getTabs(): array
     {
-        $organization = Organization::find(auth()->user()->last_organization_id);
+        $organization = getOrganizationCached();
 
         return [
             'propria' => Tab::make()
