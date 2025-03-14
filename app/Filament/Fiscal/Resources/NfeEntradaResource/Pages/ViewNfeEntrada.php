@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Filament\Fiscal\Resources\NotaFiscalEletronicaResource\Pages;
+namespace App\Filament\Fiscal\Resources\NfeEntradaResource\Pages;
 
 use Filament\Actions\Action;
 use Filament\Infolists\Infolist;
@@ -14,11 +14,11 @@ use Filament\Infolists\Components\Livewire;
 use Filament\Infolists\Components\TextEntry;
 use App\Livewire\Component\ProductTableInfolist;
 use Filament\Infolists\Components\RepeatableEntry;
-use App\Filament\Fiscal\Resources\NotaFiscalEletronicaResource;
+use App\Filament\Fiscal\Resources\NfeEntradaResource;
 
-class ViewNotaFiscalEletronica extends ViewRecord
+class ViewNfeEntrada extends ViewRecord
 {
-    protected static string $resource = NotaFiscalEletronicaResource::class;
+    protected static string $resource = NfeEntradaResource::class;
 
 
     protected function getHeaderActions(): array
@@ -27,7 +27,7 @@ class ViewNotaFiscalEletronica extends ViewRecord
             Action::make('nfe-list')
                 ->label('Voltar para lista')
                 ->color('gray')
-                ->url(fn(): string => NotaFiscalEletronicaResource::getUrl('index')),
+                ->url(fn(): string => NfeEntradaResource::getUrl('index')),
         ];
 
     }

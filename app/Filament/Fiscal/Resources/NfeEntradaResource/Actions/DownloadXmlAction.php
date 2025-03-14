@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Filament\Fiscal\Resources\NotaFiscalEletronicaResource\Actions;
+namespace App\Filament\Fiscal\Resources\NfeEntradaResource\Actions;
 
 use Filament\Tables\Actions\Action;
 use Illuminate\Database\Eloquent\Model;

@@ -26,27 +26,6 @@ class ListNfeEntradas extends ListRecords
         return __('Notas Fiscais Eletrônicas');
     }
 
-    public function getTabs(): array
-    {
-        $organization = getOrganizationCached();
-
-        return [
-            'propria' => Tab::make()
-                ->label('Entrada de Terceiros')
-                ->modifyQueryUsing(fn (Builder $query) => $query
-                    ->where('destinatario_cnpj', $organization->cnpj)
-                    ->where('emitente_cnpj', '<>', $organization->cnpj)
-                    ->where('tpNf', 1)
-                    ->orderBy('data_emissao', 'DESC')),
-            'terceiros' => Tab::make()
-                ->label('Entrada Própria')
-                ->modifyQueryUsing(fn (Builder $query) => $query->where('emitente_cnpj', $organization->cnpj)->where('tpNf', 0)->orderBy('data_emissao', 'DESC')),
-            'propria_terceiros' => Tab::make()
-                ->label('Entrada Própria de Terceiros')
-                ->modifyQueryUsing(fn (Builder $query) => $query->where('destinatario_cnpj', $organization->cnpj)->where('emitente_cnpj', '<>', $organization->cnpj)->where('tpNf', 0)->orderBy('data_emissao', 'DESC')),
-
-        ];
-    }
 
     protected function paginateTableQuery(Builder $query): Paginator
     {

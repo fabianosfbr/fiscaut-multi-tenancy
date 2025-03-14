@@ -37,10 +37,10 @@ class CreateFileUpload extends CreateRecord
 
         $total = 0;
         $record->untag();
+        
         //Aplica a etiqueta
         foreach ($data['tags'] as $tag_apply) {
-            $tag = Tag::find($tag_apply['tag_id'][0]);
-            $record->tag($tag, $tag_apply['valor']);
+            $record->tag($tag_apply['tag_id'][0], $tag_apply['valor']);
             $total = $total + $tag_apply['valor'];
         }
         $record->update([
@@ -53,7 +53,7 @@ class CreateFileUpload extends CreateRecord
     protected function getCreateFormAction(): Action
     {
         return Action::make('create')
-            ->label('Salvar')
+            ->label('Enviar documento')
             ->submit('create')
             ->keyBindings(['mod+s']);
     }
