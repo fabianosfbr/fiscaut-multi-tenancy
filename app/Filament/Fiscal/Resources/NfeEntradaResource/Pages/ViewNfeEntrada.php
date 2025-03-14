@@ -15,6 +15,7 @@ use Filament\Infolists\Components\TextEntry;
 use App\Livewire\Component\ProductTableInfolist;
 use Filament\Infolists\Components\RepeatableEntry;
 use App\Filament\Fiscal\Resources\NfeEntradaResource;
+use App\Filament\Fiscal\Resources\NfeEntradaResource\Actions\ClassificarNotaAvancadoAction;
 
 class ViewNfeEntrada extends ViewRecord
 {
@@ -28,8 +29,9 @@ class ViewNfeEntrada extends ViewRecord
                 ->label('Voltar para lista')
                 ->color('gray')
                 ->url(fn(): string => NfeEntradaResource::getUrl('index')),
-        ];
 
+            ClassificarNotaAvancadoAction::make(),
+        ];
     }
 
     public function getHeading(): string
@@ -63,6 +65,16 @@ class ViewNfeEntrada extends ViewRecord
                                 ->money('BRL')
                                 ->weight('bold'),
                         ])->columnSpan(1),
+                    ]),
+
+                Section::make('Etiquetas')
+                    ->hidden(fn($record) => empty($record->tagNamesWithCodeAndValue()))
+                    ->schema([
+                        TextEntry::make('tags')
+                            ->hiddenLabel()
+                            ->state(fn($record) => collect($record->tagNamesWithCodeAndValue())->map(fn($tag) => "<li>{$tag}</li>")->implode(''))
+                            ->columnSpanFull()
+                            ->html(),
                     ]),
 
                 Section::make('Detalhes da Nota')
@@ -389,5 +401,10 @@ class ViewNfeEntrada extends ViewRecord
 
                     ]),
             ]);
+    }
+
+    protected function performAdvancedClassification(): void
+    {
+        // Lógica para classificação avançada
     }
 }

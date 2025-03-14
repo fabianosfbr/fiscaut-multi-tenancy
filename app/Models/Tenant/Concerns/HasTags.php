@@ -66,6 +66,13 @@ trait HasTags
         })->toArray();
     }
 
+    public function tagNamesWithCodeAndValue(): array
+    {
+        return $this->tagged->map(function ($item) {
+            return $item->tag->code.' - '.$item->tag_name.' | R$'. number_format($item->value, 2, ',', '.');
+        })->toArray();
+    }
+
     public function tagAtrributes(): array
     {
         return $this->tagged->map(function ($item) {
