@@ -8,9 +8,12 @@ use Filament\Forms\Form;
 use Filament\Tables\Table;
 use Filament\Resources\Resource;
 use App\Enums\Tenant\OrigemNfeEnum;
+use App\Models\Tenant\Organization;
 use Filament\Tables\Actions\Action;
 use App\Tables\Columns\TagColumnNfe;
+use Illuminate\Support\Facades\Auth;
 use App\Tables\Columns\ViewChaveColumn;
+use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Illuminate\Database\Eloquent\Model;
 use App\Models\Tenant\ConfiguracaoGeral;
@@ -24,8 +27,7 @@ use App\Filament\Fiscal\Resources\NfeEntradaResource\Pages;
 use App\Filament\Fiscal\Resources\NfeEntradaResource\RelationManagers;
 use App\Filament\Fiscal\Resources\NfeEntradaResource\Actions\DownloadXmlAction;
 use App\Filament\Fiscal\Resources\NfeEntradaResource\Actions\ClassificarNotaAction;
-use App\Models\Tenant\Organization;
-use Illuminate\Support\Facades\Auth;
+use App\Filament\Fiscal\Resources\NfeEntradaResource\Actions\ToggleEscrituracaoAction;
 
 class NfeEntradaResource extends Resource
 {
@@ -44,9 +46,7 @@ class NfeEntradaResource extends Resource
     public static function form(Form $form): Form
     {
         return $form
-            ->schema([
-                //
-            ]);
+            ->schema([]);
     }
 
     public static function table(Table $table): Table
@@ -86,6 +86,11 @@ class NfeEntradaResource extends Resource
                     ->label('Valor Total')
                     ->money('BRL')
                     ->sortable(),
+
+                IconColumn::make('escriturada_destinatario')
+                    ->boolean()
+                    ->alignCenter()
+                    ->label('Escriturada'),
 
                 TextColumn::make('cfops')
                     ->label('CFOPs')
@@ -149,6 +154,7 @@ class NfeEntradaResource extends Resource
                         ->label('Classificar'),
                     DownloadXmlAction::make()
                         ->label('Download XML'),
+                    ToggleEscrituracaoAction::make(),
                 ]),
 
             ])

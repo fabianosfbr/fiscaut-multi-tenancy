@@ -18,7 +18,6 @@ class DownloadXmlAction extends Action
 
         $this->label('Download XML')
             ->icon('heroicon-o-document-arrow-down')
-            ->color('success')
             ->requiresConfirmation(false)
             ->visible(fn(Model $record): bool => !empty($record->xml_content))
             ->action(function ($record) {
