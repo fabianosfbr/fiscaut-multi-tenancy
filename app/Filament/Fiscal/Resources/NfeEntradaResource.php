@@ -29,6 +29,7 @@ use App\Filament\Fiscal\Resources\NfeEntradaResource\Actions\DownloadXmlAction;
 use App\Filament\Fiscal\Resources\NfeEntradaResource\Actions\ClassificarNotaAction;
 use App\Filament\Fiscal\Resources\NfeEntradaResource\Actions\ToggleEscrituracaoAction;
 use App\Filament\Fiscal\Resources\NfeEntradaResource\Actions\RemoveClassificacaoAction;
+use App\Filament\Fiscal\Resources\NfeEntradaResource\Actions\GerarDanfeAction;
 
 class NfeEntradaResource extends Resource
 {
@@ -91,6 +92,7 @@ class NfeEntradaResource extends Resource
                 IconColumn::make('escriturada_destinatario')
                     ->boolean()
                     ->alignCenter()
+                    ->toggleable()
                     ->label('Escriturada'),
 
                 TextColumn::make('cfops')
@@ -105,6 +107,7 @@ class NfeEntradaResource extends Resource
                 TextColumn::make('data_emissao')
                     ->label('Emissão')
                     ->date('d/m/Y')
+                    ->toggleable()
                     ->sortable(),
 
                 TextColumn::make('data_entrada')
@@ -116,6 +119,7 @@ class NfeEntradaResource extends Resource
                 TextColumn::make('status_nota')
                     ->label('Status')
                     ->badge()
+                    ->toggleable()
                     ->sortable(),
 
                 TagColumnNfe::make('tagged')
@@ -149,6 +153,7 @@ class NfeEntradaResource extends Resource
                     ClassificarNotaAction::make(),
                     RemoveClassificacaoAction::make(),
                     DownloadXmlAction::make(),
+                    GerarDanfeAction::make(),
                     ToggleEscrituracaoAction::make(),
                 ]),
 

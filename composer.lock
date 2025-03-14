@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "591a9c11fd3316ad9d4b823544f9409a",
+    "content-hash": "ee9dcad29b528618c721c727e51a1f12",
     "packages": [
         {
             "name": "agencetwogether/hookshelper",
@@ -4554,16 +4554,16 @@
         },
         {
             "name": "nfephp-org/sped-da",
-            "version": "dev-master",
+            "version": "v1.1.6",
             "source": {
                 "type": "git",
                 "url": "https://github.com/nfephp-org/sped-da.git",
-                "reference": "c572dc69da133a37320dbb5b99a3d10c19a7ad9a"
+                "reference": "93ae550adcf5dd0c43598f27e323a8af84ceba22"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/nfephp-org/sped-da/zipball/c572dc69da133a37320dbb5b99a3d10c19a7ad9a",
-                "reference": "c572dc69da133a37320dbb5b99a3d10c19a7ad9a",
+                "url": "https://api.github.com/repos/nfephp-org/sped-da/zipball/93ae550adcf5dd0c43598f27e323a8af84ceba22",
+                "reference": "93ae550adcf5dd0c43598f27e323a8af84ceba22",
                 "shasum": ""
             },
             "require": {
@@ -4584,7 +4584,6 @@
             "suggest": {
                 "nfephp-org/posprint": "^0.1"
             },
-            "default-branch": true,
             "type": "library",
             "extra": {
                 "branch-alias": {
@@ -4626,9 +4625,9 @@
             ],
             "support": {
                 "issues": "https://github.com/nfephp-org/sped-da/issues",
-                "source": "https://github.com/nfephp-org/sped-da/tree/master"
+                "source": "https://github.com/nfephp-org/sped-da/tree/v1.1.6"
             },
-            "time": "2025-01-14T19:40:34+00:00"
+            "time": "2024-05-07T19:32:22+00:00"
         },
         {
             "name": "nfephp-org/sped-gtin",
@@ -11877,8 +11876,7 @@
     "aliases": [],
     "minimum-stability": "stable",
     "stability-flags": {
-        "nfephp-org/sped-cte": 20,
-        "nfephp-org/sped-da": 20
+        "nfephp-org/sped-cte": 20
     },
     "prefer-stable": true,
     "prefer-lowest": false,
