@@ -26,6 +26,7 @@ class ToggleEscrituracaoAction extends Action
 
                 Notification::make()
                     ->title("Nota fiscal {$status} com sucesso!")
+                    ->body("A nota fiscal {$record->numero} foi marcada como {$status}.")
                     ->success()
                     ->send();
             })

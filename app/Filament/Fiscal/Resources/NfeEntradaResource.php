@@ -28,6 +28,7 @@ use App\Filament\Fiscal\Resources\NfeEntradaResource\RelationManagers;
 use App\Filament\Fiscal\Resources\NfeEntradaResource\Actions\DownloadXmlAction;
 use App\Filament\Fiscal\Resources\NfeEntradaResource\Actions\ClassificarNotaAction;
 use App\Filament\Fiscal\Resources\NfeEntradaResource\Actions\ToggleEscrituracaoAction;
+use App\Filament\Fiscal\Resources\NfeEntradaResource\Actions\RemoveClassificacaoAction;
 
 class NfeEntradaResource extends Resource
 {
@@ -136,11 +137,6 @@ class NfeEntradaResource extends Resource
                     ->searchable()
                     ->alignCenter(),
 
-
-
-
-
-
             ])
             ->defaultSort('data_emissao', 'desc')
             ->filters([
@@ -150,10 +146,9 @@ class NfeEntradaResource extends Resource
                 ActionGroup::make([
                     Tables\Actions\ViewAction::make()
                         ->label('Detalhes'),
-                    ClassificarNotaAction::make()
-                        ->label('Classificar'),
-                    DownloadXmlAction::make()
-                        ->label('Download XML'),
+                    ClassificarNotaAction::make(),
+                    RemoveClassificacaoAction::make(),
+                    DownloadXmlAction::make(),
                     ToggleEscrituracaoAction::make(),
                 ]),
 
