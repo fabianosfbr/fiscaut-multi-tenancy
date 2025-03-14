@@ -32,6 +32,7 @@ class FiscalPanelProvider extends PanelProvider
         return $panel
             ->id('fiscal')
             ->path('fiscal')
+            ->breadcrumbs(false)
             ->login()
             ->colors([
                 'primary' => Color::Amber,
@@ -41,8 +42,9 @@ class FiscalPanelProvider extends PanelProvider
             ->discoverPages(in: app_path('Filament/Fiscal/Pages'), for: 'App\\Filament\\Fiscal\\Pages')
             ->pages([
                 Pages\Dashboard::class,
-                NfeCte::class,
+               // NfeCte::class,
             ])
+            ->navigationGroups(config('sidebar'))
             ->discoverWidgets(in: app_path('Filament/Fiscal/Widgets'), for: 'App\\Filament\\Fiscal\\Widgets')
             ->widgets([
                 Widgets\AccountWidget::class,

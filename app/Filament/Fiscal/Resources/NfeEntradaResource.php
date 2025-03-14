@@ -2,18 +2,30 @@
 
 namespace App\Filament\Fiscal\Resources;
 
-use App\Enums\Tenant\StatusManifestoNfe;
-use App\Filament\Fiscal\Resources\NfeEntradaResource\Pages;
-use App\Models\Tenant\NotaFiscalEletronica;
+use Filament\Forms;
+use Filament\Tables;
+use Filament\Forms\Form;
+use Filament\Tables\Table;
+use Filament\Resources\Resource;
+use App\Enums\Tenant\OrigemNfeEnum;
+use Filament\Tables\Actions\Action;
 use App\Tables\Columns\TagColumnNfe;
 use App\Tables\Columns\ViewChaveColumn;
-use Filament\Forms\Form;
-use Filament\Resources\Resource;
-use Filament\Tables;
 use Filament\Tables\Columns\TextColumn;
-use Filament\Tables\Columns\ViewColumn;
-use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Model;
+use App\Models\Tenant\ConfiguracaoGeral;
+use Filament\Tables\Actions\ActionGroup;
+use Filament\Tables\Columns\BadgeColumn;
 use Illuminate\Database\Eloquent\Builder;
+use App\Models\Tenant\NotaFiscalEletronica;
+use App\Models\Tenant\NotaFiscalEletronicaItem;
+use Illuminate\Database\Eloquent\SoftDeletingScope;
+use App\Filament\Fiscal\Resources\NfeEntradaResource\Pages;
+use App\Filament\Fiscal\Resources\NfeEntradaResource\RelationManagers;
+use App\Filament\Fiscal\Resources\NfeEntradaResource\Actions\DownloadXmlAction;
+use App\Filament\Fiscal\Resources\NfeEntradaResource\Actions\ClassificarNotaAction;
+use App\Models\Tenant\Organization;
+use Illuminate\Support\Facades\Auth;
 
 class NfeEntradaResource extends Resource
 {
@@ -39,32 +51,25 @@ class NfeEntradaResource extends Resource
 
     public static function table(Table $table): Table
     {
-        $mostrarCodigo = false;
-
         return $table
+            ->modifyQueryUsing(function (Builder $query) {
+                $organization = getOrganizationCached();
+                return $query->where('cnpj_destinatario', $organization->cnpj);
+            })
             ->recordUrl(null)
-            ->extremePaginationLinks()
-            ->striped()
-            ->searchDebounce('950ms')
             ->columns([
-                TextColumn::make('nNF')
+                TextColumn::make('numero')
                     ->label('Nº')
                     ->searchable()
                     ->sortable(),
-                ViewColumn::make('carta_correcao')
-                    ->label('')
-                    ->view('tables.columns.carta-correcao'),
-                TextColumn::make('emitente_razao_social')
+
+                TextColumn::make('nome_emitente')
                     ->label('Empresa')
                     ->limit(30)
-                    ->searchable(query: function (Builder $query, string $search): Builder {
-                        return $query
-                            ->where('emitente_razao_social', 'like', "%{$search}%")
-                            ->orWhere('emitente_cnpj', $search);
-                    })
+                    ->searchable()
                     ->size('sm')
                     ->description(function (NotaFiscalEletronica $record) {
-                        return $record->emitente_cnpj;
+                        return $record->cnpj_emitente;
                     })
                     ->tooltip(function (TextColumn $column): ?string {
                         $state = $column->getState();
@@ -76,64 +81,77 @@ class NfeEntradaResource extends Resource
                         // Only render the tooltip if the column contents exceeds the length limit.
                         return $state;
                     }),
-                TextColumn::make('vNfe')
-                    ->label('Valor')
-                    ->iconPosition('after')
-                    ->searchable()
-                    ->toggleable()
+
+                TextColumn::make('valor_total')
+                    ->label('Valor Total')
                     ->money('BRL')
                     ->sortable(),
-                ViewColumn::make('apurada.status')
-                    ->label('Situação')
-                    ->alignCenter()
-                    ->toggleable()
-                    ->view('tables.columns.apurada-status-icon-column'),
+
                 TextColumn::make('cfops')
-                    ->label('CFOP')
-                    ->badge()
-                    ->toggleable()
-                    ->alignCenter(),
+                    ->label('CFOPs')
+                    ->searchable(query: function (Builder $query, string $search): Builder {
+                        return $query->whereHas('itens', function ($query) use ($search) {
+                            $query->where('cfop', 'like', "%{$search}%");
+                        });
+                    })
+                    ->toggleable(),
+
                 TextColumn::make('data_emissao')
                     ->label('Emissão')
-                    ->sortable()
-                    ->toggleable()
-                    ->date('d/m/Y'),
+                    ->date('d/m/Y')
+                    ->sortable(),
+
                 TextColumn::make('data_entrada')
                     ->label('Entrada')
                     ->sortable()
                     ->toggleable()
                     ->date('d/m/Y'),
+
                 TextColumn::make('status_nota')
                     ->label('Status')
-                    ->toggleable()
-                    ->badge(),
+                    ->badge()
+                    ->sortable(),
+
                 TagColumnNfe::make('tagged')
                     ->label('Etiqueta')
                     ->alignCenter()
                     ->toggleable()
-                    ->showTagCode($mostrarCodigo),
-                TextColumn::make('status_manifestacao')
-                    ->label('Manifestação')
-                    ->toggleable()
-                    ->icon(function (NotaFiscalEletronica $record) {
-                        if (
-                            $record->status_manifestacao === StatusManifestoNfe::DESCONHECIDA ||
-                            $record->status_manifestacao === StatusManifestoNfe::NAOREALIZADA
-                        ) {
-                            return 'heroicon-o-printer';
-                        }
+                    ->showTagCode(function () {
+                        return ConfiguracaoGeral::getValue('isNfeMostrarEtiquetaComNomeAbreviado', Auth::user()->last_organization_id);
+                    }),
 
-                        return null;
-                    })->iconPosition('after'),
-                ViewChaveColumn::make('chave')
+                TextColumn::make('status_manifestacao')
+                    ->label('Manifestação')
+                    ->badge()
+
+                    ->sortable(),
+
+                ViewChaveColumn::make('chave_acesso')
                     ->label('Chave')
                     ->searchable()
                     ->alignCenter(),
+
+
+
+
+
+
             ])
+            ->defaultSort('data_emissao', 'desc')
             ->filters([
                 //
             ])
-            ->actions([])
+            ->actions([
+                ActionGroup::make([
+                    Tables\Actions\ViewAction::make()
+                        ->label('Detalhes'),
+                    ClassificarNotaAction::make()
+                        ->label('Classificar'),
+                    DownloadXmlAction::make()
+                        ->label('Download XML'),
+                ]),
+
+            ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make(),
@@ -154,6 +172,7 @@ class NfeEntradaResource extends Resource
             'index' => Pages\ListNfeEntradas::route('/'),
             'create' => Pages\CreateNfeEntrada::route('/create'),
             'edit' => Pages\EditNfeEntrada::route('/{record}/edit'),
+            'view' => Pages\ViewNfeEntrada::route('/{record}'),
         ];
     }
 }

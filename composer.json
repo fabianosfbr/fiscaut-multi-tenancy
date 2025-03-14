@@ -14,7 +14,7 @@
         "bezhansalleh/filament-panel-switch": "^1.0",
         "davidhsianturi/blade-bootstrap-icons": "^1.5",
         "filament/filament": "^3.2",
-        "hammerstone/fast-paginate": "^1.1",
+        "hammerstone/fast-paginate": "^2.0",
         "hasnayeen/themes": "^3.0",
         "laravel/framework": "^11.9",
         "laravel/horizon": "^5.28",
