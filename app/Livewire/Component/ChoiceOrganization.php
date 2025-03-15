@@ -81,14 +81,15 @@ class ChoiceOrganization extends Component implements HasForms
 
     public function urlRenderAvoid()
     {
-
+  
         $showUrl = Cache::remember('url_render_avoid_'.auth()->user()->id, 60 * 60 * 24, function () {
             return ShowChoiceOrganizationUrl::show()->get()->toArray();
         });
 
+
         $routeName = Route::current()->getName();
 
-        // dump($routeName);
+        //dump($routeName);
         $url = [];
         foreach ($showUrl as $key => $values) {
 

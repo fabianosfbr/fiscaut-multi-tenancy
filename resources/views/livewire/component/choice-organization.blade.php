@@ -6,7 +6,6 @@
 
             </form>
 
-
             @if (auth()->user()->hasRole('admin'))
                 <x-filament::dropdown class="pt-6 px-2">
                     <x-slot name="trigger">
@@ -16,7 +15,7 @@
                     </x-slot>
 
                     <x-filament::dropdown.list>
-                        <x-filament::dropdown.list.item href="{{ route('filament.client.pages.new-organization') }}"
+                        <x-filament::dropdown.list.item href="{{ route('filament.fiscal.resources.organizations.create') }}"
                             tag="a">
                             Cadastrar nova empresa
                         </x-filament::dropdown.list.item>
@@ -24,7 +23,7 @@
                     </x-filament::dropdown.list>
 
                     <x-filament::dropdown.list>
-                        <x-filament::dropdown.list.item href="{{ route('filament.client.pages.edit-organization') }}"
+                        <x-filament::dropdown.list.item href="{{ route('filament.fiscal.resources.organizations.edit', $this->user->last_organization_id) }}"
                             tag="a">
                             Editar empresa
                         </x-filament::dropdown.list.item>

@@ -38,13 +38,13 @@ class RenderHookUrlRelationManager extends RelationManager
             ->headerActions([
                 Tables\Actions\CreateAction::make()
                     ->after(function () {
-                        Cache::forget('url_render_avoid_'.auth()->user()->id);
+                        $this->clearCache();
                     }),
             ])
             ->actions([
                 Tables\Actions\EditAction::make()
                     ->after(function () {
-                        Cache::forget('url_render_avoid_'.auth()->user()->id);
+                        $this->clearCache();
                     }),
                 Tables\Actions\DeleteAction::make(),
             ])
@@ -53,5 +53,10 @@ class RenderHookUrlRelationManager extends RelationManager
                     Tables\Actions\DeleteBulkAction::make(),
                 ]),
             ]);
+    }
+
+    public function clearCache()
+    {
+        Cache::flush();
     }
 }
