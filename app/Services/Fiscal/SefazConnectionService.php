@@ -16,6 +16,7 @@ use NFePHP\CTe\Tools as CTeTools;
 use NFePHP\NFe\Common\Standardize as NFeStandardize;
 use NFePHP\CTe\Common\Standardize as CTeStandardize;
 use Illuminate\Support\Facades\Log;
+use App\Jobs\ProcessarDocumentoFiscal;
 
 class SefazConnectionService
 {
@@ -135,7 +136,6 @@ class SefazConnectionService
         $dom->loadXML($response);
         $node = $dom->getElementsByTagName('retDistDFeInt')->item(0);
 
-
         // Extrai informações do retorno
         $cStat = $node->getElementsByTagName('cStat')->item(0)->nodeValue;
         $xMotivo = $node->getElementsByTagName('xMotivo')->item(0)->nodeValue;
@@ -156,7 +156,7 @@ class SefazConnectionService
             ];
         }
 
-        $documentosProcessados = 0;
+        $documentosEnfileirados = 0;
 
         if (!empty($lote)) {
             $docs = $lote->getElementsByTagName('docZip');
@@ -164,26 +164,14 @@ class SefazConnectionService
                 $schema = $doc->getAttribute('schema');
                 $content = gzdecode(base64_decode($doc->nodeValue));
 
-                // Processa documento baseado no schema
-                switch (true) {
-                    case str_contains($schema, 'resNFe'):
-                        $this->processarResumoNFe($content);
-                        break;
+                // Enfileira o processamento do documento
+                ProcessarDocumentoFiscal::dispatch(
+                    $this->organization,
+                    $content,
+                    $schema
+                )->onQueue('documentos-fiscais');
 
-                    case str_contains($schema, 'procNFe'):
-                        $this->processarNFe($content);
-                        break;
-
-                    case str_contains($schema, 'resEvento'):
-                        $this->processarResumoEvento($content);
-                        break;
-
-                    case str_contains($schema, 'procEventoNFe'):
-                        $this->processarEvento($content);
-                        break;
-                }
-
-                $documentosProcessados++;
+                $documentosEnfileirados++;
             }
         }
 
@@ -193,8 +181,68 @@ class SefazConnectionService
             'max_nsu' => $maxNSU,
             'status' => $cStat,
             'motivo' => $xMotivo,
-            'xml_content' => $content,
-            'documentos_processados' => $documentosProcessados
+            'xml_content' => $response,
+            'documentos_enfileirados' => $documentosEnfileirados
+        ];
+    }
+
+    /**
+     * Verifica e processa NSUs faltantes
+     */
+    public function verificarNsusFaltantes(): array
+    {
+        $ultimoControle = ControleNsu::where('organization_id', $this->organization->id)
+            ->orderBy('ultimo_nsu', 'desc')
+            ->first();
+
+        if (!$ultimoControle) {
+            return ['success' => true, 'message' => 'Nenhum NSU processado ainda.'];
+        }
+
+        $controles = ControleNsu::where('organization_id', $this->organization->id)
+            ->orderBy('ultimo_nsu')
+            ->get();
+
+        if ($controles->count() <= 1) {
+            return ['success' => true, 'message' => 'Nenhum NSU faltante encontrado.'];
+        }
+
+        $nsusFaltantes = [];
+        $anterior = null;
+
+        foreach ($controles as $controle) {
+            if ($anterior !== null) {
+                $esperado = $anterior->ultimo_nsu + 1;
+                if ($controle->ultimo_nsu > $esperado) {
+                    // Adiciona os NSUs faltantes entre o anterior e o atual
+                    for ($i = $esperado; $i < $controle->ultimo_nsu; $i++) {
+                        $nsusFaltantes[] = $i;
+                    }
+                }
+            }
+            $anterior = $controle;
+        }
+
+        dd($nsusFaltantes);
+
+        if (empty($nsusFaltantes)) {
+            return ['success' => true, 'message' => 'Nenhum NSU faltante encontrado.'];
+        }
+
+        // Processa os NSUs faltantes
+        $processados = 0;
+        foreach ($nsusFaltantes as $nsu) {
+            $resultado = $this->consultarNsuEspecifico($nsu);
+            if ($resultado['success']) {
+                $processados++;
+            }
+           
+        }
+
+        return [
+            'success' => true,
+            'message' => "Processados {$processados} NSUs faltantes.",
+            'nsus_faltantes' => $nsusFaltantes
         ];
     }
 
@@ -204,7 +252,7 @@ class SefazConnectionService
     private function consultarNsuEspecifico(int $nsu): array
     {
         try {
-             $response = $this->nfeTools->sefazDistDFe(0, $nsu);
+            $response = $this->nfeTools->sefazDistDFe(0, $nsu);
            
             $resultado = $this->processarRespostaSefaz($response);
         
@@ -213,6 +261,7 @@ class SefazConnectionService
             return $resultado;
 
         } catch (Exception $e) {
+            Log::error("Erro ao consultar NSU {$nsu}: " . $e->getMessage());
             return [
                 'success' => false,
                 'message' => $e->getMessage()
@@ -227,7 +276,10 @@ class SefazConnectionService
     {
         try {
             // Recupera último NSU consultado
-            $controleNsu = ControleNsu::where('organization_id', $this->organization->id)->first();
+            $controleNsu = ControleNsu::where('organization_id', $this->organization->id)
+                ->orderBy('ultimo_nsu', 'desc')
+                ->first();
+            
             $nsu = $controleNsu ? $controleNsu->ultimo_nsu : 0;
             $maxNSU = $nsu;
             $iCount = 0;
@@ -254,6 +306,9 @@ class SefazConnectionService
                     $nsu = $resultado['ultimo_nsu'];
                     $maxNSU = $resultado['max_nsu'];
 
+                    // Atualiza controle de NSU para cada resposta bem-sucedida
+                    $this->atualizarControleNsu($nsu, $maxNSU, $resultado['xml_content']);
+
                     // Se atingiu o máximo, finaliza
                     if ($nsu == $maxNSU) {
                         break;
@@ -267,8 +322,11 @@ class SefazConnectionService
                 }
             }
 
-            // Atualiza controle de NSU
-            $this->atualizarControleNsu($nsu, $maxNSU, $resultado['xml_content']);
+            // Verifica se há NSUs faltantes
+            $resultadoVerificacao = $this->verificarNsusFaltantes();
+            if (!empty($resultadoVerificacao['nsus_faltantes'])) {
+                $errors[] = "NSUs faltantes encontrados e processados: " . implode(', ', $resultadoVerificacao['nsus_faltantes']);
+            }
 
             return [
                 'success' => true,
@@ -284,111 +342,9 @@ class SefazConnectionService
             ];
         }
     }
+  
 
-    /**
-     * Processa o resumo da NFe
-     */
-    private function processarResumoNFe(string $content): void
-    {
-        try {
-            $st = new NFeStandardize();
-            $std = $st->toStd($content);
-
-            ResumoNfe::updateOrCreate(
-                ['chave' => $std->chNFe],
-                [
-                    'organization_id' => $this->organization->id,
-                    'cnpj_emitente' => $std->CNPJ,
-                    'nome_emitente' => $std->xNome,
-                    'ie_emitente' => $std->IE,
-                    'data_emissao' => Carbon::parse($std->dhEmi),
-                    'valor_total' => $std->vNF,
-                    'situacao' => $std->cSitNFe,
-                    'xml_resumo' => $content,
-                    'necessita_manifestacao' => true
-                ]
-            );
-        } catch (Exception $e) {
-            Log::error('Erro ao processar resumo NFe: ' . $e->getMessage());
-            throw $e;
-        }
-    }
-
-    /**
-     * Processa a NFe completa
-     */
-    private function processarNFe(string $content): void
-    {
-        try {
-            $xmlReader = new XmlNfeReaderService();
-            $xmlReader->loadXml($content)
-                ->parse()
-                ->setOrigem('SEFAZ')
-                ->save();
-        } catch (Exception $e) {
-            Log::error('Erro ao processar NFe: ' . $e->getMessage());
-            throw $e;
-        }
-    }
-
-    /**
-     * Processa o resumo do evento
-     */
-    private function processarResumoEvento(string $content): void
-    {
-        try {
-            $st = new NFeStandardize();
-            $std = $st->toStd($content);
-
-
-            EventoNfe::create([
-                'organization_id' => $this->organization->id,
-                'chave_nfe' => $std->chNFe,
-                'tipo_evento' => $std->tpEvento,
-                'numero_sequencial' => $std->nSeqEvento,
-                'data_evento' => Carbon::parse($std->dhEvento),
-                'xml_evento' => $content,
-                'protocolo' => $std->nProt ?? null,
-            ]);
-        } catch (Exception $e) {
-            Log::error('Erro ao processar resumo evento: ' . $e->getMessage());
-            throw $e;
-        }
-    }
-
-    /**
-     * Processa o evento completo
-     */
-    private function processarEvento(string $content): void
-    {
-        try {
-            $st = new NFeStandardize();
-            $std = $st->toStd($content);
-
-            // Acessa os dados do evento dentro da estrutura correta
-            $evento = $std->evento;
-            $retEvento = $std->retEvento;
-
-            EventoNfe::updateOrCreate(
-                [
-                    'chave_nfe' => $evento->infEvento->chNFe,
-                    'tipo_evento' => $evento->infEvento->tpEvento,
-                    'numero_sequencial' => $evento->infEvento->nSeqEvento
-                ],
-                [
-                    'organization_id' => $this->organization->id,
-                    'data_evento' => Carbon::parse($evento->infEvento->dhEvento),
-                    'xml_evento' => $content,
-                    'protocolo' => $retEvento->infEvento->nProt,
-                    'status_sefaz' => $retEvento->infEvento->cStat,
-                    'motivo' => $retEvento->infEvento->xMotivo
-                ]
-            );
-        } catch (Exception $e) {
-            Log::error('Erro ao processar evento: ' . $e->getMessage());
-            throw $e;
-        }
-    }
+   
 
     /**
      * Atualiza o controle de NSU 

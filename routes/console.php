@@ -123,7 +123,8 @@ Artisan::command('play', function () {
         $service = new SefazConnectionService($organization);
 
         // Act
-        $result = $service->consultarNFeDestinadas(434446);
+       // $result = $service->verificarNsusFaltantes();
+        $result = $service->consultarNFeDestinadas(434393);
 
         dd($result);
     });
