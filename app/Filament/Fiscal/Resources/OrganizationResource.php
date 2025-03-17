@@ -310,10 +310,12 @@ class OrganizationResource extends Resource
                     TextInput::make('cnpj')
                         ->label('CNPJ')
                         ->required()
-                        ->maxLength(255)
+                        ->maxLength(14)
+                        ->unique(ignoreRecord: true)
                         ->columnSpan(2)
                         ->validationMessages([
                             'required' => 'O CNPJ é obrigatório',
+                            'unique' => 'Este CNPJ já está cadastrado',
                         ]),
 
                     TextInput::make('inscricao_estadual')
