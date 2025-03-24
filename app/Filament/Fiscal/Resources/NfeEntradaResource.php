@@ -98,7 +98,10 @@ class NfeEntradaResource extends Resource
                     ->boolean()
                     ->alignCenter()
                     ->toggleable()
-                    ->label('Escriturada'),
+                    ->label('Escriturada')
+                    ->getStateUsing(function (NotaFiscalEletronica $record): bool {
+                        return $record->isEscrituradaParaOrganization(getOrganizationCached());
+                    }),
 
                 TextColumn::make('cfops')
                     ->label('CFOPs')
@@ -252,7 +255,22 @@ class NfeEntradaResource extends Resource
                     ->columnSpan(1)
                     ->placeholder('Todos')
                     ->trueLabel('Sim')
-                    ->falseLabel('Não'),
+                    ->falseLabel('Não')
+                    ->query(function (Builder $query, array $data): Builder {
+                        if ($data['value'] === null) {
+                            return $query;
+                        }
+
+                        $organization = getOrganizationCached();
+
+                        return $data['value']
+                            ? $query->whereHas('organizacoesEscrituradas', function ($query) use ($organization) {
+                                $query->where('organization_id', $organization->id);
+                            })
+                            : $query->whereDoesntHave('organizacoesEscrituradas', function ($query) use ($organization) {
+                                $query->where('organization_id', $organization->id);
+                            });
+                    }),
 
                 Tables\Filters\Filter::make('cfop')
                     ->label('CFOP')

@@ -7,6 +7,7 @@ use App\Enums\Tenant\OrigemNfeEnum;
 use App\Enums\Tenant\StatusNfeEnum;
 use Illuminate\Support\Facades\Cache;
 use App\Models\Tenant\Concerns\HasTags;
+use App\Models\Tenant\Concerns\HasEscrituracao;
 use Illuminate\Database\Eloquent\Model;
 use App\Enums\Tenant\StatusManifestoNfe;
 use App\Enums\Tenant\StatusManifestoNfeEnum;
@@ -14,7 +15,7 @@ use Illuminate\Database\Eloquent\Concerns\HasUuids;
 
 class NotaFiscalEletronica extends Model
 {
-    use HasTags, HasUuids;
+    use HasTags, HasUuids, HasEscrituracao;
 
     protected $table = 'notas_fiscais_eletronica';
 
@@ -159,4 +160,6 @@ class NotaFiscalEletronica extends Model
         $this->untag();
         $this->tag($tag, $this->valor_total);
     }
+
+    
 }
