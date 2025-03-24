@@ -52,9 +52,7 @@ class ClientPanelProvider extends PanelProvider
             )
 
             ->viteTheme('resources/css/filament/client/theme.css')
-            ->discoverResources(in: app_path('Filament/Client/Resources'), for: 'App\\Filament\\Client\\Resources')
-            ->discoverPages(in: app_path('Filament/Client/Pages'), for: 'App\\Filament\\Client\\Pages')
-            ->discoverClusters(in: app_path('Filament/Clusters'), for: 'App\\Filament\\Clusters')
+            ->discoverResources(in: app_path('Filament/Client/Resources'), for: 'App\\Filament\\Client\\Resources')            
             ->pages([
                 Pages\Dashboard::class,
             ])
@@ -63,12 +61,7 @@ class ClientPanelProvider extends PanelProvider
                 Widgets\AccountWidget::class,
                 Widgets\FilamentInfoWidget::class,
             ])
-            ->userMenuItems([
-                MenuItem::make()
-                    ->label('Meu Perfil')
-                    ->icon('heroicon-o-user')
-                    ->url(fn (): string => ViewProfile::getUrl()),
-            ])
+           
             ->renderHook(
                 PanelsRenderHook::CONTENT_START,
                 fn (): string => Blade::render('@livewire(\'component.choice-organization\')'),

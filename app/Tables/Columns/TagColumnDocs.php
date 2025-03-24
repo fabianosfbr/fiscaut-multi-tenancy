@@ -12,7 +12,7 @@ class TagColumnDocs extends Column
     protected bool $mostrarCodigo = false;
 
     public function showTagCode(bool|Closure $mostrarCodigo): static
-    {
+    {        
         if ($mostrarCodigo instanceof Closure) {
             $this->mostrarCodigo = $mostrarCodigo();
         } else {

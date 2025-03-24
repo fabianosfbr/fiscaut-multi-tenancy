@@ -68,7 +68,7 @@ class ChoiceOrganization extends Component implements HasForms
 
                             $user->last_organization_id = $state;
                             $user->saveQuietly();
-                                                       
+                                                    
                             Cache::forget($cacheKey);
 
                             $this->redirect(request()->header('Referer'));

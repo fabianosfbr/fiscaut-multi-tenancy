@@ -2,9 +2,10 @@
 
 namespace App\Filament\Fiscal\Resources\OrganizationResource\Pages;
 
-use App\Filament\Fiscal\Resources\OrganizationResource;
 use Filament\Actions;
+use Illuminate\Support\Facades\Auth;
 use Filament\Resources\Pages\CreateRecord;
+use App\Filament\Fiscal\Resources\OrganizationResource;
 
 class CreateOrganization extends CreateRecord
 {
@@ -16,6 +17,12 @@ class CreateOrganization extends CreateRecord
     {
         $data['validade_certificado'] = now()->parse($data['validade_certificado']);
         return $data;
+    }
+
+    public function afterCreate(): void
+    {
+        $user = Auth::user();
+        $user->organizations()->attach($this->record->id, ['is_active' => true]);
     }
 
     protected function getRedirectUrl(): string

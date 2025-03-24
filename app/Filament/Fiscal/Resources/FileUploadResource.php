@@ -246,7 +246,9 @@ class FileUploadResource extends Resource
                     ->label('Etiqueta')
                     ->showTagCode(function () {
                         $isShow = ConfiguracaoGeral::getValue('isNfeMostrarEtiquetaComNomeAbreviado', Auth::user()->last_organization_id);
-                        return $isShow;
+                        
+                    
+                        return $isShow ?? false;
                     })
                     ->alignCenter(),
                 TextColumn::make('created_at')

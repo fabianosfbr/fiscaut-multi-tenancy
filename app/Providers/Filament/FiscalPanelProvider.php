@@ -11,9 +11,11 @@ use Filament\Support\Colors\Color;
 use Filament\View\PanelsRenderHook;
 use Illuminate\Support\Facades\Blade;
 use Filament\Http\Middleware\Authenticate;
+use App\Filament\Fiscal\Pages\Importar\NfeCte;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use App\Http\Middleware\CheckUserHasOrganization;
+use App\Filament\Clusters\Profile\Pages\ViewProfile;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\AuthenticateSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
@@ -23,7 +25,6 @@ use Filament\Http\Middleware\DispatchServingFilamentEvent;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Stancl\Tenancy\Middleware\PreventAccessFromCentralDomains;
-use App\Filament\Fiscal\Pages\Importar\NfeCte;
 
 class FiscalPanelProvider extends PanelProvider
 {
@@ -39,7 +40,8 @@ class FiscalPanelProvider extends PanelProvider
             ])
             ->viteTheme('resources/css/filament/fiscal/theme.css')
             ->discoverResources(in: app_path('Filament/Fiscal/Resources'), for: 'App\\Filament\\Fiscal\\Resources')
-            ->discoverPages(in: app_path('Filament/Fiscal/Pages'), for: 'App\\Filament\\Fiscal\\Pages')
+            ->discoverPages(in: app_path('Filament/Fiscal/Pages'), for: 'App\\Filament\\Fiscal\\Pages')            
+            ->discoverClusters(in: app_path('Filament/Clusters'), for: 'App\\Filament\\Clusters')
             ->pages([
                 Pages\Dashboard::class,
                // NfeCte::class,
@@ -54,7 +56,7 @@ class FiscalPanelProvider extends PanelProvider
                 MenuItem::make()
                     ->label('Meu Perfil')
                     ->icon('heroicon-o-user')
-                    ->url(fn (): string => 'app/profile/me'),
+                    ->url(fn (): string => ViewProfile::getUrl()),
             ])
             ->renderHook(
                 PanelsRenderHook::CONTENT_START,

@@ -127,7 +127,7 @@ class NfeEntradaResource extends Resource
                     ->alignCenter()
                     ->toggleable()
                     ->showTagCode(function () {
-                        return ConfiguracaoGeral::getValue('isNfeMostrarEtiquetaComNomeAbreviado', Auth::user()->last_organization_id);
+                        return ConfiguracaoGeral::getValue('isNfeMostrarEtiquetaComNomeAbreviado', Auth::user()->last_organization_id) ?? false;
                     }),
 
                 TextColumn::make('status_manifestacao')

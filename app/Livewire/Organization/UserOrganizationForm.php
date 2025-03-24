@@ -230,7 +230,9 @@ class UserOrganizationForm extends Component implements HasForms, HasTable
 
                             //  unset($roles[UserTypeEnum::SUPER_ADMIN->value]);
                             return $roles;
-                        })->columnSpan(2),
+                        })
+                        ->disableOptionWhen(fn (string $value): bool => $value === 'super-admin')
+                        ->columnSpan(2),
                 ]),
 
             Toggle::make('is_active')

@@ -24,7 +24,7 @@ class PaymentLog extends BaseProfile implements HasForms, HasTable
 
     protected static ?string $slug = 'me/payment';
 
-    protected static ?int $navigationSort = 4;
+    protected static ?int $navigationSort = 5;
 
     protected static string $view = 'filament.clusters.profile.pages.payment-log';
 
