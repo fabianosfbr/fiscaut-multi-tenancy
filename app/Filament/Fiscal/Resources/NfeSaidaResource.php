@@ -8,6 +8,7 @@ use Filament\Forms\Form;
 use Filament\Tables\Table;
 use Filament\Resources\Resource;
 use App\Tables\Columns\ViewChaveColumn;
+use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Actions\ActionGroup;
 use Illuminate\Database\Eloquent\Builder;
@@ -17,6 +18,7 @@ use App\Filament\Fiscal\Resources\NfeSaidaResource\Pages;
 use App\Filament\Fiscal\Resources\NfeSaidaResource\RelationManagers;
 use App\Filament\Fiscal\Resources\NfeEntradaResource\Actions\DownloadPdfAction;
 use App\Filament\Fiscal\Resources\NfeEntradaResource\Actions\DownloadXmlAction;
+use App\Filament\Fiscal\Resources\NfeEntradaResource\Actions\ToggleEscrituracaoTableAction;
 
 class NfeSaidaResource extends Resource
 {
@@ -78,6 +80,16 @@ class NfeSaidaResource extends Resource
                     ->money('BRL')
                     ->sortable(),
 
+
+                IconColumn::make('escriturada_destinatario')
+                    ->boolean()
+                    ->alignCenter()
+                    ->toggleable()
+                    ->label('Escriturada')
+                    ->getStateUsing(function (NotaFiscalEletronica $record): bool {
+                        return $record->isEscrituradaParaOrganization(getOrganizationCached());
+                    }),
+
                 TextColumn::make('cfops')
                     ->label('CFOPs')
                     ->searchable(query: function (Builder $query, string $search): Builder {
@@ -92,6 +104,7 @@ class NfeSaidaResource extends Resource
                     ->date('d/m/Y')
                     ->toggleable()
                     ->sortable(),
+
 
 
                 TextColumn::make('status_nota')
@@ -172,6 +185,7 @@ class NfeSaidaResource extends Resource
                         ->label('Detalhes'),
                     DownloadXmlAction::make(),
                     DownloadPdfAction::make(),
+                    ToggleEscrituracaoTableAction::make(),
                 ]),
             ])
             ->bulkActions([
