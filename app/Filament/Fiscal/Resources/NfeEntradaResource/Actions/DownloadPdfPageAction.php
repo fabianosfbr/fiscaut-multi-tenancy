@@ -2,11 +2,11 @@
 
 namespace App\Filament\Fiscal\Resources\NfeEntradaResource\Actions;
 
-use Filament\Tables\Actions\Action;
+use Filament\Actions\Action;
 use NFePHP\DA\NFe\Danfe;
 use Filament\Notifications\Notification;
 
-class GerarDanfeAction extends Action
+class DownloadPdfPageAction extends Action
 {
     public static function getDefaultName(): ?string
     {

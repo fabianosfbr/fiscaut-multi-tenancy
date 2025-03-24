@@ -27,9 +27,9 @@ use App\Filament\Fiscal\Resources\NfeEntradaResource\Pages;
 use App\Filament\Fiscal\Resources\NfeEntradaResource\RelationManagers;
 use App\Filament\Fiscal\Resources\NfeEntradaResource\Actions\DownloadXmlAction;
 use App\Filament\Fiscal\Resources\NfeEntradaResource\Actions\ClassificarNotaAction;
-use App\Filament\Fiscal\Resources\NfeEntradaResource\Actions\ToggleEscrituracaoAction;
+use App\Filament\Fiscal\Resources\NfeEntradaResource\Actions\ToggleEscrituracaoTableAction;
 use App\Filament\Fiscal\Resources\NfeEntradaResource\Actions\RemoveClassificacaoAction;
-use App\Filament\Fiscal\Resources\NfeEntradaResource\Actions\GerarDanfeAction;
+use App\Filament\Fiscal\Resources\NfeEntradaResource\Actions\DownloadPdfAction;
 
 class NfeEntradaResource extends Resource
 {
@@ -153,8 +153,8 @@ class NfeEntradaResource extends Resource
                     ClassificarNotaAction::make(),
                     RemoveClassificacaoAction::make(),
                     DownloadXmlAction::make(),
-                    GerarDanfeAction::make(),
-                    ToggleEscrituracaoAction::make(),
+                    DownloadPdfAction::make(),
+                    ToggleEscrituracaoTableAction::make(),
                 ]),
 
             ])

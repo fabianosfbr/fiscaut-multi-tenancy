@@ -4,6 +4,7 @@ namespace App\Filament\Fiscal\Resources\NfeEntradaResource\Pages;
 
 use Filament\Actions\Action;
 use Filament\Infolists\Infolist;
+use Filament\Actions\ActionGroup;
 use Filament\Infolists\Components\Grid;
 use Filament\Infolists\Components\Tabs;
 use Filament\Infolists\Components\Group;
@@ -15,6 +16,9 @@ use Filament\Infolists\Components\TextEntry;
 use App\Livewire\Component\ProductTableInfolist;
 use Filament\Infolists\Components\RepeatableEntry;
 use App\Filament\Fiscal\Resources\NfeEntradaResource;
+use App\Filament\Fiscal\Resources\NfeEntradaResource\Actions\DownloadPdfPageAction;
+use App\Filament\Fiscal\Resources\NfeEntradaResource\Actions\DownloadXmlPageAction;
+use App\Filament\Fiscal\Resources\NfeEntradaResource\Actions\ToggleEscrituracaoPageAction;
 use App\Filament\Fiscal\Resources\NfeEntradaResource\Actions\ClassificarNotaAvancadoAction;
 
 class ViewNfeEntrada extends ViewRecord
@@ -30,7 +34,18 @@ class ViewNfeEntrada extends ViewRecord
                 ->color('gray')
                 ->url(fn(): string => NfeEntradaResource::getUrl('index')),
 
+            ToggleEscrituracaoPageAction::make()
+            ->tooltip('Marcar como'),
+
             ClassificarNotaAvancadoAction::make(),
+
+            ActionGroup::make([
+                DownloadXmlPageAction::make(),
+                DownloadPdfPageAction::make(),
+            ])
+            ->button()
+            ->label('Download'),
+
         ];
     }
 

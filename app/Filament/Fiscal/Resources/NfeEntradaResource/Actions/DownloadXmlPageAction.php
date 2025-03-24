@@ -2,10 +2,10 @@
 
 namespace App\Filament\Fiscal\Resources\NfeEntradaResource\Actions;
 
-use Filament\Tables\Actions\Action;
+use Filament\Actions\Action;
 use Illuminate\Database\Eloquent\Model;
 
-class DownloadXmlAction extends Action
+class DownloadXmlPageAction extends Action
 {
     public static function getDefaultName(): ?string
     {
