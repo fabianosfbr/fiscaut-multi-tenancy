@@ -49,9 +49,10 @@ class ViewNfeEntrada extends ViewRecord
         ];
     }
 
+
     public function getHeading(): string
     {
-        return __('Nota Fiscal Eletrônica');
+        return __('NFe de Entrada');
     }
 
     public function infolist(Infolist $infolist): Infolist
