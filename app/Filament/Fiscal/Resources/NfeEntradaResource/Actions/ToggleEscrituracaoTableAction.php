@@ -17,7 +17,8 @@ class ToggleEscrituracaoTableAction extends Action
         parent::setUp();
 
         $this->icon('heroicon-o-document-check')
-            ->label(fn ($record) => $record->escriturada_destinatario ? 'Não Escriturada' : 'Escriturada')            
+            ->label(fn ($record) => $record->escriturada_destinatario ? 'Não Escriturada' : 'Escriturada')    
+            ->tooltip('Marcar como')        
             ->action(function ($record) {
                 $record->escriturada_destinatario = !$record->escriturada_destinatario;
                 $record->save();

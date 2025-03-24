@@ -2,21 +2,21 @@
 
 namespace App\Services\Fiscal;
 
-use App\Models\Tenant\Organization;
-use App\Models\Tenant\ControleNsu;
-use App\Models\Tenant\ResumoNfe;
-use App\Models\Tenant\EventoNfe;
-use App\Services\Tenant\Xml\XmlNfeReaderService;
-use Carbon\Carbon;
-use DOMDocument;
 use Exception;
+use DOMDocument;
+use Carbon\Carbon;
 use NFePHP\Common\Certificate;
-use NFePHP\NFe\Tools as NFeTools;
+use App\Models\Tenant\EventoNfe;
+use App\Models\Tenant\ResumoNfe;
 use NFePHP\CTe\Tools as CTeTools;
-use NFePHP\NFe\Common\Standardize as NFeStandardize;
-use NFePHP\CTe\Common\Standardize as CTeStandardize;
+use NFePHP\NFe\Tools as NFeTools;
+use App\Models\Tenant\ControleNsu;
+use App\Models\Tenant\Organization;
 use Illuminate\Support\Facades\Log;
 use App\Jobs\ProcessarDocumentoFiscal;
+use App\Services\Tenant\Xml\XmlNfeReaderService;
+use NFePHP\CTe\Common\Standardize as CTeStandardize;
+use NFePHP\NFe\Common\Standardize as NFeStandardize;
 
 class SefazConnectionService
 {
@@ -407,12 +407,13 @@ class SefazConnectionService
     {
         try {
             $response = $this->nfeTools->sefazManifesta(
-                $chave,
-                $manifestacao,
-                1, // Sequencial do evento
-                $justificativa
+                chave: $chave,
+                tpEvento: $manifestacao,
+                nSeqEvento: 1, // Sequencial do evento
+                xJust: $justificativa
             );
 
+           
             // Padroniza a resposta
             $st = new NFeStandardize();
             $std = $st->toStd($response);

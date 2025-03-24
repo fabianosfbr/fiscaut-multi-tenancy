@@ -25,11 +25,12 @@ use App\Models\Tenant\NotaFiscalEletronicaItem;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use App\Filament\Fiscal\Resources\NfeEntradaResource\Pages;
 use App\Filament\Fiscal\Resources\NfeEntradaResource\RelationManagers;
+use App\Filament\Fiscal\Resources\NfeEntradaResource\Actions\DownloadPdfAction;
 use App\Filament\Fiscal\Resources\NfeEntradaResource\Actions\DownloadXmlAction;
 use App\Filament\Fiscal\Resources\NfeEntradaResource\Actions\ClassificarNotaAction;
-use App\Filament\Fiscal\Resources\NfeEntradaResource\Actions\ToggleEscrituracaoTableAction;
+use App\Filament\Fiscal\Resources\NfeEntradaResource\Actions\ManifestarDocumentoAction;
 use App\Filament\Fiscal\Resources\NfeEntradaResource\Actions\RemoveClassificacaoAction;
-use App\Filament\Fiscal\Resources\NfeEntradaResource\Actions\DownloadPdfAction;
+use App\Filament\Fiscal\Resources\NfeEntradaResource\Actions\ToggleEscrituracaoTableAction;
 
 class NfeEntradaResource extends Resource
 {
@@ -152,6 +153,7 @@ class NfeEntradaResource extends Resource
                         ->label('Detalhes'),
                     ClassificarNotaAction::make(),
                     RemoveClassificacaoAction::make(),
+                    ManifestarDocumentoAction::make(),
                     DownloadXmlAction::make(),
                     DownloadPdfAction::make(),
                     ToggleEscrituracaoTableAction::make(),
