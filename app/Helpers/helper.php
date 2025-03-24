@@ -1,22 +1,24 @@
 <?php
 
 use App\Models\Issuer;
+use App\Models\Tenant\Tag;
 use App\Models\PlanoDeConta;
-use App\Models\Tenant\ConfiguracaoGeral;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use NFePHP\NFe\Common\Standardize;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
+use App\Models\Tenant\ConfiguracaoGeral;
+use App\Models\Tenant\NotaFiscalEletronica;
 
 function percent($number)
 {
-    return number_format($number * 100, 2, ',', '.').' %';
+    return number_format($number * 100, 2, ',', '.') . ' %';
 }
 
 function formatar_moeda($valor)
 {
-    return 'R$ '.number_format($valor, 2, ',', '.');
+    return 'R$ ' . number_format($valor, 2, ',', '.');
 }
 
 function issuersViewHelper()
@@ -29,14 +31,7 @@ function issuersViewHelper()
     return $issuers;
 }
 
-function getCurrentIssuer()
-{
-    // $issuer_id = Cache::forever('get-current-issuer', function () {
-    //     return Auth::user()->issuer_id;
-    // });
 
-    return Auth::user()->issuer_id;
-}
 
 function tipoEventoManifesto($evento)
 {
@@ -76,13 +71,13 @@ function formatar_cnpj_cpf($value)
 
 function formatar_cep($value)
 {
-    return substr($value, 0, 5).'-'.substr($value, 5, 3);
+    return substr($value, 0, 5) . '-' . substr($value, 5, 3);
 }
 
 function formatar_telefone($numero)
 {
     // primeiro substr pega apenas o DDD e coloca dentro do (), segundo subtr pega os números do 3º até faltar 4, insere o hifem, e o ultimo pega apenas o 4 ultimos digitos
-    $number = '('.substr($numero, 0, 2).') '.substr($numero, 2, -4).'-'.substr($numero, -4);
+    $number = '(' . substr($numero, 0, 2) . ') ' . substr($numero, 2, -4) . '-' . substr($numero, -4);
 
     return $number;
 }
@@ -121,7 +116,7 @@ function getTagValue($theObj, $keyName, $extraTextBefore = '', $extraTextAfter =
             $value = html_entity_decode($value);
         }
 
-        return $extraTextBefore.$value.$extraTextAfter;
+        return $extraTextBefore . $value . $extraTextAfter;
     }
 
     return '';
@@ -136,7 +131,7 @@ function getTagDate($theObj, $keyName, $extraText = '')
     if (isset($vct)) {
         $theDate = explode('-', $vct->nodeValue);
 
-        return $extraText.$theDate[2].'/'.$theDate[1].'/'.$theDate[0];
+        return $extraText . $theDate[2] . '/' . $theDate[1] . '/' . $theDate[0];
     }
 
     return '';
@@ -214,7 +209,7 @@ function formatField($campo = '', $mascara = '')
         }
         if (! $flag) {
             if ($mascara[0] != '#') {
-                $sRetorno = '('.trim($sRetorno);
+                $sRetorno = '(' . trim($sRetorno);
             }
         }
 
@@ -296,5 +291,34 @@ if (! function_exists('config_system')) {
         }
 
         return ConfiguracaoGeral::getValue($key, $organizationId, $default);
+    }
+}
+
+if (! function_exists('tagsForFilterNfe')) {
+    function tagsForFilterNfe()
+    {
+        $organization = getOrganizationCached();
+
+        $tagUsed = Tag::rightJoin('tagging_tagged', 'tags.id', '=', 'tagging_tagged.tag_id')
+            ->where('taggable_type', NotaFiscalEletronica::class)
+            ->select('tags.id')
+            ->distinct()
+            ->get()
+            ->pluck('id');
+
+        
+        return Tag::whereHas('category', function ($query) use ($organization) {
+            $query->where('organization_id', $organization->id);
+        })
+            ->whereIn('id', $tagUsed)
+            ->get()
+            ->keyBy('id')
+            ->map(fn($tag) => $tag->code . ' - ' . $tag->name)
+            ->toArray();
+
+      
+
+
+    
     }
 }

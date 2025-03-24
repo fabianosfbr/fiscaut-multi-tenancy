@@ -88,4 +88,9 @@ class Tag extends Model
             ->get()
             ->pluck('id');
     }
+
+    public function notasFiscaisEletronicas()
+    {
+        return $this->hasMany(NotaFiscalEletronica::class, 'tag_id');
+    }
 }

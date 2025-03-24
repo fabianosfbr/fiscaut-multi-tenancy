@@ -107,7 +107,64 @@ class NfeSaidaResource extends Resource
             ])
             ->defaultSort('data_emissao', 'desc')
             ->filters([
-                //
+                Tables\Filters\Filter::make('data_emissao')
+                    ->label('Data de Emissão')
+                    ->columnSpan(2)
+                    ->form([
+                        Forms\Components\DatePicker::make('data_emissao_inicio')
+                            ->label('Data Emissão Início')
+                            ->columnSpan(1),
+                        Forms\Components\DatePicker::make('data_emissao_fim')
+                            ->label('Data Emissão Final')
+                            ->columnSpan(1),
+                    ])->columns(2)
+                    ->indicateUsing(function (array $data): ?string {
+                        if (empty($data['data_emissao_inicio']) && empty($data['data_emissao_fim'])) {
+                            return null;
+                        }
+
+                        $inicio = $data['data_emissao_inicio'] ? date('d/m/Y', strtotime($data['data_emissao_inicio'])) : '...';
+                        $fim = $data['data_emissao_fim'] ? date('d/m/Y', strtotime($data['data_emissao_fim'])) : '...';
+
+                        return "Emissão: {$inicio} até {$fim}";
+                    })
+                    ->query(function (Builder $query, array $data): Builder {
+                        if (!empty($data['data_emissao_inicio'])) {
+                            $query->whereDate('data_emissao', '>=', $data['data_emissao_inicio']);
+                        }
+                        if (!empty($data['data_emissao_fim'])) {
+                            $query->whereDate('data_emissao', '<=', $data['data_emissao_fim']);
+                        }
+                        return $query;
+                    }),
+
+                Tables\Filters\Filter::make('cfop')
+                    ->label('CFOP')
+                    ->columnSpan(1)
+                    ->form([
+                        Forms\Components\TagsInput::make('cfops')
+                            ->label('CFOPs')
+                            ->placeholder('Digite os CFOPs')
+                            ->separator(',')
+                            ->splitKeys(['Enter', ','])
+                            ->rules(['regex:/^[0-9]+$/'])
+                            ->helperText('Digite os CFOPs que deseja filtrar'),
+                    ])
+                    ->indicateUsing(function (array $data): ?string {
+                        if (empty($data['cfops'])) {
+                            return null;
+                        }
+
+                        return 'CFOPs: ' . implode(', ', $data['cfops']);
+                    })
+                    ->query(function (Builder $query, array $data): Builder {
+                        if (!empty($data['cfops'])) {
+                            $query->whereHas('itens', function ($query) use ($data) {
+                                $query->whereIn('cfop', $data['cfops']);
+                            });
+                        }
+                        return $query;
+                    }),
             ])
             ->actions([
                 ActionGroup::make([
