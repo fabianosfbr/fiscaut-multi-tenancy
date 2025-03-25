@@ -47,7 +47,7 @@ class NfeSaidaResource extends Resource
         return $table
             ->modifyQueryUsing(function (Builder $query) {
                 $organization = getOrganizationCached();
-                return $query->where('cnpj_emitente', $organization->cnpj);
+                return $query->where('cnpj_emitente', $organization->cnpj)->where('tipo', 0);
             })
             ->recordUrl(null)
             ->columns([
@@ -179,6 +179,7 @@ class NfeSaidaResource extends Resource
                         return $query;
                     }),
             ])
+            ->deferFilters()
             ->actions([
                 ActionGroup::make([
                     Tables\Actions\ViewAction::make()

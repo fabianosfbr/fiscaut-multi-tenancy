@@ -27,6 +27,8 @@ class NotaFiscalEletronica extends Model
 
     protected $appends = ['tagging_summary'];
 
+    protected $with = ['itens', 'impostos'];
+
     protected function casts(): array
     {
         return [
@@ -61,16 +63,8 @@ class NotaFiscalEletronica extends Model
         ];
     }
 
-    public function products()
-    {
 
-        return $this->hasMany(Produto::class, 'nfe_id');
-    }
 
-    public function apurada()
-    {
-        return $this->hasOne(NfeApurada::class, 'nfe_id');
-    }
 
     public function getTaggingSummaryAttribute()
     {
@@ -161,5 +155,28 @@ class NotaFiscalEletronica extends Model
         $this->tag($tag, $this->valor_total);
     }
 
-    
+    public function scopeEntradasTerceiros($query, $organization = null)
+    {
+        $organization = $organization ?? getOrganizationCached();
+        return $query->where('cnpj_destinatario', $organization->cnpj)
+                    ->where('cnpj_emitente', '<>', $organization->cnpj)
+                    ->where('tipo', 1);
+    }
+
+    public function scopeEntradasProprias($query, $organization = null)
+    {
+        $organization = $organization ?? getOrganizationCached();
+
+        return $query->where('cnpj_emitente', $organization->cnpj)
+                    ->where('tipo', '0');
+    }
+
+    public function scopeEntradasPropriasTerceiros($query, $organization = null)
+    {
+        $organization = $organization ?? getOrganizationCached();
+        return $query->where('cnpj_destinatario', $organization->cnpj)
+                    ->where('cnpj_emitente', '<>', $organization->cnpj)
+                    ->where('tipo', '0');
+    }
+
 }

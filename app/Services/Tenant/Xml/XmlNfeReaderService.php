@@ -104,6 +104,7 @@ class XmlNfeReaderService
                 'chave_acesso' => str_replace('NFe', '', $this->xml->NFe->infNFe['Id']),
                 'numero' => (string) $ide->nNF,
                 'serie' => (string) $ide->serie,
+                'tipo' => (string) $ide->tpNF,
                 'data_emissao' => Carbon::parse((string) $ide->dhEmi),
                 'cnpj_emitente' => (string) $emit->CNPJ,
                 'ie_emitente' => (string) ($emit->IE ?? ''),
@@ -265,6 +266,7 @@ class XmlNfeReaderService
                         'status_manifestacao',
                         'data_entrada',
                         'origem',
+                        'tipo',
                         'xml_content',
                         // Adicione aqui outros campos que podem ser atualizados
                     ];

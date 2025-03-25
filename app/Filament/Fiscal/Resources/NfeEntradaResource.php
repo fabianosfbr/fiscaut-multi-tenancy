@@ -11,6 +11,7 @@ use Filament\Resources\Resource;
 use App\Enums\Tenant\OrigemNfeEnum;
 use App\Models\Tenant\Organization;
 use Filament\Tables\Actions\Action;
+use Filament\Tables\Grouping\Group;
 use App\Tables\Columns\TagColumnNfe;
 use Filament\Support\Enums\MaxWidth;
 use Illuminate\Support\Facades\Auth;
@@ -59,9 +60,8 @@ class NfeEntradaResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
-            ->modifyQueryUsing(function (Builder $query) {
-                $organization = getOrganizationCached();
-                return $query->where('cnpj_destinatario', $organization->cnpj);
+            ->query(function () {
+                return NotaFiscalEletronica::query()->entradasTerceiros(getOrganizationCached());
             })
             ->recordUrl(null)
             ->columns([

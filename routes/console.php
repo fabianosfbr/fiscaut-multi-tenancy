@@ -20,47 +20,48 @@ use Illuminate\Http\Client\RequestException;
 use App\Services\Fiscal\SiegConnectionService;
 use App\Services\Fiscal\SefazConnectionService;
 use App\Models\Tenant\ShowChoiceOrganizationUrl;
+use App\Services\Tenant\Xml\XmlNfeReaderService;
 
 Artisan::command('play', function () {
 
 
-    $apiUrl = 'https://api.sieg.com/BaixarXmls';
-    $apiKey = 'tPSP92W2wug4gDwurCvF3Q==';
+    // $apiUrl = 'https://api.sieg.com/BaixarXmls';
+    // $apiKey = 'tPSP92W2wug4gDwurCvF3Q==';
 
 
-    try {
-        $requestData = [
-            'XmlType' => 1,
-            'DataEmissaoInicio' => '2025-03-17T00:00:00.000Z',
-            'DataEmissaoFim' => '2025-03-17T23:59:59.999Z',
-            'CnpjEmit' => '08357463000117',
-            'skip' => 60,
-            'take' => 50,
-            'Downloadevent' => false,
-        ];
+    // try {
+    //     $requestData = [
+    //         'XmlType' => 1,
+    //         'DataEmissaoInicio' => '2025-03-17T00:00:00.000Z',
+    //         'DataEmissaoFim' => '2025-03-17T23:59:59.999Z',
+    //         'CnpjEmit' => '08357463000117',
+    //         'skip' => 60,
+    //         'take' => 50,
+    //         'Downloadevent' => false,
+    //     ];
     
-        $response = Http::retry(3, 100)
-        ->post(
-            $apiUrl . '?api_key=' . $apiKey,
-            $requestData
-        )
-        ->throw();
+    //     $response = Http::retry(3, 100)
+    //     ->post(
+    //         $apiUrl . '?api_key=' . $apiKey,
+    //         $requestData
+    //     )
+    //     ->throw();
     
-        dd($response->status());
-        //code...
-    } catch (RequestException $e) {
-        if ($e->response->status() === 404) {
-            $errorMessage = $e->response->json()['message'] ?? $e->response->body();
+    //     dd($response->status());
+    //     //code...
+    // } catch (RequestException $e) {
+    //     if ($e->response->status() === 404) {
+    //         $errorMessage = $e->response->json()['message'] ?? $e->response->body();
 
-            if (str_contains($errorMessage, 'Nenhum arquivo XML localizado')) {
-                // Trata como sucesso com mensagem específica
-                dd('sucesso');
-            }
-        }
-    }
+    //         if (str_contains($errorMessage, 'Nenhum arquivo XML localizado')) {
+    //             // Trata como sucesso com mensagem específica
+    //             dd('sucesso');
+    //         }
+    //     }
+    // }
 
 
-    dd('parei');
+    // dd('parei');
 
 
     $tenant = Tenant::where('id', '330f85f4-0b59-4490-9ada-5b6343032cf5')->first();
@@ -159,6 +160,22 @@ Artisan::command('play', function () {
 
     $tenant->run(function ($tenant) {
         $organization = Organization::where('cnpj', '08357463000117')->first();
+
+        $nfes = NotaFiscalEletronica::entradasProprias($organization)->get();
+
+        dd($nfes);
+
+        foreach ($nfes as $nfe) {
+            $content = $nfe->xml_content;
+
+            $xmlReader = new XmlNfeReaderService();
+            $xmlReader->loadXml($content)
+                ->parse()
+                ->setOrigem('SEFAZ')
+                ->save();
+        }
+
+        dd('parei');
 
 
 
