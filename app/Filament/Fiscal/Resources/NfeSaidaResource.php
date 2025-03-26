@@ -47,7 +47,7 @@ class NfeSaidaResource extends Resource
         return $table
             ->modifyQueryUsing(function (Builder $query) {
                 $organization = getOrganizationCached();
-                return $query->where('cnpj_emitente', $organization->cnpj)->where('tipo', 0);
+                return $query->where('cnpj_emitente', $organization->cnpj);
             })
             ->recordUrl(null)
             ->columns([
@@ -117,6 +117,48 @@ class NfeSaidaResource extends Resource
                     ->label('Chave')
                     ->searchable()
                     ->alignCenter(),
+
+                IconColumn::make('possui_referencias')
+                    ->label('Ref')
+                    ->boolean()
+                    ->alignCenter()
+                    ->getStateUsing(fn(NotaFiscalEletronica $record): bool => $record->possuiReferencias())
+                    ->tooltip('Possui Referências a Outras Notas')
+                    ->url(function (NotaFiscalEletronica $record): ?string {
+                        if (!$record->possuiReferencias()) {
+                            return null;
+                        }
+
+                        $primeiraReferencia = $record->referenciasFeitas()
+                            ->where('documento_origem_type', NotaFiscalEletronica::class)
+                            ->first();
+
+                        return $primeiraReferencia
+                            ? route('filament.fiscal.resources.nfes-entrada.view', ['record' => $primeiraReferencia->documento_origem_id])
+                            : null;
+                    })
+                    ->openUrlInNewTab(),
+
+                IconColumn::make('eh_referenciada')
+                    ->label('Ref. por')
+                    ->boolean()
+                    ->alignCenter()
+                    ->url(function (NotaFiscalEletronica $record): ?string {
+                        if (!$record->ehReferenciado()) {
+                            return null;
+                        }
+
+                        $primeiraReferencia = $record->referenciasRecebidas()
+                            ->where('documento_origem_type', NotaFiscalEletronica::class)
+                            ->first();
+
+                        return $primeiraReferencia
+                            ? route('filament.fiscal.resources.nfes-entrada.view', ['record' => $primeiraReferencia->documento_origem_id])
+                            : null;
+                    })
+                    ->getStateUsing(fn(NotaFiscalEletronica $record): bool => $record->ehReferenciado())
+                    ->tooltip('Referenciada por Outras Notas')
+                    ->openUrlInNewTab(),
             ])
             ->defaultSort('data_emissao', 'desc')
             ->filters([
@@ -178,7 +220,29 @@ class NfeSaidaResource extends Resource
                         }
                         return $query;
                     }),
+
+                Tables\Filters\SelectFilter::make('referencias')
+                    ->label('Referências')
+                    ->options([
+                        'possui_referencias' => 'Possui Referências',
+                        'eh_referenciada' => 'É Referenciada',
+                        'sem_referencias' => 'Sem Referências',
+                    ])
+                    ->query(function (Builder $query, array $data): Builder {
+                        if (empty($data['value'])) {
+                            return $query;
+                        }
+
+                        return match ($data['value']) {
+                            'possui_referencias' => $query->whereHas('referenciasFeitas'),
+                            'eh_referenciada' => $query->whereHas('referenciasRecebidas'),
+                            'sem_referencias' => $query->whereDoesntHave('referenciasFeitas')
+                                ->whereDoesntHave('referenciasRecebidas'),
+                            default => $query,
+                        };
+                    }),
             ])
+            ->persistFiltersInSession()
             ->deferFilters()
             ->actions([
                 ActionGroup::make([

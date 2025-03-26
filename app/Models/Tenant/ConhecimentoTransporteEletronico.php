@@ -7,10 +7,14 @@ use App\Enums\Tenant\StatusCteEnum;
 use Illuminate\Database\Eloquent\Model;
 use App\Enums\Tenant\StatusManifestoCteEnum;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
+use App\Models\Tenant\Concerns\HasTags;
+use App\Models\Tenant\Concerns\HasEscrituracao;
+use App\Models\Tenant\Concerns\HasDocumentoReferencias;
+use App\Interfaces\DocumentoFiscal;
 
-class ConhecimentoTransporteEletronico extends Model
+class ConhecimentoTransporteEletronico extends Model implements DocumentoFiscal
 {
-    use HasUuids;
+    use HasTags, HasUuids, HasEscrituracao, HasDocumentoReferencias;
 
     protected $guarded = ['id'];
 

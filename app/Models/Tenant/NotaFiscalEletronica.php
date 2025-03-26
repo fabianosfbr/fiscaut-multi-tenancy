@@ -8,14 +8,16 @@ use App\Enums\Tenant\StatusNfeEnum;
 use Illuminate\Support\Facades\Cache;
 use App\Models\Tenant\Concerns\HasTags;
 use App\Models\Tenant\Concerns\HasEscrituracao;
+use App\Models\Tenant\Concerns\HasDocumentoReferencias;
 use Illuminate\Database\Eloquent\Model;
 use App\Enums\Tenant\StatusManifestoNfe;
 use App\Enums\Tenant\StatusManifestoNfeEnum;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
+use App\Interfaces\DocumentoFiscal;
 
-class NotaFiscalEletronica extends Model
+class NotaFiscalEletronica extends Model implements DocumentoFiscal
 {
-    use HasTags, HasUuids, HasEscrituracao;
+    use HasTags, HasUuids, HasEscrituracao, HasDocumentoReferencias;
 
     protected $table = 'notas_fiscais_eletronica';
 
@@ -117,6 +119,22 @@ class NotaFiscalEletronica extends Model
     public function historicos()
     {
         return $this->hasMany(NotaFiscalEletronicaHistorico::class, 'nfe_id');
+    }
+
+    /**
+     * Referências que esta nota faz a outras notas
+     */
+    public function referenciasFeitas()
+    {
+        return $this->morphMany(DocumentoReferencia::class, 'documento_origem');
+    }
+
+    /**
+     * Referências que outras notas fazem a esta nota
+     */
+    public function referenciasRecebidas()
+    {
+        return $this->morphMany(DocumentoReferencia::class, 'documento_referenciado');
     }
 
     public function getEnderecoEmitenteCompletoAttribute(): string

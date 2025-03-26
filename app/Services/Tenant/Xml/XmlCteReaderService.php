@@ -9,35 +9,32 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use App\Models\Tenant\ConhecimentoTransporte;
 use App\Models\Tenant\ConhecimentoTransporteEletronico;
+use App\Models\Tenant\DocumentoReferencia;
+use App\Interfaces\ServicoLeituraDocumentoFiscal;
 
-class XmlCteReaderService
+class XmlCteReaderService implements ServicoLeituraDocumentoFiscal
 {
     private ?SimpleXMLElement $xml = null;
     private array $data = [];
     private string $rawXml;
 
     /**
-     * Carrega o conteúdo do XML
+     * Inicializa o serviço com o conteúdo XML
      */
     public function loadXml(string $xmlContent): self
     {
-       
         try {
             $this->rawXml = $xmlContent;
             $this->xml = new SimpleXMLElement($xmlContent);
-            
-            // Registra os namespaces necessários para CTe
-            $this->xml->registerXPathNamespace('cte', 'http://www.portalfiscal.inf.br/cte');
-            
             return $this;
         } catch (Exception $e) {
-            Log::error('Erro ao carregar XML do CTe: ' . $e->getMessage());
-            throw new Exception("XML de CTe inválido ou mal formatado: {$e->getMessage()}");
+            Log::error('Erro ao carregar XML de CTe: ' . $e->getMessage());
+            throw new Exception('XML de CTe inválido ou mal formatado');
         }
     }
 
     /**
-     * Extrai os dados do XML
+     * Extrai e mapeia os dados do XML para um array estruturado
      */
     public function parse(): self
     {
@@ -46,36 +43,45 @@ class XmlCteReaderService
         }
 
         try {
-            // Registra os namespaces necessários para CTe
+            // Registra os namespaces necessários
             $this->xml->registerXPathNamespace('cte', 'http://www.portalfiscal.inf.br/cte');
 
-            // Verifica se existe o elemento CTe
-            if (!isset($this->xml->CTe) || !isset($this->xml->CTe->infCte)) {
-                throw new Exception('Estrutura do XML do CTe inválida: CTe ou infCte não encontrado');
-            }
-
-            // Extrai informações básicas do CTe usando o caminho correto
+            // Extrai os dados principais
             $ide = $this->xml->CTe->infCte->ide;
             $emit = $this->xml->CTe->infCte->emit;
             $dest = $this->xml->CTe->infCte->dest;
-            $rem = $this->xml->CTe->infCte->rem;
             $vPrest = $this->xml->CTe->infCte->vPrest;
-            $imp = $this->xml->CTe->infCte->imp;
             
-            // O infCarga pode estar em diferentes locais dependendo do tipo de CTe
-            $infCarga = $this->xml->CTe->infCte->infCTeNorm->infCarga ?? null;
-
-            // Extrai o status do CTe do protocolo (se existir)
+            // Verifica se há documentos referenciados (NFes, outros CTes, etc)
+            $possuiReferencia = false;
+            $chaveReferenciada = null;
+            $tipoReferencia = null;
+            
+            // Verifica referências a NFes
+            if (isset($this->xml->CTe->infCte->infCTeNorm->infDoc->infNFe)) {
+                $possuiReferencia = true;
+                $refNFe = $this->xml->CTe->infCte->infCTeNorm->infDoc->infNFe;
+                $chaveReferenciada = (string) $refNFe->chave;
+                $tipoReferencia = 'NFE';
+            }
+            
+            // Verifica referências a outros CTes
+            if (isset($this->xml->CTe->infCte->infCTeNorm->infDoc->infCTe)) {
+                $possuiReferencia = true;
+                $refCTe = $this->xml->CTe->infCte->infCTeNorm->infDoc->infCTe;
+                $chaveReferenciada = (string) $refCTe->chave;
+                $tipoReferencia = 'CTE';
+            }
+            
+            // Extrai o status da nota do protCTe (se existir)
             $status = 'EMITIDO'; // Status padrão
             if (isset($this->xml->protCTe)) {
                 $cStat = (string) $this->xml->protCTe->infProt->cStat;
                 switch ($cStat) {
                     case '100': // Autorizado o uso do CT-e
-                    case '150': // Autorizado o uso do CT-e, autorização fora de prazo
                         $status = 'AUTORIZADO';
                         break;
-                    case '101': // Cancelamento de CT-e homologado
-                    case '151': // Cancelamento de CT-e homologado fora de prazo
+                    case '101': // Cancelamento homologado
                         $status = 'CANCELADO';
                         break;
                     case '110': // Uso Denegado
@@ -88,132 +94,113 @@ class XmlCteReaderService
                 }
             }
 
-            // Monta o array de dados com verificações de null
+            $enderEmit = $this->xml->CTe->infCte->emit->enderEmit;
+            $enderDest = $this->xml->CTe->infCte->dest->enderDest;
+
             $this->data = [
-                'chave_acesso' => str_replace('CTe', '', (string) $this->xml->CTe->infCte['Id']),
+                'chave_acesso' => str_replace('CTe', '', $this->xml->CTe->infCte['Id']),
                 'numero' => (string) $ide->nCT,
                 'serie' => (string) $ide->serie,
                 'data_emissao' => Carbon::parse((string) $ide->dhEmi),
-                'data_entrada' => Carbon::now(),
-                
-                // Emitente
                 'cnpj_emitente' => (string) $emit->CNPJ,
+                'ie_emitente' => (string) ($emit->IE ?? ''),
                 'nome_emitente' => (string) $emit->xNome,
-                'ie_emitente' => (string) $emit->IE,
-                
-                // Destinatário
-                'cnpj_destinatario' => (string) ($dest->CNPJ ?? $dest->CPF ?? ''),
-                'nome_destinatario' => (string) $dest->xNome,
+                'cnpj_destinatario' => (string) ($dest->CNPJ ?? $dest->CPF),
                 'ie_destinatario' => (string) ($dest->IE ?? ''),
+                'nome_destinatario' => (string) $dest->xNome,
                 
-                // Remetente
-                'cnpj_remetente' => (string) ($rem->CNPJ ?? $rem->CPF ?? ''),
-                'nome_remetente' => (string) $rem->xNome,
-                'ie_remetente' => (string) ($rem->IE ?? ''),
+                // Dados de referência
+                'possui_referencia' => $possuiReferencia,
+                'chave_referenciada' => $chaveReferenciada,
+                'tipo_referencia' => $tipoReferencia,
                 
                 // Valores
-                'valor_total' => (float) ($vPrest->vTPrest ?? 0),
-                'valor_receber' => (float) ($vPrest->vRec ?? 0),
-                'valor_servico' => (float) ($vPrest->vTPrest ?? 0),
+                'valor_total' => (float) $vPrest->vTPrest,
+                'valor_receber' => (float) $vPrest->vRec,
                 
-                // ICMS - com tratamento para diferentes tipos de tributação
-                'valor_icms' => $this->extrairValorICMS($imp->ICMS),
-                'base_calculo_icms' => $this->extrairBaseCalculoICMS($imp->ICMS),
-                'aliquota_icms' => $this->extrairAliquotaICMS($imp->ICMS),
-                
-                // Informações do Transporte
-                'modal' => (string) $ide->modal,
-                'tipo_servico' => (string) $ide->tpServ,
-                'quantidade_carga' => (int) ($infCarga->qCarga ?? 0),
-                'peso_bruto' => $this->extrairPesoCarga($infCarga, 'PESO BRUTO'),
-                'peso_base_calculo' => $this->extrairPesoCarga($infCarga, 'PESO BC'),
-                'peso_aferido' => $this->extrairPesoCarga($infCarga, 'PESO AFERIDO'),
-                'unidade_medida' => $this->extrairUnidadeMedida($infCarga),
-                
-                // Status e Controle
-                'status_cte' => $status,
-                'status_manifestacao' => 'PENDENTE',
-                'origem' => 'IMPORTADO',
+                // Status do CTe
+                'status' => $status,
                 'xml_content' => $this->rawXml,
+
+                // Dados do Emitente
+                'logradouro_emitente' => (string) $enderEmit->xLgr,
+                'numero_emitente' => (string) $enderEmit->nro,
+                'complemento_emitente' => (string) $enderEmit->xCpl,
+                'bairro_emitente' => (string) $enderEmit->xBairro,
+                'municipio_emitente' => (string) $enderEmit->xMun,
+                'uf_emitente' => (string) $enderEmit->UF,
+                'cep_emitente' => (string) $enderEmit->CEP,
+
+                // Dados do Destinatário
+                'logradouro_destinatario' => (string) $enderDest->xLgr,
+                'numero_destinatario' => (string) $enderDest->nro,
+                'complemento_destinatario' => (string) $enderDest->xCpl,
+                'bairro_destinatario' => (string) $enderDest->xBairro,
+                'municipio_destinatario' => (string) $enderDest->xMun,
+                'uf_destinatario' => (string) $enderDest->UF,
+                'cep_destinatario' => (string) $enderDest->CEP,
             ];
 
             return $this;
         } catch (Exception $e) {
-            Log::error('Erro ao fazer parse do XML do CTe: ' . $e->getMessage());
-            throw new Exception('Erro ao processar dados do XML do CTe: ' . $e->getMessage());
+            Log::error('Erro ao fazer parse do XML de CTe: ' . $e->getMessage());
+            throw new Exception('Erro ao processar dados do XML de CTe: ' . $e->getMessage());
         }
     }
 
     /**
-     * Extrai o valor do ICMS considerando diferentes tipos de tributação
+     * Define a origem do XML
      */
-    private function extrairValorICMS($icms): float
+    public function setOrigem(string $origem): self
     {
-        $tipos = ['ICMS00', 'ICMS20', 'ICMS45', 'ICMS60', 'ICMS90'];
-        foreach ($tipos as $tipo) {
-            if (isset($icms->$tipo) && isset($icms->$tipo->vICMS)) {
-                return (float) $icms->$tipo->vICMS;
-            }
+        if (!in_array($origem, ['IMPORTADO', 'SEFAZ', 'SIEG'])) {
+            throw new Exception('Origem inválida. Use: IMPORTADO, SEFAZ ou SIEG');
         }
-        return 0;
+        
+        $this->data['origem'] = $origem;
+        return $this;
     }
 
     /**
-     * Extrai a base de cálculo do ICMS
+     * Salva ou atualiza os dados extraídos no banco de dados
      */
-    private function extrairBaseCalculoICMS($icms): float
+    public function save(): ConhecimentoTransporteEletronico
     {
-        $tipos = ['ICMS00', 'ICMS20', 'ICMS90'];
-        foreach ($tipos as $tipo) {
-            if (isset($icms->$tipo) && isset($icms->$tipo->vBC)) {
-                return (float) $icms->$tipo->vBC;
-            }
+        try {
+            return DB::transaction(function () {
+                $chaveAcesso = $this->data['chave_acesso'];
+                
+                // Remove campos que serão tratados separadamente
+                $possuiReferencia = $this->data['possui_referencia'] ?? false;
+                $chaveReferenciada = $this->data['chave_referenciada'] ?? null;
+                $tipoReferencia = $this->data['tipo_referencia'] ?? 'NFE';
+                
+                unset($this->data['possui_referencia']);
+                unset($this->data['chave_referenciada']);
+                unset($this->data['tipo_referencia']);
+                
+                // Busca o CTe existente
+                $cte = ConhecimentoTransporteEletronico::where('chave_acesso', $chaveAcesso)->first();
+                
+                // Atualiza ou cria o CTe
+                if ($cte) {
+                    $cte->update($this->data);
+                } else {
+                    $cte = ConhecimentoTransporteEletronico::create($this->data);
+                }
+                
+                // Se este CTe faz referência a outro documento, registra esta referência
+                if ($possuiReferencia && $chaveReferenciada) {
+                    $cte->adicionarReferencia($chaveReferenciada, $tipoReferencia);
+                }
+                
+                // Retorna o CTe
+                return $cte;
+            });
+        } catch (Exception $e) {
+            Log::error('Erro ao salvar dados do CTe: ' . $e->getMessage());
+            throw new Exception('Erro ao salvar dados do CTe: ' . $e->getMessage());
         }
-        return 0;
-    }
-
-    /**
-     * Extrai a alíquota do ICMS
-     */
-    private function extrairAliquotaICMS($icms): float
-    {
-        $tipos = ['ICMS00', 'ICMS20', 'ICMS90'];
-        foreach ($tipos as $tipo) {
-            if (isset($icms->$tipo) && isset($icms->$tipo->pICMS)) {
-                return (float) $icms->$tipo->pICMS;
-            }
-        }
-        return 0;
-    }
-
-    /**
-     * Extrai o peso da carga conforme o tipo especificado
-     */
-    private function extrairPesoCarga(?SimpleXMLElement $infCarga, string $tipo): float
-    {
-        if (!$infCarga || !isset($infCarga->infQ)) {
-            return 0;
-        }
-
-        foreach ($infCarga->infQ as $infQ) {
-            if ((string) $infQ->tpMed == $tipo) {
-                return (float) $infQ->qCarga;
-            }
-        }
-
-        return 0;
-    }
-
-    /**
-     * Extrai a unidade de medida da primeira informação de quantidade
-     */
-    private function extrairUnidadeMedida(?SimpleXMLElement $infCarga): string
-    {
-        if (!$infCarga || !isset($infCarga->infQ[0])) {
-            return '';
-        }
-
-        return (string) $infCarga->infQ[0]->tpMed;
     }
 
     /**
@@ -222,66 +209,5 @@ class XmlCteReaderService
     public function getData(): array
     {
         return $this->data;
-    }
-
-    /**
-     * Salva ou atualiza os dados no banco
-     */
-    public function save(): ConhecimentoTransporteEletronico
-    {
-        try {
-            return DB::transaction(function () {
-                $chaveAcesso = $this->data['chave_acesso'];
-                
-                // Busca CTe existente
-                $cte = ConhecimentoTransporteEletronico::where('chave_acesso', $chaveAcesso)->first();
-
-                if ($cte) {
-                    // Atualiza apenas os campos que podem ser modificados
-                    $camposAtualizaveis = [
-                        'status_cte',
-                        'status_manifestacao',
-                        'origem',
-                        'xml_content',
-                    ];
-
-                    $dadosAtualizacao = array_intersect_key(
-                        $this->data,
-                        array_flip($camposAtualizaveis)
-                    );
-
-                    // Se o status atual for CANCELADO, não permite alteração para AUTORIZADO
-                    if ($cte->status_cte === 'CANCELADO' && $dadosAtualizacao['status_cte'] === 'AUTORIZADO') {
-                        throw new Exception("Não é possível alterar o status de um CTe CANCELADO para AUTORIZADO");
-                    }
-
-                    // Atualiza o CTe
-                    $cte->update($dadosAtualizacao);
-
-                    // Registra o histórico de alteração
-                    $this->registrarHistoricoAlteracao($cte, $dadosAtualizacao);
-
-                    return $cte;
-                }
-
-                // Se não existir, cria um novo CTe
-                return ConhecimentoTransporteEletronico::create($this->data);
-            });
-        } catch (Exception $e) {
-            Log::error('Erro ao salvar CTe: ' . $e->getMessage());
-            throw new Exception('Erro ao salvar dados do CTe no banco: ' . $e->getMessage());
-        }
-    }
-
-    /**
-     * Registra o histórico de alteração do CTe
-     */
-    private function registrarHistoricoAlteracao(ConhecimentoTransporteEletronico $cte, array $dadosAtualizados): void
-    {
-        $cte->historicos()->create([
-            'data_alteracao' => now(),
-            'campos_alterados' => $dadosAtualizados,
-            'usuario_id' => auth()->id() ?? null,
-        ]);
     }
 } 

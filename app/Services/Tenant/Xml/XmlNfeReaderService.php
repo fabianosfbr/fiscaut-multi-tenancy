@@ -8,10 +8,12 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use App\Models\Tenant\NotaFiscalEletronica;
+use App\Models\Tenant\DocumentoReferencia;
+use App\Interfaces\ServicoLeituraDocumentoFiscal;
 use App\Services\Tenant\Xml\Traits\HasXmlReader;
 use App\Services\Tenant\Xml\Traits\HasXmlValidator;
 
-class XmlNfeReaderService
+class XmlNfeReaderService implements ServicoLeituraDocumentoFiscal
 {
     // use HasXmlValidator, HasXmlReader;
 
@@ -51,6 +53,18 @@ class XmlNfeReaderService
             $emit = $this->xml->NFe->infNFe->emit;
             $dest = $this->xml->NFe->infNFe->dest;
             $total = $this->xml->NFe->infNFe->total->ICMSTot;
+            
+            // Verifica se há NFes referenciadas
+            $possuiReferencia = false;
+            $chaveReferenciada = null;
+            
+            if (isset($this->xml->NFe->infNFe->ide->NFref)) {
+                $possuiReferencia = true;
+                // Verificamos se existe a tag refNFe, que contém a chave da nota referenciada
+                if (isset($this->xml->NFe->infNFe->ide->NFref->refNFe)) {
+                    $chaveReferenciada = (string) $this->xml->NFe->infNFe->ide->NFref->refNFe;
+                }
+            }
             
             // Extrai o status da nota do protNFe (se existir)
             $status = 'EMITIDA'; // Status padrão
@@ -113,6 +127,11 @@ class XmlNfeReaderService
                 'ie_destinatario' => (string) ($dest->IE ?? ''),
                 'nome_destinatario' => (string) $dest->xNome,
                 'natureza_operacao' => (string) $this->xml->NFe->infNFe->ide->natOp,
+                
+                // Dados de referência de NFe
+                'possui_referencia' => $possuiReferencia,
+                'chave_referenciada' => $chaveReferenciada,
+                'referenciada_por_outra' => false,
                 
                 // Valores
                 'valor_base_icms' => (float) $total->vBC,
@@ -255,54 +274,47 @@ class XmlNfeReaderService
         try {
             return DB::transaction(function () {
                 $chaveAcesso = $this->data['chave_acesso'];
+
+                info($chaveAcesso);
+                
+                // Remove campos que serão tratados separadamente
+                $possuiReferencia = $this->data['possui_referencia'] ?? false;
+                $chaveReferenciada = $this->data['chave_referenciada'] ?? null;
+                
+                unset($this->data['possui_referencia']);
+                unset($this->data['chave_referenciada']);
+                unset($this->data['referenciada_por_outra']);
                 
                 // Busca a nota fiscal existente
                 $nfe = NotaFiscalEletronica::where('chave_acesso', $chaveAcesso)->first();
-
+                
+                // Atualiza ou cria a nota fiscal
                 if ($nfe) {
-                    // Atualiza apenas os campos que podem ser modificados
-                    $camposAtualizaveis = [
-                        'status_nota',
-                        'status_manifestacao',
-                        'data_entrada',
-                        'origem',
-                        'tipo',
-                        'xml_content',
-                        // Adicione aqui outros campos que podem ser atualizados
-                    ];
-
-                    $dadosAtualizacao = array_intersect_key(
-                        $this->data,
-                        array_flip($camposAtualizaveis)
-                    );
-
-                    // Se o status atual for CANCELADA, não permite alteração para AUTORIZADA
-                    if ($nfe->status_nota === 'CANCELADA' && $dadosAtualizacao['status_nota'] === 'AUTORIZADA') {
-                        throw new Exception("Não é possível alterar o status de uma nota CANCELADA para AUTORIZADA");
+                    // Remove os itens para garantir que serão atualizados corretamente
+                    $nfe->itens()->delete();
+                    $nfe->update($this->data);
+                } else {
+                    $nfe = NotaFiscalEletronica::create($this->data);
+                }
+                
+                // Cria os itens da nota
+                if (!empty($this->data['itens'])) {
+                    foreach ($this->data['itens'] as $itemData) {
+                        $nfe->itens()->create($itemData);
                     }
-
-                    // Atualiza a nota fiscal
-                    $nfe->update($dadosAtualizacao);
-
-                    // Registra o histórico de alteração
-                    $this->registrarHistoricoAlteracao($nfe, $dadosAtualizacao);
-
-                    return $nfe;
                 }
-
-                // Se não existir, cria uma nova nota fiscal
-                $nfe = NotaFiscalEletronica::create($this->data);
-
-                // Salva os itens
-                foreach ($this->data['itens'] as $item) {
-                    $nfe->itens()->create($item);
+                
+                // Se esta nota faz referência a outra, registra esta referência
+                if ($possuiReferencia && $chaveReferenciada) {
+                    $nfe->adicionarReferencia($chaveReferenciada, 'NFE');
                 }
-
+                
+                // Retorna a nota fiscal
                 return $nfe;
             });
         } catch (Exception $e) {
-            Log::error('Erro ao salvar NFe: ' . $e->getMessage());
-            throw new Exception('Erro ao salvar dados da NFe no banco: ' . $e->getMessage());
+            Log::error('Erro ao salvar dados da NFe: ' . $e->getMessage());
+            throw new Exception('Erro ao salvar dados da NFe: ' . $e->getMessage());
         }
     }
 
