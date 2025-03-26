@@ -18,6 +18,8 @@ use App\Filament\Fiscal\Resources\NfeSaidaResource\Pages;
 use App\Filament\Fiscal\Resources\NfeSaidaResource\RelationManagers;
 use App\Filament\Fiscal\Resources\NfeEntradaResource\Actions\DownloadPdfAction;
 use App\Filament\Fiscal\Resources\NfeEntradaResource\Actions\DownloadXmlAction;
+use App\Filament\Fiscal\Resources\NfeEntradaResource\Actions\DownloadPdfBulkAction;
+use App\Filament\Fiscal\Resources\NfeEntradaResource\Actions\DownloadXmlBulkAction;
 use App\Filament\Fiscal\Resources\NfeEntradaResource\Actions\ToggleEscrituracaoTableAction;
 
 class NfeSaidaResource extends Resource
@@ -255,7 +257,8 @@ class NfeSaidaResource extends Resource
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
+                    DownloadXmlBulkAction::make(),
+                    DownloadPdfBulkAction::make(),
                 ]),
             ]);
     }

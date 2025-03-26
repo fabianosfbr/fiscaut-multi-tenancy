@@ -32,10 +32,12 @@ use App\Filament\Fiscal\Resources\NfeEntradaResource\Pages;
 use App\Filament\Fiscal\Resources\NfeEntradaResource\RelationManagers;
 use App\Filament\Fiscal\Resources\NfeEntradaResource\Actions\DownloadPdfAction;
 use App\Filament\Fiscal\Resources\NfeEntradaResource\Actions\DownloadXmlAction;
+use App\Filament\Fiscal\Resources\NfeEntradaResource\Actions\DownloadXmlBulkAction;
 use App\Filament\Fiscal\Resources\NfeEntradaResource\Actions\ClassificarNotaAction;
 use App\Filament\Fiscal\Resources\NfeEntradaResource\Actions\ManifestarDocumentoAction;
 use App\Filament\Fiscal\Resources\NfeEntradaResource\Actions\RemoveClassificacaoAction;
 use App\Filament\Fiscal\Resources\NfeEntradaResource\Actions\ToggleEscrituracaoTableAction;
+use App\Filament\Fiscal\Resources\NfeEntradaResource\Actions\DownloadPdfBulkAction;
 
 class NfeEntradaResource extends Resource
 {
@@ -455,7 +457,8 @@ class NfeEntradaResource extends Resource
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
+                    DownloadXmlBulkAction::make(),
+                    DownloadPdfBulkAction::make(),
                 ]),
             ]);
     }
