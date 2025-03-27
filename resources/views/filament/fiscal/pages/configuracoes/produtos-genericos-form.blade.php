@@ -1,11 +1,11 @@
-<x-filament-panels::page>
+<div>
     <form wire:submit="save">
         {{ $this->form }}
         
-        <div class="mt-6 flex justify-end">
+        <div class="mt-4 flex justify-end">
             <x-filament::button type="submit">
-                Salvar Configurações
+                Salvar Produtos Genéricos
             </x-filament::button>
         </div>
     </form>
-</x-filament-panels::page>
+</div> 
