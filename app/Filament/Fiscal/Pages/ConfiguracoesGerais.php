@@ -19,58 +19,34 @@ class ConfiguracoesGerais extends Page implements HasForms
 {
     use InteractsWithForms;
 
-    protected static ?string $navigationIcon = 'heroicon-o-cog';
+    protected static ?string $navigationIcon = 'heroicon-o-cog-6-tooth';
     protected static ?string $navigationLabel = 'Configurações';
     protected static ?string $title = 'Configurações Gerais';
     protected static ?string $slug = 'configuracoes-gerais';
-    protected static ?string $navigationGroup = 'Sistema';
+    protected static ?string $navigationGroup = 'Fiscal';
     protected static string $view = 'filament.fiscal.pages.configuracoes-gerais';
-    
+
     public ?array $data = [];
-    
+
     public function mount(): void
     {
         $config = ConfiguracaoFactory::atual();
         $configGerais = $config->obterConfiguracoesGerais();
-        
+
         $this->form->fill($configGerais);
     }
-    
+
     public function form(Form $form): Form
     {
         return $form
             ->schema([
                 Tabs::make('Configurações')
+                    ->persistTab()
                     ->tabs([
                         Tabs\Tab::make('Geral')
                             ->schema([
-                                Section::make('Configurações Gerais')
-                                    ->schema([
-                                        Grid::make(2)
-                                            ->schema([
-                                                Checkbox::make('nfe_classificacao_data_entrada')
-                                                    ->label('Data de Entrada na classificação da NFe')
-                                                    ->helperText('Quando ativado, permite informar a data de entrada ao classificar uma NFe'),
-
-                                                Checkbox::make('manifestacao_automatica')
-                                                    ->label('Manifestação automática pelo Fiscaut')
-                                                    ->helperText('Quando ativado, o sistema realizará a manifestação automática das notas'),
-
-                                                Checkbox::make('mostrar_codigo_etiqueta')
-                                                    ->label('Mostrar código da etiqueta ao invés do nome abreviado')
-                                                    ->helperText('Quando ativado, o sistema mostrará o código da etiqueta ao invés do nome abreviado'),
-                                                
-                                                Checkbox::make('icms_credito_cfop_1401')
-                                                    ->label('Considerar como crédito de ICMS as NF com CFOP 1.401')
-                                                    ->helperText('Quando ativado, o sistema considerará crédito de ICMS para notas com CFOP 1.401'),
-                                                
-                                                Checkbox::make('cfop_verificar_uf')
-                                                    ->label('Verificar UF no processamento de CFOP')
-                                                    ->helperText('Quando ativado, verifica a UF do emitente e destinatário para processar os CFOPs corretamente'),
-                                            ]),
-                                    ]),
+                                Livewire::make(\App\Filament\Fiscal\Pages\Configuracoes\ConfiguracoesGeraisForm::class),
                             ]),
-                        
                         Tabs\Tab::make('Entrada')
                             ->schema([
                                 Tabs::make('TiposEntrada')
@@ -79,61 +55,48 @@ class ConfiguracoesGerais extends Page implements HasForms
                                             ->schema([
                                                 Tabs::make('TiposCFOPs')
                                                     ->tabs([
-                                                        Tabs\Tab::make('NFe')
+                                                        Tabs\Tab::make('Notas de Terceiros')
                                                             ->schema([
-                                                                Livewire::make(\App\Filament\Fiscal\Pages\Configuracoes\CfopsNfeEntradaForm::class),
+                                                                Livewire::make(\App\Filament\Fiscal\Pages\Configuracoes\CfopsNfeForm::class, [
+                                                                    'tipoNota' => 'terceiros',
+                                                                    'tipoOperacao' => 'entrada'
+                                                                ])
+                                                                    ->id('cfops-terceiros'),
                                                             ]),
-                                                        Tabs\Tab::make('CTe')
+                                                        Tabs\Tab::make('Notas Próprias')
                                                             ->schema([
-                                                                // Implementaremos os formulários específicos mais tarde
-                                                            ]),
-                                                    ]),
-                                            ]),
-                                        
-                                        Tabs\Tab::make('Acumuladores')
-                                            ->schema([
-                                                Tabs::make('TiposAcumuladores')
-                                                    ->tabs([
-                                                        Tabs\Tab::make('NFe')
-                                                            ->schema([
-                                                             //   Livewire::make(\App\Filament\Fiscal\Pages\Configuracoes\AcumuladoresNfeEntradaForm::class),
-                                                            ]),
-                                                        Tabs\Tab::make('CTe')
-                                                            ->schema([
-                                                                // Implementaremos os formulários específicos mais tarde
+                                                                Livewire::make(\App\Filament\Fiscal\Pages\Configuracoes\CfopsNfeForm::class, [
+                                                                    'tipoNota' => 'propria',
+                                                                    'tipoOperacao' => 'entrada'
+                                                                ])
+                                                                    ->id('cfops-propria'),
                                                             ]),
                                                     ]),
-                                            ]),
-                                        
-                                        Tabs\Tab::make('Produtos Genéricos')
-                                            ->schema([
-                                              //  Livewire::make(\App\Filament\Fiscal\Pages\Configuracoes\ProdutosGenericosForm::class),
                                             ]),
                                     ]),
                             ]),
-                        
                         Tabs\Tab::make('Saída')
                             ->schema([
-                                // Implementaremos os formulários específicos mais tarde
+                                Tabs::make('TiposSaida')
+                                    ->tabs([
+                                        Tabs\Tab::make('CFOPs')
+                                            ->schema([
+                                                Tabs::make('TiposCFOPs')
+                                                    ->tabs([
+                                                        Tabs\Tab::make('Notas de Saída')
+                                                            ->schema([
+                                                                Livewire::make(\App\Filament\Fiscal\Pages\Configuracoes\CfopsNfeForm::class, [
+                                                                    'tipoNota' => 'terceiros',
+                                                                    'tipoOperacao' => 'saida'
+                                                                ])
+                                                                    ->id('cfops-saida'),
+                                                            ]),
+                                                    ]),
+                                            ]),
+                                    ]),
                             ]),
-                    ]),
+                    ])
             ])
             ->statePath('data');
-    }
-    
-    public function save(): void
-    {
-        $formData = $this->form->getState();
-        $organizationId = getOrganizationCached()->id;
-        
-        // Salva as configurações gerais
-        $config = ConfiguracaoFactory::criar($organizationId);
-        $config->salvarConfiguracoesGerais($formData);
-        
-        Notification::make()
-            ->success()
-            ->title('Configurações salvas com sucesso')
-            ->body('As configurações gerais foram salvas com sucesso')
-            ->send();
     }
 }

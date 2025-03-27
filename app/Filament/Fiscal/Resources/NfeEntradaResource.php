@@ -137,7 +137,7 @@ class NfeEntradaResource extends Resource
                     ->label('Etiqueta')
                     ->alignCenter()
                     ->toggleable()
-                    ->showTagCode(function () {                        
+                    ->showTagCode(function () {
                         $organizationId = getOrganizationCached()->id;                        
                         return config_organizacao($organizationId, 'geral', null, null, 'mostrar_codigo_etiqueta', false);
 

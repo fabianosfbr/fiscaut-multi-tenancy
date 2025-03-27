@@ -122,13 +122,30 @@ class ConfiguracaoService
      */
     public function obterCfopsEntradaNfe(array $padrao = []): array
     {
-        return OrganizacaoConfiguracao::obterConfiguracao(
+        // Determinar o tipo de nota (terceiros ou propria)
+        $tipo = $padrao['tipo'] ?? 'terceiros';
+        if (!in_array($tipo, ['terceiros', 'propria'])) {
+            $tipo = 'terceiros'; // Valor padrão
+        }
+        
+        // Adicionar sufixo para diferenciar as configurações
+        $categoria = "nfe_{$tipo}";
+        
+        // Log para depuração
+        \Illuminate\Support\Facades\Log::info("Obtendo CFOPs de entrada NFe para tipo: {$tipo}");
+        
+        $config = OrganizacaoConfiguracao::obterConfiguracao(
             $this->organizationId,
             'entrada',
             'cfops',
-            'nfe',
+            $categoria,
             $padrao
         );
+        
+        // Garantir que o tipo está definido nos dados retornados
+        $config['tipo'] = $tipo;
+        
+        return $config;
     }
     
     /**
@@ -136,12 +153,37 @@ class ConfiguracaoService
      */
     public function salvarCfopsEntradaNfe(array $configuracoes): void
     {
+        // Garante que os dados têm formatação consistente
+        if (!isset($configuracoes['itens'])) {
+            $configuracoes['itens'] = [];
+        }
+        
+        // Garante que o tipo está definido
+        if (!isset($configuracoes['tipo'])) {
+            $configuracoes['tipo'] = 'terceiros';
+        }
+        
+        // Log para depuração
+        \Illuminate\Support\Facades\Log::info('ConfiguracaoService - Salvando CFOPs:', [
+            'tipo' => $configuracoes['tipo'],
+            'num_itens' => count($configuracoes['itens'])
+        ]);
+        
+        // Verificar o tipo de nota para decidir onde salvar
+        $tipo = $configuracoes['tipo'];
+        if (!in_array($tipo, ['terceiros', 'propria'])) {
+            $tipo = 'terceiros'; // Valor padrão
+        }
+        
+        // Adicionar sufixo para diferenciar as configurações
+        $categoria = "nfe_{$tipo}";
+        
         OrganizacaoConfiguracao::salvarConfiguracao(
             $this->organizationId,
             'entrada',
             $configuracoes,
             'cfops',
-            'nfe'
+            $categoria
         );
     }
     
@@ -213,5 +255,75 @@ class ConfiguracaoService
         );
         
         return $config[$chave] ?? $valorPadrao;
+    }
+    
+    /**
+     * Retorna as configurações de CFOPs de saída NFe
+     */
+    public function obterCfopsSaidaNfe(array $padrao = []): array
+    {
+        // Determinar o tipo de nota (terceiros ou propria)
+        $tipo = $padrao['tipo'] ?? 'terceiros';
+        if (!in_array($tipo, ['terceiros', 'propria'])) {
+            $tipo = 'terceiros'; // Valor padrão
+        }
+        
+        // Adicionar sufixo para diferenciar as configurações
+        $categoria = "nfe_saida_{$tipo}";
+        
+        // Log para depuração
+        \Illuminate\Support\Facades\Log::info("Obtendo CFOPs de saída NFe para tipo: {$tipo}");
+        
+        $config = OrganizacaoConfiguracao::obterConfiguracao(
+            $this->organizationId,
+            'saida',
+            'cfops',
+            $categoria,
+            $padrao
+        );
+        
+        // Garantir que o tipo está definido nos dados retornados
+        $config['tipo'] = $tipo;
+        
+        return $config;
+    }
+    
+    /**
+     * Salva configurações de CFOPs de saída NFe
+     */
+    public function salvarCfopsSaidaNfe(array $configuracoes): void
+    {
+        // Garante que os dados têm formatação consistente
+        if (!isset($configuracoes['itens'])) {
+            $configuracoes['itens'] = [];
+        }
+        
+        // Garante que o tipo está definido
+        if (!isset($configuracoes['tipo'])) {
+            $configuracoes['tipo'] = 'terceiros';
+        }
+        
+        // Log para depuração
+        \Illuminate\Support\Facades\Log::info('ConfiguracaoService - Salvando CFOPs de saída:', [
+            'tipo' => $configuracoes['tipo'],
+            'num_itens' => count($configuracoes['itens'])
+        ]);
+        
+        // Verificar o tipo de nota para decidir onde salvar
+        $tipo = $configuracoes['tipo'];
+        if (!in_array($tipo, ['terceiros', 'propria'])) {
+            $tipo = 'terceiros'; // Valor padrão
+        }
+        
+        // Adicionar sufixo para diferenciar as configurações
+        $categoria = "nfe_saida_{$tipo}";
+        
+        OrganizacaoConfiguracao::salvarConfiguracao(
+            $this->organizationId,
+            'saida',
+            $configuracoes,
+            'cfops',
+            $categoria
+        );
     }
 } 

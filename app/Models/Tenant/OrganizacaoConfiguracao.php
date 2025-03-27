@@ -6,6 +6,9 @@ use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 class OrganizacaoConfiguracao extends Model
 {
@@ -120,18 +123,83 @@ class OrganizacaoConfiguracao extends Model
         ?string $subtipo = null, 
         ?string $categoria = null
     ): self {
-        return static::updateOrCreate(
-            [
-                'organization_id' => $organizationId,
-                'tipo' => $tipo,
-                'subtipo' => $subtipo,
-                'categoria' => $categoria,
-            ],
-            [
-                'configuracoes' => $configuracoes,
-                'ativo' => true,
-            ]
-        );
+        // Log dos dados recebidos
+        Log::info('OrganizacaoConfiguracao::salvarConfiguracao - Dados recebidos:', [
+            'organizationId' => $organizationId,
+            'tipo' => $tipo,
+            'subtipo' => $subtipo,
+            'categoria' => $categoria
+        ]);
+        
+        try {
+            // Encontrar ou criar o registro
+            $model = static::updateOrCreate(
+                [
+                    'organization_id' => $organizationId,
+                    'tipo' => $tipo,
+                    'subtipo' => $subtipo,
+                    'categoria' => $categoria,
+                ],
+                [
+                    'configuracoes' => $configuracoes,
+                    'ativo' => true,
+                ]
+            );
+            
+            // Log após salvar
+            Log::info('OrganizacaoConfiguracao::salvarConfiguracao - Salvou com sucesso', [
+                'id' => $model->id,
+                'itens' => isset($model->configuracoes['itens']) ? count($model->configuracoes['itens']) : 0
+            ]);
+            
+            return $model;
+        } catch (\Exception $e) {
+            // Log de erro
+            Log::error('Erro ao salvar configuração: ' . $e->getMessage(), [
+                'exception' => get_class($e),
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            // Tenta salvar usando query bruta em caso de falha
+            try {
+                // Preparar JSON manualmente
+                $jsonData = json_encode($configuracoes);
+                
+                // Buscar registro existente
+                $existingRecord = static::where('organization_id', $organizationId)
+                    ->where('tipo', $tipo)
+                    ->where('subtipo', $subtipo)
+                    ->where('categoria', $categoria)
+                    ->first();
+                
+                if ($existingRecord) {
+                    // Atualizar registro existente
+                    DB::statement("
+                        UPDATE organizacao_configuracoes 
+                        SET configuracoes = ?, updated_at = NOW() 
+                        WHERE id = ?
+                    ", [$jsonData, $existingRecord->id]);
+                    
+                    return $existingRecord->fresh();
+                } else {
+                    // Criar novo registro
+                    $uuid = (string) Str::uuid();
+                    $now = now()->format('Y-m-d H:i:s');
+                    
+                    DB::statement("
+                        INSERT INTO organizacao_configuracoes 
+                        (id, organization_id, tipo, subtipo, categoria, configuracoes, ativo, created_at, updated_at) 
+                        VALUES (?, ?, ?, ?, ?, ?, 1, ?, ?)
+                    ", [$uuid, $organizationId, $tipo, $subtipo, $categoria, $jsonData, $now, $now]);
+                    
+                    return static::find($uuid);
+                }
+            } catch (\Exception $innerException) {
+                Log::error('Erro no fallback ao salvar configuração: ' . $innerException->getMessage());
+                throw $innerException;
+            }
+        }
     }
 
     /**
