@@ -46,10 +46,10 @@ class ConfiguracoesGerais extends Page implements HasForms
                             ->schema([
                                 Section::make('Configurações Gerais')
                                     ->schema([
-                                        Grid::make(3)
+                                        Grid::make(2)
                                             ->schema([
                                                 Checkbox::make('nfe_classificacao_data_entrada')
-                                                    ->label('Exibir Data de Entrada na classificação da NFe')
+                                                    ->label('Data de Entrada na classificação da NFe')
                                                     ->helperText('Quando ativado, permite informar a data de entrada ao classificar uma NFe'),
 
                                                 Checkbox::make('manifestacao_automatica')
@@ -81,7 +81,7 @@ class ConfiguracoesGerais extends Page implements HasForms
                                                     ->tabs([
                                                         Tabs\Tab::make('NFe')
                                                             ->schema([
-                                                            //    Livewire::make(\App\Filament\Fiscal\Pages\Configuracoes\CfopsNfeEntradaForm::class),
+                                                                Livewire::make(\App\Filament\Fiscal\Pages\Configuracoes\CfopsNfeEntradaForm::class),
                                                             ]),
                                                         Tabs\Tab::make('CTe')
                                                             ->schema([
@@ -124,7 +124,7 @@ class ConfiguracoesGerais extends Page implements HasForms
     public function save(): void
     {
         $formData = $this->form->getState();
-        $organizationId = Auth::user()->last_organization_id;
+        $organizationId = getOrganizationCached()->id;
         
         // Salva as configurações gerais
         $config = ConfiguracaoFactory::criar($organizationId);
@@ -133,6 +133,7 @@ class ConfiguracoesGerais extends Page implements HasForms
         Notification::make()
             ->success()
             ->title('Configurações salvas com sucesso')
+            ->body('As configurações gerais foram salvas com sucesso')
             ->send();
     }
 }

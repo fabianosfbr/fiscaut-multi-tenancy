@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use App\Models\Tenant\ConfiguracaoGeral;
 use App\Models\Tenant\NotaFiscalEletronica;
+use App\Services\Configuracoes\ConfiguracaoFactory;
 
 function percent($number)
 {
@@ -315,10 +316,26 @@ if (! function_exists('tagsForFilterNfe')) {
             ->keyBy('id')
             ->map(fn($tag) => $tag->code . ' - ' . $tag->name)
             ->toArray();
-
-      
-
-
     
+    }
+}
+
+if (!function_exists('config_organizacao')) {
+    /**
+     * Obtém uma configuração específica de uma organização
+     * 
+     * @param string $organizationId ID da organização ou nome
+     * @param string $tipo Tipo da configuração (geral, entrada, saida)
+     * @param string|null $subtipo Subtipo da configuração (cfops, acumuladores, etc)
+     * @param string|null $categoria Categoria da configuração (nfe, cte, etc)
+     * @param string $chave Chave da configuração a ser obtida
+     * @param mixed $valorPadrao Valor padrão caso a configuração não exista
+     * @return mixed
+     */
+    function config_organizacao($organizationId, string $tipo, ?string $subtipo, ?string $categoria, string $chave, $valorPadrao = null)
+    {
+               
+        $config = ConfiguracaoFactory::criar($organizationId);
+        return $config->obterValor($tipo, $subtipo, $categoria, $chave, $valorPadrao);
     }
 }
