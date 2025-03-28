@@ -2,155 +2,135 @@
 
 namespace App\Filament\Fiscal\Pages;
 
-use App\Livewire\Organization\Configuration\Acumulador\CteEntradaForm as AcumuladorCteEntradaForm;
-use App\Livewire\Organization\Configuration\Acumulador\CteSaidaForm as AcumuladorCteSaidaForm;
-use App\Livewire\Organization\Configuration\Acumulador\NfeEntradaPropriaForm as AcumuladorNfeEntradaPropriaForm;
-use App\Livewire\Organization\Configuration\Acumulador\NfeEntradaTerceiroForm as AcumuladorNfeEntradaTerceiroForm;
-use App\Livewire\Organization\Configuration\ConfiguracoesGeraisForm;
-use App\Livewire\Organization\Configuration\CteEntradaForm;
-use App\Livewire\Organization\Configuration\CteSaidaForm;
-use App\Livewire\Organization\Configuration\ImpostoEquivalenteEntradaForm;
-use App\Livewire\Organization\Configuration\NfeEntradaPropriaForm;
-use App\Livewire\Organization\Configuration\NfeEntradaTerceiroForm;
-use App\Livewire\Organization\Configuration\ProdutoGenericoForm;
-use Filament\Forms\Components\Livewire;
+use App\Services\Configuracoes\ConfiguracaoFactory;
+use Filament\Forms\Components\Checkbox;
+use Filament\Forms\Components\Grid;
+use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Tabs;
+use Filament\Forms\Components\Livewire;
+use Filament\Forms\Concerns\InteractsWithForms;
+use Filament\Forms\Contracts\HasForms;
 use Filament\Forms\Form;
+use Filament\Notifications\Notification;
 use Filament\Pages\Page;
+use Illuminate\Support\Facades\Auth;
 
-class ConfiguracoesGerais extends Page
+class ConfiguracoesGerais extends Page implements HasForms
 {
-    protected static ?string $navigationGroup = 'Configurações';
+    use InteractsWithForms;
 
-    protected static ?string $navigationLabel = 'Configurações Gerais';
-
+    protected static ?string $navigationIcon = 'heroicon-o-cog-6-tooth';
+    protected static ?string $navigationLabel = 'Configurações';
     protected static ?string $title = 'Configurações Gerais';
-
-    protected static ?string $slug = 'configuracoes/configuracoes-gerais';
-
+    protected static ?string $slug = 'configuracoes-gerais';
+    protected static ?string $navigationGroup = 'Fiscal';
     protected static string $view = 'filament.fiscal.pages.configuracoes-gerais';
 
-    protected static ?int $navigationSort = 1;
+    public ?array $data = [];
+
+    public function mount(): void
+    {
+        $config = ConfiguracaoFactory::atual();
+        $configGerais = $config->obterConfiguracoesGerais();
+
+        $this->form->fill($configGerais);
+    }
 
     public function form(Form $form): Form
     {
         return $form
             ->schema([
-                Tabs::make('Heading')
+                Tabs::make('Configurações')
+                    ->persistTab()
                     ->tabs([
-                        Tabs\Tab::make('Configurações')
+                        Tabs\Tab::make('Geral')
                             ->schema([
-                                Livewire::make(ConfiguracoesGeraisForm::class),
+                                Livewire::make(\App\Filament\Fiscal\Pages\Configuracoes\ConfiguracoesGeraisForm::class),
                             ]),
-                        Tabs\Tab::make('Entradas')
+                        Tabs\Tab::make('Entrada')
                             ->schema([
-                                Tabs::make('Heading')
+                                Tabs::make('TiposEntrada')
                                     ->tabs([
-                                        Tabs\Tab::make('Impostos')
-                                            ->schema([
-                                                Livewire::make(ImpostoEquivalenteEntradaForm::class),
-                                            ]),
-                                        Tabs\Tab::make('CFOP\'s')
+                                        Tabs\Tab::make('CFOPs')
                                             ->schema([
                                                 Tabs::make('Tabs')
                                                     ->tabs([
                                                         Tabs\Tab::make('NFe')
                                                             ->schema([
-                                                                Tabs::make('nfe-tipo-entrada')
-                                                                    ->contained(false)
-                                                                    ->persistTabInQueryString('nfe-tab')
+                                                                Tabs::make('TiposNFes')
                                                                     ->tabs([
-                                                                        Tabs\Tab::make('Entrada Terceiro')
+                                                                        Tabs\Tab::make('Notas de Terceiros')
                                                                             ->schema([
-                                                                                Livewire::make(NfeEntradaTerceiroForm::class),
-
+                                                                                Livewire::make(\App\Filament\Fiscal\Pages\Configuracoes\CfopsNfeForm::class, [
+                                                                                    'tipoNota' => 'terceiros',
+                                                                                    'tipoOperacao' => 'entrada'
+                                                                                ])
+                                                                                    ->id('cfops-terceiros'),
                                                                             ]),
-                                                                        Tabs\Tab::make('Entrada Própria')
+                                                                        Tabs\Tab::make('Notas Próprias')
                                                                             ->schema([
-                                                                                Livewire::make(NfeEntradaPropriaForm::class),
-
+                                                                                Livewire::make(\App\Filament\Fiscal\Pages\Configuracoes\CfopsNfeForm::class, [
+                                                                                    'tipoNota' => 'propria',
+                                                                                    'tipoOperacao' => 'entrada'
+                                                                                ])
+                                                                                    ->id('cfops-propria'),
                                                                             ]),
-
                                                                     ]),
                                                             ]),
                                                         Tabs\Tab::make('CTe')
                                                             ->schema([
-                                                                Tabs::make('cte-tipo-entrada')
-                                                                    ->contained(false)
-                                                                    ->persistTabInQueryString('cte-tab')
+                                                                Tabs::make('TiposCTes')
                                                                     ->tabs([
-                                                                        Tabs\Tab::make('NFe Entrada')
+                                                                        Tabs\Tab::make('Notas de Entrada')
                                                                             ->schema([
-                                                                                Livewire::make(component: CteEntradaForm::class),
-
-                                                                            ]),
-                                                                        Tabs\Tab::make('NFe Saída')
-                                                                            ->schema([
-                                                                                Livewire::make(component: CteSaidaForm::class),
+                                                                                Livewire::make(\App\Filament\Fiscal\Pages\Configuracoes\CfopsCteForm::class, [
+                                                                                    'tipoOperacao' => 'entrada'
+                                                                                ])
+                                                                                    ->id('cfops-cte-entrada'),
                                                                             ]),
 
+                                                                        Tabs\Tab::make('Notas de Saida')
+                                                                            ->schema([
+                                                                                Livewire::make(\App\Filament\Fiscal\Pages\Configuracoes\CfopsCteForm::class, [
+                                                                                    'tipoOperacao' => 'saida'
+                                                                                ])
+                                                                                    ->id('cfops-cte-saida'),
+                                                                            ]),
                                                                     ]),
                                                             ]),
+                                                    ]),
 
-                                                    ])
-                                                    ->persistTabInQueryString('cfops-tab'),
                                             ]),
-
-                                        Tabs\Tab::make('Acumuladores')
+                                    ]),
+                            ]),
+                        Tabs\Tab::make('Saída')
+                            ->schema([
+                                Tabs::make('TiposSaida')
+                                    ->tabs([
+                                        Tabs\Tab::make('CFOPs')
                                             ->schema([
-                                                Tabs::make('Tabs')
+                                                Tabs::make('TiposCFOPs')
                                                     ->tabs([
-                                                        Tabs\Tab::make('NFe')
+                                                        Tabs\Tab::make('Notas de Saída')
                                                             ->schema([
-                                                                Tabs::make('nfe-tipo-entrada')
-                                                                    ->contained(false)
-                                                                    ->persistTabInQueryString('nfe-tab')
-                                                                    ->tabs([
-                                                                        Tabs\Tab::make('Entrada Terceiro')
-                                                                            ->schema([
-                                                                                Livewire::make(AcumuladorNfeEntradaTerceiroForm::class),
-
-                                                                            ]),
-                                                                        Tabs\Tab::make('Entrada Própria')
-                                                                            ->schema([
-                                                                                Livewire::make(AcumuladorNfeEntradaPropriaForm::class),
-
-                                                                            ]),
-
-                                                                    ]),
+                                                                Livewire::make(\App\Filament\Fiscal\Pages\Configuracoes\CfopsNfeForm::class, [
+                                                                    'tipoNota' => 'terceiros',
+                                                                    'tipoOperacao' => 'saida'
+                                                                ])
+                                                                    ->id('cfops-saida'),
                                                             ]),
                                                         Tabs\Tab::make('CTe')
                                                             ->schema([
-                                                                Tabs::make('cte-tipo-entrada')
-                                                                    ->contained(false)
-                                                                    ->persistTabInQueryString('cte-tab')
-                                                                    ->tabs([
-                                                                        Tabs\Tab::make('NFe Entrada')
-                                                                            ->schema([
-                                                                                Livewire::make(component: AcumuladorCteEntradaForm::class),
-
-                                                                            ]),
-                                                                        Tabs\Tab::make('NFe Saída')
-                                                                            ->schema([
-                                                                                Livewire::make(component: AcumuladorCteSaidaForm::class),
-                                                                            ]),
-
-                                                                    ]),
+                                                                Livewire::make(\App\Filament\Fiscal\Pages\Configuracoes\CfopsCteForm::class, [
+                                                                    'tipoOperacao' => 'saida'
+                                                                ])
+                                                                    ->id('cfops-cte-saida'),
                                                             ]),
-
-                                                    ])
-                                                    ->persistTabInQueryString('cfops-tab'),
+                                                    ]),
                                             ]),
-                                        Tabs\Tab::make('Produtos Genéricos')
-                                            ->schema([
-                                                Livewire::make(ProdutoGenericoForm::class),
-                                            ]),
-                                    ])
-                                    ->persistTabInQueryString('settings-tab-entradas')
-                                    ->contained(false),
+                                    ]),
                             ]),
                     ])
-                    ->persistTabInQueryString('settings-tab'),
             ])
             ->statePath('data');
     }

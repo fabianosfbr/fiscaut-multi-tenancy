@@ -40,6 +40,7 @@ use Filament\Forms\Components\CheckboxList;
 use Illuminate\Database\Eloquent\Collection;
 use App\Forms\Components\DownloadDocumentFile;
 use App\Jobs\Downloads\DownloadLoteUploadFile;
+use App\Services\Configuracoes\ConfiguracaoFactory;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use App\Filament\Fiscal\Resources\FileUploadResource\Pages;
 use Filament\Forms\Components\FileUpload as FileUploadInput;
@@ -245,10 +246,9 @@ class FileUploadResource extends Resource
                 TagColumnDocs::make('tagged')
                     ->label('Etiqueta')
                     ->showTagCode(function () {
-                        $isShow = ConfiguracaoGeral::getValue('isNfeMostrarEtiquetaComNomeAbreviado', Auth::user()->last_organization_id);
-                        
-                    
-                        return $isShow ?? false;
+                        $organizationId = getOrganizationCached()->id;
+                        $config = ConfiguracaoFactory::criar($organizationId);
+                        return $config->obterValor('geral', null, null, 'mostrar_codigo_etiqueta', false);
                     })
                     ->alignCenter(),
                 TextColumn::make('created_at')

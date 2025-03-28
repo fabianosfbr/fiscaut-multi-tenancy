@@ -27,17 +27,18 @@ use Illuminate\Database\Eloquent\Builder;
 use App\Models\Tenant\NotaFiscalEletronica;
 use App\Enums\Tenant\StatusManifestoNfeEnum;
 use App\Models\Tenant\NotaFiscalEletronicaItem;
+use App\Services\Configuracoes\ConfiguracaoFactory;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use App\Filament\Fiscal\Resources\NfeEntradaResource\Pages;
 use App\Filament\Fiscal\Resources\NfeEntradaResource\RelationManagers;
 use App\Filament\Fiscal\Resources\NfeEntradaResource\Actions\DownloadPdfAction;
 use App\Filament\Fiscal\Resources\NfeEntradaResource\Actions\DownloadXmlAction;
-use App\Filament\Fiscal\Resources\NfeEntradaResource\Actions\DownloadXmlBulkAction;
 use App\Filament\Fiscal\Resources\NfeEntradaResource\Actions\ClassificarNotaAction;
+use App\Filament\Fiscal\Resources\NfeEntradaResource\Actions\DownloadPdfBulkAction;
+use App\Filament\Fiscal\Resources\NfeEntradaResource\Actions\DownloadXmlBulkAction;
 use App\Filament\Fiscal\Resources\NfeEntradaResource\Actions\ManifestarDocumentoAction;
 use App\Filament\Fiscal\Resources\NfeEntradaResource\Actions\RemoveClassificacaoAction;
 use App\Filament\Fiscal\Resources\NfeEntradaResource\Actions\ToggleEscrituracaoTableAction;
-use App\Filament\Fiscal\Resources\NfeEntradaResource\Actions\DownloadPdfBulkAction;
 
 class NfeEntradaResource extends Resource
 {
@@ -137,7 +138,9 @@ class NfeEntradaResource extends Resource
                     ->alignCenter()
                     ->toggleable()
                     ->showTagCode(function () {
-                        return ConfiguracaoGeral::getValue('isNfeMostrarEtiquetaComNomeAbreviado', Auth::user()->last_organization_id) ?? false;
+                        $organizationId = getOrganizationCached()->id;                        
+                        return config_organizacao($organizationId, 'geral', null, null, 'mostrar_codigo_etiqueta', false);
+
                     }),
 
                 TextColumn::make('status_manifestacao')
