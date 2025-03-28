@@ -123,14 +123,7 @@ class OrganizacaoConfiguracao extends Model
         ?string $subtipo = null, 
         ?string $categoria = null
     ): self {
-        // Log dos dados recebidos
-        Log::info('OrganizacaoConfiguracao::salvarConfiguracao - Dados recebidos:', [
-            'organizationId' => $organizationId,
-            'tipo' => $tipo,
-            'subtipo' => $subtipo,
-            'categoria' => $categoria
-        ]);
-        
+                
         try {
             // Encontrar ou criar o registro
             $model = static::updateOrCreate(
@@ -146,11 +139,6 @@ class OrganizacaoConfiguracao extends Model
                 ]
             );
             
-            // Log após salvar
-            Log::info('OrganizacaoConfiguracao::salvarConfiguracao - Salvou com sucesso', [
-                'id' => $model->id,
-                'itens' => isset($model->configuracoes['itens']) ? count($model->configuracoes['itens']) : 0
-            ]);
             
             return $model;
         } catch (\Exception $e) {

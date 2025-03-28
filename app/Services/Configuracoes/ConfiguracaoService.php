@@ -131,9 +131,7 @@ class ConfiguracaoService
         // Adicionar sufixo para diferenciar as configurações
         $categoria = "nfe_{$tipo}";
 
-        // Log para depuração
-        \Illuminate\Support\Facades\Log::info("Obtendo CFOPs de entrada NFe para tipo: {$tipo}");
-
+    
         $config = OrganizacaoConfiguracao::obterConfiguracao(
             $this->organizationId,
             'entrada',
@@ -266,9 +264,6 @@ class ConfiguracaoService
         // Adicionar sufixo para diferenciar as configurações
         $categoria = "nfe_saida_{$tipo}";
 
-        // Log para depuração
-        \Illuminate\Support\Facades\Log::info("Obtendo CFOPs de saída NFe para tipo: {$tipo}");
-
         $config = OrganizacaoConfiguracao::obterConfiguracao(
             $this->organizationId,
             'saida',
@@ -298,11 +293,6 @@ class ConfiguracaoService
             $configuracoes['tipo'] = 'terceiros';
         }
 
-        // Log para depuração
-        \Illuminate\Support\Facades\Log::info('ConfiguracaoService - Salvando CFOPs de saída:', [
-            'tipo' => $configuracoes['tipo'],
-            'num_itens' => count($configuracoes['itens'])
-        ]);
 
         // Verificar o tipo de nota para decidir onde salvar
         $tipo = $configuracoes['tipo'];
@@ -390,9 +380,7 @@ class ConfiguracaoService
      */
     public function obterCfopsSaidaCte(array $padrao = []): array
     {
-        // Log para depuração
-        \Illuminate\Support\Facades\Log::info("Obtendo CFOPs de saída CTe");
-
+       
         $config = OrganizacaoConfiguracao::obterConfiguracao(
             $this->organizationId,
             'saida',
@@ -413,11 +401,6 @@ class ConfiguracaoService
         if (!isset($configuracoes['itens'])) {
             $configuracoes['itens'] = [];
         }
-
-        // Log para depuração
-        \Illuminate\Support\Facades\Log::info('ConfiguracaoService - Salvando CFOPs de saída CTe:', [
-            'num_itens' => count($configuracoes['itens'])
-        ]);
 
         OrganizacaoConfiguracao::salvarConfiguracao(
             $this->organizationId,
