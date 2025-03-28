@@ -183,13 +183,13 @@ class ConfiguracaoService
     /**
      * Retorna as configurações de acumuladores de entrada NFe
      */
-    public function obterAcumuladoresEntradaNfe(array $padrao = []): array
+    public function obterAcumuladoresTerceiroNfe(array $padrao = []): array
     {
         return OrganizacaoConfiguracao::obterConfiguracao(
             $this->organizationId,
             'entrada',
             'acumuladores',
-            'nfe',
+            'nfe_terceiro',
             $padrao
         );
     }
@@ -197,14 +197,14 @@ class ConfiguracaoService
     /**
      * Salva configurações de acumuladores de entrada NFe
      */
-    public function salvarAcumuladoresEntradaNfe(array $configuracoes): void
+    public function salvarAcumuladoresTerceiroNfe(array $configuracoes): void
     {
         OrganizacaoConfiguracao::salvarConfiguracao(
             $this->organizationId,
             'entrada',
             $configuracoes,
             'acumuladores',
-            'nfe'
+            'nfe_terceiro'
         );
     }
 
@@ -408,6 +408,118 @@ class ConfiguracaoService
             $configuracoes,
             'cfops',
             'cte_saida'
+        );
+    }
+
+    /**
+     * Retorna as configurações de acumuladores de entrada NFe para notas próprias
+     */
+    public function obterAcumuladoresNfePropria(array $padrao = []): array
+    {
+        return OrganizacaoConfiguracao::obterConfiguracao(
+            $this->organizationId,
+            'entrada',
+            'acumuladores',
+            'nfe_propria',
+            $padrao
+        );
+    }
+
+    /**
+     * Salva configurações de acumuladores de entrada NFe para notas próprias
+     */
+    public function salvarAcumuladoresNfePropria(array $configuracoes): void
+    {
+        OrganizacaoConfiguracao::salvarConfiguracao(
+            $this->organizationId,
+            'entrada',
+            $configuracoes,
+            'acumuladores',
+            'nfe_propria'
+        );
+    }
+
+    /**
+     * Retorna as configurações de acumuladores de entrada CTe
+     */
+    public function obterAcumuladoresCteEntrada(array $padrao = []): array
+    {
+        return OrganizacaoConfiguracao::obterConfiguracao(
+            $this->organizationId,
+            'entrada',
+            'acumuladores',
+            'cte_entrada',
+            $padrao
+        );
+    }
+
+    /**
+     * Salva configurações de acumuladores de entrada CTe
+     */
+    public function salvarAcumuladoresCteEntrada(array $configuracoes): void
+    {
+        OrganizacaoConfiguracao::salvarConfiguracao(
+            $this->organizationId,
+            'entrada',
+            $configuracoes,
+            'acumuladores',
+            'cte_entrada'
+        );
+    }
+
+    /**
+     * Retorna as configurações de acumuladores de saída CTe
+     */
+    public function obterAcumuladoresCteSaida(array $padrao = []): array
+    {
+        return OrganizacaoConfiguracao::obterConfiguracao(
+            $this->organizationId,
+            'saida',
+            'acumuladores',
+            'cte_saida',
+            $padrao
+        );
+    }
+
+    /**
+     * Salva configurações de acumuladores de saída CTe
+     */
+    public function salvarAcumuladoresCteSaida(array $configuracoes): void
+    {
+        OrganizacaoConfiguracao::salvarConfiguracao(
+            $this->organizationId,
+            'saida',
+            $configuracoes,
+            'acumuladores',
+            'cte_saida'
+        );
+    }
+
+    /**
+     * Retorna as configurações de acumuladores de saída NFe
+     */
+    public function obterAcumuladoresNfeSaida(array $padrao = []): array
+    {
+        return OrganizacaoConfiguracao::obterConfiguracao(
+            $this->organizationId,
+            'saida',
+            'acumuladores',
+            'nfe_saida',
+            $padrao
+        );
+    }
+
+    /**
+     * Salva configurações de acumuladores de saída NFe
+     */
+    public function salvarAcumuladoresNfeSaida(array $configuracoes): void
+    {
+        OrganizacaoConfiguracao::salvarConfiguracao(
+            $this->organizationId,
+            'saida',
+            $configuracoes,
+            'acumuladores',
+            'nfe_saida'
         );
     }
 }

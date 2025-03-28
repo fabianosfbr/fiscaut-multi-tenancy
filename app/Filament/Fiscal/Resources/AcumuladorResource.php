@@ -7,7 +7,9 @@ use Filament\Tables\Table;
 use Filament\Resources\Resource;
 use App\Models\Tenant\Acumulador;
 use Illuminate\Support\Facades\Auth;
+use Filament\Forms\Components\Section;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Forms\Components\TextInput;
 use Illuminate\Database\Eloquent\Builder;
 use App\Filament\Fiscal\Resources\AcumuladorResource\Pages;
 
@@ -21,13 +23,35 @@ class AcumuladorResource extends Resource
 
     protected static ?string $pluralLabel = 'Acumuladores';
 
+    protected static ?string $slug = 'acumuladores';
+
     protected static ?int $navigationSort = 2;
 
     public static function form(Form $form): Form
     {
         return $form
             ->schema([
-                //
+                Section::make('Dados do Acumulador')
+                    ->schema([
+                        TextInput::make('codi_acu')
+                            ->label('Código Acumulador')
+                            ->required()
+                            ->unique(
+                                table: Acumulador::class,
+                                column: 'codi_acu',
+                                ignoreRecord: true,
+                                modifyRuleUsing: fn($rule) =>
+                                $rule->where('organization_id', getOrganizationCached()->id)
+                            )
+                            ->validationMessages([
+                                'unique' => 'O código acumulador já está em uso.',
+                            ]),
+                        TextInput::make('nome_acu')
+                            ->label('Nome')
+                            ->required(),
+
+                    ])
+                    ->columns(2),
             ]);
     }
 
@@ -65,8 +89,8 @@ class AcumuladorResource extends Resource
     {
         return [
             'index' => Pages\ListAcumuladors::route('/'),
-            // 'create' => Pages\CreateAcumulador::route('/create'),
-            //  'edit' => Pages\EditAcumulador::route('/{record}/edit'),
+            'create' => Pages\CreateAcumulador::route('/create'),
+            'edit' => Pages\EditAcumulador::route('/{record}/edit'),
         ];
     }
 }
