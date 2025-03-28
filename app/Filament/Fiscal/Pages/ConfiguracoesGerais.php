@@ -20,11 +20,11 @@ class ConfiguracoesGerais extends Page implements HasForms
 {
     use InteractsWithForms;
 
-    protected static ?string $navigationIcon = 'heroicon-o-cog-6-tooth';
-    protected static ?string $navigationLabel = 'Configurações';
+ 
+    protected static ?string $navigationGroup = 'Configurações';
+    protected static ?string $navigationLabel = 'Configurações Gerais';
     protected static ?string $title = 'Configurações Gerais';
     protected static ?string $slug = 'configuracoes-gerais';
-    protected static ?string $navigationGroup = 'Fiscal';
     protected static string $view = 'filament.fiscal.pages.configuracoes-gerais';
 
     public ?array $data = [];
