@@ -27,7 +27,7 @@ class CfopsNfeForm extends Component implements HasForms
 
     // Propriedade para rastrear o tipo de nota
     public string $tipoNota = 'terceiros';
-    
+
     // Propriedade para rastrear o tipo de operação (entrada ou saída)
     public string $tipoOperacao = 'entrada';
 
@@ -53,13 +53,6 @@ class CfopsNfeForm extends Component implements HasForms
     {
         return $form
             ->schema([
-                Placeholder::make('instrucoes')
-                    ->content(function () {
-                        $tipoDescricao = $this->tipoNota === 'terceiros' ? 'Notas de Terceiros' : 'Notas Próprias';
-                        $operacaoDescricao = $this->tipoOperacao === 'entrada' ? 'entrada' : 'saída';
-                        return "Configure abaixo os CFOPs de {$operacaoDescricao} para {$tipoDescricao}";
-                    })
-                    ->columnSpanFull(),
 
                 Hidden::make('tipo_nota')
                     ->columnSpanFull(),
@@ -68,6 +61,7 @@ class CfopsNfeForm extends Component implements HasForms
                     ->columnSpanFull(),
 
                 Repeater::make('itens')
+                    ->hiddenLabel()
                     ->schema([
                         SelectTagGrouped::make('tag_ids')
                             ->label('Etiqueta')
@@ -93,10 +87,10 @@ class CfopsNfeForm extends Component implements HasForms
                             ->columnSpan(2),
 
                         Repeater::make('cfops')
-                            ->label('CFOPs')
+                            ->hiddenLabel()
                             ->schema([
                                 Select::make('cfop_entrada')
-                                    ->label(function() {
+                                    ->label(function () {
                                         return $this->tipoOperacao === 'entrada' ? 'CFOP Entrada' : 'CFOP Saída';
                                     })
                                     ->searchable()
@@ -110,15 +104,15 @@ class CfopsNfeForm extends Component implements HasForms
                                     ->columnSpan(2),
 
                                 TagsInput::make('cfops_saida')
-                                    ->label(function() {
+                                    ->label(function () {
                                         return $this->tipoOperacao === 'entrada' ? 'CFOPs Saída' : 'CFOPs Entrada';
                                     })
                                     ->placeholder('Digite os CFOPs e pressione Enter')
                                     ->separator(',')
                                     ->splitKeys(['Enter', ',', ' '])
-                                    ->helperText(function() {
-                                        return $this->tipoOperacao === 'entrada' 
-                                            ? 'Digite um ou mais CFOPs de saída' 
+                                    ->helperText(function () {
+                                        return $this->tipoOperacao === 'entrada'
+                                            ? 'Digite um ou mais CFOPs de saída'
                                             : 'Digite um ou mais CFOPs de entrada';
                                     })
                                     ->columnSpan(2),
@@ -140,7 +134,7 @@ class CfopsNfeForm extends Component implements HasForms
                     ->columns(2)
                     ->itemLabel(fn(array $state): ?string =>
                     !empty($state['tag_ids']) ? "Etiquetas: " . count($state['tag_ids']) : "Sem etiquetas")
-                    ->addActionLabel('Adicionar Grupo de Etiquetas')
+                    ->addActionLabel('Adicionar Etiqueta')
                     ->reorderable()
                     ->collapsible()
                     ->columnSpanFull(),
@@ -186,7 +180,7 @@ class CfopsNfeForm extends Component implements HasForms
 
             // Salva as configurações
             $config = ConfiguracaoFactory::atual();
-            
+
             if ($tipoOperacao === 'entrada') {
                 $config->salvarCfopsEntradaNfe($formData);
             } else {
@@ -197,7 +191,6 @@ class CfopsNfeForm extends Component implements HasForms
                 ->success()
                 ->title("CFOPs de {$operacaoDescricao} NFe ({$tipoDescricao}) salvos com sucesso")
                 ->send();
-            
         } catch (\Exception $e) {
             \Illuminate\Support\Facades\Log::error("Erro ao salvar CFOPs: " . $e->getMessage());
 
@@ -213,4 +206,4 @@ class CfopsNfeForm extends Component implements HasForms
     {
         return view('filament.fiscal.pages.configuracoes.cfops-nfe-form');
     }
-} 
+}

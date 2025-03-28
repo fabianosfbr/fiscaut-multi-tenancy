@@ -53,25 +53,53 @@ class ConfiguracoesGerais extends Page implements HasForms
                                     ->tabs([
                                         Tabs\Tab::make('CFOPs')
                                             ->schema([
-                                                Tabs::make('TiposCFOPs')
+                                                Tabs::make('Tabs')
                                                     ->tabs([
-                                                        Tabs\Tab::make('Notas de Terceiros')
+                                                        Tabs\Tab::make('NFe')
                                                             ->schema([
-                                                                Livewire::make(\App\Filament\Fiscal\Pages\Configuracoes\CfopsNfeForm::class, [
-                                                                    'tipoNota' => 'terceiros',
-                                                                    'tipoOperacao' => 'entrada'
-                                                                ])
-                                                                    ->id('cfops-terceiros'),
+                                                                Tabs::make('TiposNFes')
+                                                                    ->tabs([
+                                                                        Tabs\Tab::make('Notas de Terceiros')
+                                                                            ->schema([
+                                                                                Livewire::make(\App\Filament\Fiscal\Pages\Configuracoes\CfopsNfeForm::class, [
+                                                                                    'tipoNota' => 'terceiros',
+                                                                                    'tipoOperacao' => 'entrada'
+                                                                                ])
+                                                                                    ->id('cfops-terceiros'),
+                                                                            ]),
+                                                                        Tabs\Tab::make('Notas Próprias')
+                                                                            ->schema([
+                                                                                Livewire::make(\App\Filament\Fiscal\Pages\Configuracoes\CfopsNfeForm::class, [
+                                                                                    'tipoNota' => 'propria',
+                                                                                    'tipoOperacao' => 'entrada'
+                                                                                ])
+                                                                                    ->id('cfops-propria'),
+                                                                            ]),
+                                                                    ]),
                                                             ]),
-                                                        Tabs\Tab::make('Notas Próprias')
+                                                        Tabs\Tab::make('CTe')
                                                             ->schema([
-                                                                Livewire::make(\App\Filament\Fiscal\Pages\Configuracoes\CfopsNfeForm::class, [
-                                                                    'tipoNota' => 'propria',
-                                                                    'tipoOperacao' => 'entrada'
-                                                                ])
-                                                                    ->id('cfops-propria'),
+                                                                Tabs::make('TiposCTes')
+                                                                    ->tabs([
+                                                                        Tabs\Tab::make('Notas de Entrada')
+                                                                            ->schema([
+                                                                                Livewire::make(\App\Filament\Fiscal\Pages\Configuracoes\CfopsCteForm::class, [
+                                                                                    'tipoOperacao' => 'entrada'
+                                                                                ])
+                                                                                    ->id('cfops-cte-entrada'),
+                                                                            ]),
+
+                                                                        Tabs\Tab::make('Notas de Saida')
+                                                                            ->schema([
+                                                                                Livewire::make(\App\Filament\Fiscal\Pages\Configuracoes\CfopsCteForm::class, [
+                                                                                    'tipoOperacao' => 'saida'
+                                                                                ])
+                                                                                    ->id('cfops-cte-saida'),
+                                                                            ]),
+                                                                    ]),
                                                             ]),
                                                     ]),
+
                                             ]),
                                     ]),
                             ]),
@@ -90,6 +118,13 @@ class ConfiguracoesGerais extends Page implements HasForms
                                                                     'tipoOperacao' => 'saida'
                                                                 ])
                                                                     ->id('cfops-saida'),
+                                                            ]),
+                                                        Tabs\Tab::make('CTe')
+                                                            ->schema([
+                                                                Livewire::make(\App\Filament\Fiscal\Pages\Configuracoes\CfopsCteForm::class, [
+                                                                    'tipoOperacao' => 'saida'
+                                                                ])
+                                                                    ->id('cfops-cte-saida'),
                                                             ]),
                                                     ]),
                                             ]),
