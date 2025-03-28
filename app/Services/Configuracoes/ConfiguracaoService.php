@@ -522,4 +522,37 @@ class ConfiguracaoService
             'nfe_saida'
         );
     }
+
+    /**
+     * Retorna as configurações de impostos
+     */
+    public function obterConfiguracoesImpostos(array $padrao = []): array
+    {
+        return OrganizacaoConfiguracao::obterConfiguracao(
+            $this->organizationId,
+            'entrada',
+            'impostos',
+            'configuracoes',
+            $padrao
+        );
+    }
+
+    /**
+     * Salva configurações de impostos
+     */
+    public function salvarConfiguracoesImpostos(array $configuracoes): void
+    {
+        // Garante que os dados têm formatação consistente
+        if (!isset($configuracoes['itens'])) {
+            $configuracoes['itens'] = [];
+        }
+
+        OrganizacaoConfiguracao::salvarConfiguracao(
+            $this->organizationId,
+            'entrada',
+            $configuracoes,
+            'impostos',
+            'configuracoes'
+        );
+    }
 }
