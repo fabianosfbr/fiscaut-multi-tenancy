@@ -35,15 +35,11 @@ class CfopsNfeEntradaForm extends Component implements HasForms
     public function form(Form $form): Form
     {
         return $form
-            ->schema([
-                Placeholder::make('instrucoes')
-                    ->content('Configure abaixo os CFOPs de entrada e saída agrupados por etiquetas')
-                    ->columnSpanFull(),
-
+            ->schema([                
                 Repeater::make('itens')
+                    ->hiddenLabel()
                     ->schema([
-
-                        SelectTagGrouped::make('tag_ids')
+                        SelectTagGrouped::make('tag_id')
                             ->label('Etiqueta')
                             ->columnSpan(1)
                             ->multiple(true)
@@ -105,8 +101,6 @@ class CfopsNfeEntradaForm extends Component implements HasForms
                             ->columnSpanFull(),
                     ])
                     ->columns(2)
-                    ->itemLabel(fn(array $state): ?string =>
-                    !empty($state['tag_ids']) ? "Etiquetas: " . count($state['tag_ids']) : "Sem etiquetas")
                     ->addActionLabel('Adicionar Grupo de Etiquetas')
                     ->reorderable()
                     ->collapsible()

@@ -129,8 +129,7 @@ class CfopsCteForm extends Component implements HasForms
                 Repeater::make('itens')
                     ->hiddenLabel()
                     ->schema([
-                        // Campo de etiquetas (opcional)
-                        SelectTagGrouped::make('tag_ids')
+                        SelectTagGrouped::make('tag_id')
                             ->hiddenLabel()
                             ->columnSpan(2)
                             ->multiple(true)

@@ -13,6 +13,7 @@ use Filament\Forms\Contracts\HasForms;
 use Filament\Forms\Form;
 use Filament\Notifications\Notification;
 use Livewire\Component;
+use App\Forms\Components\SelectTagGrouped;
 
 class ProdutosGenericosForm extends Component implements HasForms
 {
@@ -23,75 +24,71 @@ class ProdutosGenericosForm extends Component implements HasForms
     public function mount(): void
     {
         $config = ConfiguracaoFactory::atual();
-        $produtosGenericos = $config->obterProdutosGenericos();
+        $configuracoes = $config->obterProdutosGenericos();
         
-        $this->form->fill($produtosGenericos);
+        $this->form->fill($configuracoes);
     }
     
     public function form(Form $form): Form
     {
         return $form
             ->schema([
-                Placeholder::make('instrucoes')
-                    ->content('Configure abaixo os produtos genéricos agrupados por etiquetas')
-                    ->columnSpanFull(),
-                
-                Repeater::make('grupos')
+                Repeater::make('itens')
+                    ->hiddenLabel()
                     ->schema([
-                        Select::make('tag_ids')
-                            ->label('Etiquetas')
-                            ->multiple()
-                            ->preload()
-                            ->searchable()
+                        SelectTagGrouped::make('tag_id')
+                            ->label('Etiqueta')
+                            ->columnSpan(1)
                             ->required()
                             ->options(function () {
-                                return Tag::all()->pluck('name', 'id')->toArray();
-                            })
-                            ->columnSpan(2),
+                                $categoryTag = categoryWithTagForSearching(getOrganizationCached()->id);
+                                $tagData = [];
+                                foreach ($categoryTag as $key => $category) {
+                                    $tags = [];
+                                    foreach ($category->tags as $tagKey => $tag) {
+                                        if (!$tag->is_enable) {
+                                            continue;
+                                        }
+                                        $tags[$tagKey]['id'] = $tag->id;
+                                        $tags[$tagKey]['name'] = $tag->code . ' - ' . $tag->name;
+                                    }
+                                    $tagData[$key]['text'] = $category->name;
+                                    $tagData[$key]['children'] = $tags;
+                                }
+                                return $tagData;
+                            }),
                         
                         Repeater::make('produtos')
                             ->label('Produtos')
                             ->schema([
                                 TextInput::make('codigo')
-                                    ->label('Código')
+                                    ->label('Código do Produto')
                                     ->required()
-                                    ->maxLength(30)
+                                    ->maxLength(20)
                                     ->columnSpan(1),
-                                
+                                    
                                 TextInput::make('descricao')
                                     ->label('Descrição')
                                     ->required()
                                     ->maxLength(120)
-                                    ->columnSpan(3),
-                                
+                                    ->columnSpan(1),
+                                    
                                 TextInput::make('ncm')
                                     ->label('NCM')
                                     ->required()
-                                    ->mask('9999.99.99')
-                                    ->placeholder('0000.00.00')
-                                    ->columnSpan(1),
-                                
-                                TextInput::make('unidade')
-                                    ->label('Unidade')
-                                    ->required()
-                                    ->maxLength(6)
-                                    ->placeholder('UN')
+                                    ->maxLength(8)
+                                    ->mask('99999999')
+                                    ->placeholder('00000000')
                                     ->columnSpan(1),
                             ])
-                            ->columns(6)
-                            ->itemLabel(fn (array $state): ?string => 
-                                isset($state['codigo'], $state['descricao']) 
-                                    ? "{$state['codigo']} - {$state['descricao']}" 
-                                    : null)
+                            ->columns(3)
                             ->addActionLabel('Adicionar Produto')
                             ->reorderable()
                             ->collapsible()
                             ->columnSpanFull(),
                     ])
-                    ->columns(2)
-                    ->itemLabel(fn (array $state): ?string => 
-                        !empty($state['tag_ids']) ? "Etiquetas: " . count($state['tag_ids']) : "Sem etiquetas")
-                    ->addActionLabel('Adicionar Grupo')
+                    ->columns(1)
+                    ->addActionLabel('Adicionar Etiqueta')
                     ->reorderable()
                     ->collapsible()
                     ->columnSpanFull(),

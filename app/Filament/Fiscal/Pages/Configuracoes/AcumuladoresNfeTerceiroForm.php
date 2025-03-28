@@ -54,7 +54,7 @@ class AcumuladoresNfeTerceiroForm extends Component implements HasForms
                                 return $options;
                             }),
 
-                        SelectTagGrouped::make('tag_ids')
+                        SelectTagGrouped::make('tag_id')
                             ->label('Etiquetas')
                             ->columnSpan(2)
                             ->multiple(true)

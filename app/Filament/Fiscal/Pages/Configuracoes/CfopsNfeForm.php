@@ -63,7 +63,7 @@ class CfopsNfeForm extends Component implements HasForms
                 Repeater::make('itens')
                     ->hiddenLabel()
                     ->schema([
-                        SelectTagGrouped::make('tag_ids')
+                        SelectTagGrouped::make('tag_id')
                             ->label('Etiqueta')
                             ->columnSpan(1)
                             ->multiple(true)

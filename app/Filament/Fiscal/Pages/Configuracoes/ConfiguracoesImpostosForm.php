@@ -37,7 +37,7 @@ class ConfiguracoesImpostosForm extends Component implements HasForms
                 Repeater::make('itens')
                     ->hiddenLabel()
                     ->schema([
-                        SelectTagGrouped::make('tag_ids')
+                        SelectTagGrouped::make('tag_id')
                             ->label('Etiquetas')
                             ->columnSpan(1)
                             ->multiple(false)

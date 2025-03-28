@@ -145,6 +145,11 @@ class ConfiguracoesGerais extends Page implements HasForms
                                                     Livewire::make(\App\Filament\Fiscal\Pages\Configuracoes\ConfiguracoesImpostosForm::class)
                                                         ->id('configuracoes-impostos'),
                                                 ]),
+                                            Tabs\Tab::make('Produtos Genéricos')
+                                                ->schema([
+                                                    Livewire::make(\App\Filament\Fiscal\Pages\Configuracoes\ProdutosGenericosForm::class)
+                                                        ->id('produtos-genericos'),
+                                                ]),
                                     ]),
                             ]),
                         
