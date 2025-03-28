@@ -197,4 +197,157 @@ class NotaFiscalEletronica extends Model implements DocumentoFiscal
                     ->where('tipo', '0');
     }
 
+    /**
+     * Calcula o diferencial de alíquota (DIFAL) para cada produto da nota
+     * 
+     * @return array Array contendo os dados do DIFAL para cada produto
+     */
+    public function calcularDifalProdutos(): array
+    {
+        $resultado = [];
+               
+        // Verifica se existem itens na nota
+        if (!$this->itens || $this->itens->isEmpty()) {
+            return $resultado;
+        }
+        
+        foreach ($this->itens as $item) {
+            // Obtém os valores necessários para o cálculo
+            $valorContabil = $item->valor_total ?? 0;
+            $baseCalculo = $item->base_calculo_icms ?? 0;
+            
+            // Pula itens sem base de cálculo
+            if ($baseCalculo <= 0) {
+                continue;
+            }
+            
+            // Alíquota de origem - pode vir do produto ou da tabela
+            $aliquotaOrigem = $this->obterAliquotaOrigem($item);
+            
+            // Alíquota de destino (interna do estado de destino)
+            $aliquotaDestino = $this->obterAliquotaDestino();
+                        
+            // Calcula o DIFAL
+            $valorDifal = 0;
+            $valorIcms = $item->valor_icms ?? 0;
+         
+            if ($aliquotaDestino > $aliquotaOrigem) {
+                // Cálculo do DIFAL: Base de Cálculo * (Alíquota Destino - Alíquota Origem)
+                $valorDifal = $baseCalculo * (($aliquotaDestino - $aliquotaOrigem) / 100);
+            }
+            
+            $resultado[] = [
+                'item_id' => $item->id,
+                'codigo' => $item->codigo ?? '-',
+                'descricao' => $item->descricao ?? 'Sem descrição',
+                'ncm' => $item->ncm ?? '-',
+                'cfop' => $item->cfop ?? '-',
+                'valor_contabil' => $valorContabil,
+                'base_calculo' => $baseCalculo,
+                'aliquota_origem' => $aliquotaOrigem,
+                'aliquota_destino' => $aliquotaDestino,
+                'valor_icms' => $valorIcms,
+                'valor_difal' => round($valorDifal, 2)
+            ];
+        }
+   
+        return $resultado;
+    }
+    
+    /**
+     * Obtém a alíquota de origem para o item
+     * 
+     * @param object $item Item da nota fiscal
+     * @return float Alíquota de origem a ser usada no cálculo
+     */
+    private function obterAliquotaOrigem($item): float
+    {
+        // Primeiro verifica se o item já tem uma alíquota definida
+        if (!empty($item->aliquota_icms)) {
+            return (float) $item->aliquota_icms;
+        }
+        
+        // Verifica se UF de origem e destino são válidas
+        if (empty($this->uf_emitente) || empty($this->uf_destinatario)) {
+            return 12.0; // Valor padrão se não tiver UFs válidas
+        }
+        
+        // Se não tiver, busca na tabela de alíquotas interestaduais
+        $aliquotasInterestaduais = config('aliquotas_icms.valor_icms');
+        
+        if ($aliquotasInterestaduais && isset($aliquotasInterestaduais[$this->uf_emitente]) && isset($aliquotasInterestaduais['UF'])) {
+            // Busca o índice da UF de destino no array de UFs
+            $indexUfDestino = array_search($this->uf_destinatario, $aliquotasInterestaduais['UF']);
+            
+            // Se encontrar, pega a alíquota definida para esta origem-destino
+            if ($indexUfDestino !== false && isset($aliquotasInterestaduais[$this->uf_emitente][$indexUfDestino])) {
+                return (float) $aliquotasInterestaduais[$this->uf_emitente][$indexUfDestino];
+            }
+        }
+        
+        // Alíquotas padrão para operações interestaduais baseadas na região
+        $regioesSul = ['PR', 'RS', 'SC'];
+        $regioesSudeste = ['SP', 'RJ', 'ES', 'MG'];
+        
+        // Se o emitente for do Sul ou Sudeste e o destinatário for de outras regiões, usa 7%
+        if (in_array($this->uf_emitente, array_merge($regioesSul, $regioesSudeste)) && 
+            !in_array($this->uf_destinatario, array_merge($regioesSul, $regioesSudeste))) {
+            return 7.0;
+        }
+        
+        // Para outras combinações, usa 12%
+        return 12.0;
+    }
+    
+    /**
+     * Obtém a alíquota de destino (interna do estado destinatário)
+     * 
+     * @return float Alíquota interna do estado de destino
+     */
+    private function obterAliquotaDestino(): float
+    {
+        // Verifica se a UF de destino é válida
+        if (empty($this->uf_destinatario)) {
+            return 18.0; // Valor padrão se não tiver UF de destino válida
+        }
+        
+        // Busca a alíquota interna diretamente na tabela de alíquotas
+        $aliquotasInterestaduais = config('aliquotas_icms.valor_icms');
+        
+        // Se a UF de destino estiver definida e for igual à UF emitente (operação interna),
+        // pega o valor da diagonal principal da tabela
+        if (isset($aliquotasInterestaduais[$this->uf_destinatario]) && isset($aliquotasInterestaduais['UF'])) {
+            $indexUfDestino = array_search($this->uf_destinatario, $aliquotasInterestaduais['UF']);
+            
+            if ($indexUfDestino !== false && isset($aliquotasInterestaduais[$this->uf_destinatario][$indexUfDestino])) {
+                // Pega a alíquota interna (operação dentro do mesmo estado)
+                return (float) $aliquotasInterestaduais[$this->uf_destinatario][$indexUfDestino];
+            }
+        }
+        
+        // Se não encontrar, retorna um valor padrão baseado na UF de destino
+        $aliquotasPadrao = [
+            'AC' => 17, 'AL' => 17, 'AM' => 18, 'AP' => 18, 'BA' => 18,
+            'CE' => 18, 'DF' => 18, 'ES' => 17, 'GO' => 17, 'MA' => 18,
+            'MG' => 18, 'MS' => 17, 'MT' => 17, 'PA' => 17, 'PB' => 18,
+            'PE' => 18, 'PI' => 18, 'PR' => 18, 'RJ' => 20, 'RN' => 18,
+            'RO' => 17.5, 'RR' => 17, 'RS' => 17, 'SC' => 17, 'SE' => 18,
+            'SP' => 18, 'TO' => 18
+        ];
+        
+        return $aliquotasPadrao[$this->uf_destinatario] ?? 18.0;
+    }
+    
+    /**
+     * Calcula o valor total do DIFAL para a nota
+     * 
+     * @return float Valor total do DIFAL
+     */
+    public function calcularTotalDifal(): float
+    {
+        $difalProdutos = $this->calcularDifalProdutos();
+        
+        return array_sum(array_column($difalProdutos, 'valor_difal'));
+    }
+
 }
