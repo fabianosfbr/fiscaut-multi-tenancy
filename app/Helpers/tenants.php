@@ -21,10 +21,12 @@ if (! function_exists('getAllValidOrganizationsForUser')) {
     function getAllValidOrganizationsForUser($user)
     {
 
-        return Cache::remember('all_valid_organizations_for_user_' . $user->id, 10, function () use ($user) {
+        return Cache::remember('all_valid_organizations_for_user_' . $user->id, now()->addDay(1), function () use ($user) {
             return Organization::whereHas('users', function ($q) use ($user) {
                 $q->where('is_active', 1)->where('user_id', $user->id);
-            })->get();
+            })
+            ->orderBy('razao_social', 'asc')
+            ->get();
         });
     }
 }

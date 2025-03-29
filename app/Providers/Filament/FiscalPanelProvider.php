@@ -9,6 +9,7 @@ use Filament\PanelProvider;
 use Filament\Navigation\MenuItem;
 use Filament\Support\Colors\Color;
 use Filament\View\PanelsRenderHook;
+use Filament\Support\Enums\MaxWidth;
 use Illuminate\Support\Facades\Blade;
 use Filament\Http\Middleware\Authenticate;
 use App\Filament\Fiscal\Pages\Importar\NfeCte;
@@ -38,6 +39,7 @@ class FiscalPanelProvider extends PanelProvider
             ->colors([
                 'primary' => Color::Amber,
             ])
+            ->maxContentWidth(MaxWidth::Full)
             ->viteTheme('resources/css/filament/fiscal/theme.css')
             ->discoverResources(in: app_path('Filament/Fiscal/Resources'), for: 'App\\Filament\\Fiscal\\Resources')
             ->discoverPages(in: app_path('Filament/Fiscal/Pages'), for: 'App\\Filament\\Fiscal\\Pages')            

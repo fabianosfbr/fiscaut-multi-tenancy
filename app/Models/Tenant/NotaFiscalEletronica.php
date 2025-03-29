@@ -349,5 +349,45 @@ class NotaFiscalEletronica extends Model implements DocumentoFiscal
         
         return array_sum(array_column($difalProdutos, 'valor_difal'));
     }
+    
+    /**
+     * Verifica se a nota possui DIFAL
+     * 
+     * @return bool
+     */
+    public function possuiDifal(): bool
+    {
+        // Verifica se é uma operação interestadual
+        if ($this->uf_emitente === $this->uf_destinatario) {
+            return false;
+        }
+        
+        // Verifica se há itens com base de cálculo de ICMS
+        $temBaseCalculoICMS = $this->itens->contains(function ($item) {
+            return isset($item->base_calculo_icms) && $item->base_calculo_icms > 0;
+        });
+        
+        if (!$temBaseCalculoICMS) {
+            return false;
+        }
+        
+        // Verifica se o valor do DIFAL é maior que zero
+        return $this->calcularTotalDifal() > 0;
+    }
+    
+    /**
+     * Escopo para filtrar notas com DIFAL
+     * 
+     * @param \Illuminate\Database\Eloquent\Builder $query
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public function scopeComDifal($query)
+    {
+        return $query->whereColumn('uf_emitente', '!=', 'uf_destinatario')
+                    ->whereHas('itens', function ($itemQuery) {
+                        $itemQuery->whereNotNull('base_calculo_icms')
+                                ->where('base_calculo_icms', '>', 0);
+                    });
+    }
 
 }

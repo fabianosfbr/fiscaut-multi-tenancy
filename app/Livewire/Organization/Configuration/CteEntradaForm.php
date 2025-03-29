@@ -100,7 +100,7 @@ class CteEntradaForm extends Component implements HasForms
 
         $tagData = Cfop::getAllForTag()->pluck('full_name', 'codigo');
 
-        return $tagData;
+        return $tagData ?? [];
     }
 
     public function submit()

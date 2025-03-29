@@ -120,6 +120,9 @@ class UserOrganizationForm extends Component implements HasForms, HasTable
 
                         $user->syncRolesWithOrganization($data['roles'], $this->organization->id);
 
+
+                        Cache::forget('all_valid_organizations_for_user_'.$user->id);
+
                         Notification::make()
                             ->title('Usuário atualizado com sucesso.')
                             ->success()

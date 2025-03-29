@@ -57,8 +57,16 @@ class ChoiceOrganization extends Component implements HasForms
                     ->prefix('Empresa:')
                     ->live()
                     ->options(function () {
-                        return $this->organizations->pluck('razao_social', 'id');
-                    })
+                        return $this->organizations->mapWithKeys(function ($organization) {
+                            $razaoSocial = $organization->razao_social;
+                            
+                            if (str_contains($razaoSocial, ':')) {
+                                $razaoSocial = trim(explode(':', $razaoSocial)[0]);
+                            }
+                            
+                            return [$organization->id => $razaoSocial];
+                        });
+                    })                 
                     ->afterStateUpdated(function (?string $state) {
                         if (filled($state)) {
 

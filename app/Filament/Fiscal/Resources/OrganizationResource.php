@@ -192,6 +192,7 @@ class OrganizationResource extends Resource
                     ->label('Dias para Vencimento')
                     ->badge()
                     ->state(function (Model $record): string {
+                        
                         if (!$record->validade_certificado) {
                             return 'Sem certificado';
                         }

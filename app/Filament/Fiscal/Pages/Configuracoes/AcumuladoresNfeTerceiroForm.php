@@ -72,7 +72,7 @@ class AcumuladoresNfeTerceiroForm extends Component implements HasForms
                                     $tagData[$key]['text'] = $category->name;
                                     $tagData[$key]['children'] = $tags;
                                 }
-                                return $tagData;
+                                return $tagData ?? [];
                             }),
 
                         TagsInput::make('cfops')

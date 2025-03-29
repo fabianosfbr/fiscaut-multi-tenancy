@@ -106,6 +106,21 @@ class NfeEntradaResource extends Resource
                         return $record->isEscrituradaParaOrganization(getOrganizationCached());
                     }),
 
+                IconColumn::make('possui_difal')
+                    ->boolean()
+                    ->alignCenter()
+                    ->toggleable(isToggledHiddenByDefault: true)
+                    ->label('DIFAL')
+                    ->tooltip(function(NotaFiscalEletronica $record){
+                        if($record->possuiDifal()){
+                            return 'Nota com Diferencial de Alíquota';
+                        }
+                        return 'Nota sem Diferencial de Alíquota';
+                    })
+                    ->getStateUsing(function (NotaFiscalEletronica $record): bool {
+                        return $record->possuiDifal();
+                    }),
+
                 TextColumn::make('cfops')
                     ->label('CFOPs')
                     ->searchable(query: function (Builder $query, string $search): Builder {
@@ -317,6 +332,27 @@ class NfeEntradaResource extends Resource
                             : $query->whereDoesntHave('organizacoesEscrituradas', function ($query) use ($organization) {
                                 $query->where('organization_id', $organization->id);
                             });
+                    }),
+
+                Tables\Filters\TernaryFilter::make('possui_difal')
+                    ->label('Possui DIFAL')
+                    ->placeholder('Todos')
+                    ->trueLabel('Sim')
+                    ->falseLabel('Não')
+                    ->query(function (Builder $query, array $data): Builder {
+                        if ($data['value'] === null) {
+                            return $query;
+                        }
+                        
+                        return $data['value'] 
+                            ? $query->comDifal() 
+                            : $query->where(function ($query) {
+                                $query->whereColumn('uf_emitente', '=', 'uf_destinatario')
+                                    ->orWhereDoesntHave('itens', function ($itemQuery) {
+                                        $itemQuery->whereNotNull('base_calculo_icms')
+                                            ->where('base_calculo_icms', '>', 0);
+                                    });
+                              });
                     }),
 
                 Tables\Filters\SelectFilter::make('referencias')
