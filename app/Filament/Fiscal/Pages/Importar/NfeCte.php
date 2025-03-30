@@ -115,8 +115,7 @@ class NfeCte extends Page
                             $nomeArquivo = $xmlData['filename'];
 
                             $tipoXml = XmlIdentifierService::identificarTipoXml($xmlContent);
-
-
+                          
                             if ($tipoXml === XmlIdentifierService::TIPO_NFE) {
                                 $this->processarNfe($xmlContent, $nomeArquivo, $resultados['nfe']);
                             } else {
@@ -248,12 +247,15 @@ class NfeCte extends Page
         $xmlReader = (new XmlCteReaderService())
             ->loadXml($xmlContent)
             ->parse();
+            
 
         $dadosXml = $xmlReader->getData();
+        
         $chaveAcesso = $dadosXml['chave_acesso'];
 
         $existente = ConhecimentoTransporteEletronico::where('chave_acesso', $chaveAcesso)->first();
         $cte = $xmlReader->save();
+
 
         if ($existente) {
             $resultados['atualizacoes'][] = [
