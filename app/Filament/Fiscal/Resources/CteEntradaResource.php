@@ -8,6 +8,7 @@ use Filament\Forms\Form;
 use Filament\Tables\Table;
 use Filament\Resources\Resource;
 use Filament\Tables\Actions\Action;
+use App\Tables\Columns\TagColumnNfe;
 use App\Tables\Columns\ViewChaveColumn;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
@@ -36,7 +37,7 @@ class CteEntradaResource extends Resource
 
     protected static ?string $navigationGroup = 'CTe';
 
- 
+
     public static function form(Form $form): Form
     {
         return $form
@@ -99,6 +100,8 @@ class CteEntradaResource extends Resource
                     ->toggleable()
                     ->label('Escriturada')
                     ->getStateUsing(function (ConhecimentoTransporteEletronico $record): bool {
+
+                       // dd($record);
                         return $record->isEscrituradaParaOrganization(getOrganizationCached());
                     }),
 
@@ -107,6 +110,15 @@ class CteEntradaResource extends Resource
                     ->date('d/m/Y')
                     ->toggleable()
                     ->sortable(),
+
+                // TagColumnNfe::make('tagged')
+                //     ->label('Etiqueta')
+                //     ->alignCenter()
+                //     ->toggleable()
+                //     ->showTagCode(function () {
+                //         $organizationId = getOrganizationCached()->id;
+                //         return config_organizacao($organizationId, 'geral', null, null, 'mostrar_codigo_etiqueta', false);
+                //     }),
 
                 TextColumn::make('status_cte')
                     ->label('Status')
@@ -128,7 +140,7 @@ class CteEntradaResource extends Resource
             ->actions([
                 ActionGroup::make([
                     Tables\Actions\ViewAction::make()
-                        ->label('Detalhes'),                   
+                        ->label('Detalhes'),
                     DownloadXmlAction::make(),
                     DownloadCtePdfAction::make(),
                     ToggleEscrituracaoTableAction::make(),
@@ -150,7 +162,7 @@ class CteEntradaResource extends Resource
         return [
             'index' => Pages\ListCteEntradas::route('/'),
             //'create' => Pages\CreateCteEntrada::route('/create'),
-           // 'edit' => Pages\EditCteEntrada::route('/{record}/edit'),
+            // 'edit' => Pages\EditCteEntrada::route('/{record}/edit'),
             'view' => Pages\ViewCteEntrada::route('/{record}'),
         ];
     }

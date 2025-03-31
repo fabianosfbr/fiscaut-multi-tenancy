@@ -12,6 +12,7 @@ use App\Models\Tenant\ConfiguracaoGeral;
 use Filament\Notifications\Notification;
 use Filament\Forms\Components\DatePicker;
 use App\Forms\Components\SelectTagGrouped;
+use App\Models\Tenant\ConhecimentoTransporteEletronico;
 
 class ClassificarNotaAction extends Action
 {
@@ -68,13 +69,26 @@ class ClassificarNotaAction extends Action
                     }),
             ])
             ->action(function (array $data, Model $record): void {
-           
+
+
                 $record->retag($data['tags']);
 
                 if (isset($data['data_entrada'])) {
                     $record->data_entrada = $data['data_entrada'];
                     $record->saveQuietly();
                 }
+
+             $record->referenciasRecebidas()->where('documento_origem_type', ConhecimentoTransporteEletronico::class)
+                    ->get()
+                    ->unique('chave_acesso_origem')
+                    ->map(function ($referencia) use ($data) {                        
+                        $cte = ConhecimentoTransporteEletronico::where('chave_acesso', $referencia->chave_acesso_origem)->first(); 
+                        if($cte)           {
+                            $cte->retag($data['tags']);
+                        }                        
+                        return $referencia;
+                    });
+               
             })->after(function () {
                 Notification::make()
                     ->success()

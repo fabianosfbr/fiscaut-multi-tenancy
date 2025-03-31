@@ -42,6 +42,12 @@ class ConhecimentoTransporteEletronico extends Model implements DocumentoFiscal
         return $this->hasMany(ConhecimentoTransporteEletronicoHistorico::class, 'cte_id');
     }
 
+    public function retag(string $tag)
+    {
+        $this->untag();
+        $this->tag($tag, $this->valor_total);
+    }
+
     /**
      * Escopo para filtrar CTEs de entrada onde a empresa logada é o destinatário
      *
