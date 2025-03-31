@@ -11,7 +11,9 @@ use Filament\Support\Colors\Color;
 use Filament\View\PanelsRenderHook;
 use Filament\Support\Enums\MaxWidth;
 use Illuminate\Support\Facades\Blade;
+use App\Filament\Fiscal\Pages\Dashboard;
 use Filament\Http\Middleware\Authenticate;
+use App\Filament\Fiscal\Widgets\DocsOverview;
 use App\Filament\Fiscal\Pages\Importar\NfeCte;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\Cookie\Middleware\EncryptCookies;
@@ -26,6 +28,7 @@ use Filament\Http\Middleware\DispatchServingFilamentEvent;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Stancl\Tenancy\Middleware\PreventAccessFromCentralDomains;
+
 
 class FiscalPanelProvider extends PanelProvider
 {
@@ -45,14 +48,12 @@ class FiscalPanelProvider extends PanelProvider
             ->discoverPages(in: app_path('Filament/Fiscal/Pages'), for: 'App\\Filament\\Fiscal\\Pages')            
             ->discoverClusters(in: app_path('Filament/Clusters'), for: 'App\\Filament\\Clusters')
             ->pages([
-                Pages\Dashboard::class,
-               // NfeCte::class,
+                Dashboard::class,
             ])
             ->navigationGroups(config('sidebar'))
             ->discoverWidgets(in: app_path('Filament/Fiscal/Widgets'), for: 'App\\Filament\\Fiscal\\Widgets')
             ->widgets([
-                Widgets\AccountWidget::class,
-                Widgets\FilamentInfoWidget::class,
+                DocsOverview::class,
             ])
             ->userMenuItems([
                 MenuItem::make()
