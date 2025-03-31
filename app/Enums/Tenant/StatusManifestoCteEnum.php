@@ -12,7 +12,8 @@ enum StatusManifestoCteEnum: string implements HasColor, HasLabel
     case DESCONHECIDA = 'DESCONHECIDA';
     case NAO_REALIZADA = 'NAO_REALIZADA';
     case CIENCIA = 'CIENCIA';
-    case OPERACAO_NAO_REALIZADA = 'OPERACAO_NAO_REALIZADA';
+    case OPERACAO_NAO_REALIZADA = 'OPERACAO_NAO_REALIZADA';    
+    case PRESTACAO_DE_SERVICO_EM_DESACORDO = 'PRESTACAO_DE_SERVICO_EM_DESACORDO';
 
     public function getLabel(): ?string
     {

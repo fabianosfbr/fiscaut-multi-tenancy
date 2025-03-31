@@ -94,30 +94,12 @@ class CteEntradaResource extends Resource
                     ->money('BRL')
                     ->sortable(),
 
-                IconColumn::make('escriturada_destinatario')
-                    ->boolean()
-                    ->alignCenter()
-                    ->toggleable()
-                    ->label('Escriturada')
-                    ->getStateUsing(function (ConhecimentoTransporteEletronico $record): bool {
-
-                        return $record->isEscrituradaParaOrganization(getOrganizationCached());
-                    }),
 
                 TextColumn::make('data_emissao')
                     ->label('Emissão')
                     ->date('d/m/Y')
                     ->toggleable()
                     ->sortable(),
-
-                // TagColumnNfe::make('tagged')
-                //     ->label('Etiqueta')
-                //     ->alignCenter()
-                //     ->toggleable()
-                //     ->showTagCode(function () {
-                //         $organizationId = getOrganizationCached()->id;
-                //         return config_organizacao($organizationId, 'geral', null, null, 'mostrar_codigo_etiqueta', false);
-                //     }),
 
                 TextColumn::make('status_cte')
                     ->label('Status')
@@ -196,7 +178,6 @@ class CteEntradaResource extends Resource
                         ->label('Detalhes'),
                     DownloadXmlAction::make(),
                     DownloadCtePdfAction::make(),
-                    ToggleEscrituracaoTableAction::make(),
                 ]),
 
             ])

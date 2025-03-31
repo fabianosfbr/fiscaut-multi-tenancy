@@ -141,26 +141,7 @@ class NfeSaidaResource extends Resource
                     })
                     ->openUrlInNewTab(),
 
-                IconColumn::make('eh_referenciada')
-                    ->label('Ref. por')
-                    ->boolean()
-                    ->alignCenter()
-                    ->url(function (NotaFiscalEletronica $record): ?string {
-                        if (!$record->ehReferenciado()) {
-                            return null;
-                        }
-
-                        $primeiraReferencia = $record->referenciasRecebidas()
-                            ->where('documento_origem_type', NotaFiscalEletronica::class)
-                            ->first();
-
-                        return $primeiraReferencia
-                            ? route('filament.fiscal.resources.nfes-entrada.view', ['record' => $primeiraReferencia->documento_origem_id])
-                            : null;
-                    })
-                    ->getStateUsing(fn(NotaFiscalEletronica $record): bool => $record->ehReferenciado())
-                    ->tooltip('Referenciada por Outras Notas')
-                    ->openUrlInNewTab(),
+                
             ])
             ->defaultSort('data_emissao', 'desc')
             ->filters([
