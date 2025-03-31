@@ -4,53 +4,51 @@ namespace App\Filament\Fiscal\Resources;
 
 use Filament\Forms;
 use Filament\Tables;
+use App\Models\CteSaida;
 use Filament\Forms\Form;
 use Filament\Tables\Table;
 use Filament\Resources\Resource;
-use Filament\Tables\Actions\Action;
-use App\Tables\Columns\TagColumnNfe;
 use App\Tables\Columns\ViewChaveColumn;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Actions\ActionGroup;
-use Filament\Tables\Filters\SelectFilter;
 use Illuminate\Database\Eloquent\Builder;
-use Filament\Tables\Filters\TernaryFilter;
+use Illuminate\Database\Eloquent\SoftDeletingScope;
 use App\Models\Tenant\ConhecimentoTransporteEletronico;
-use App\Filament\Fiscal\Resources\CteEntradaResource\Pages;
-use App\Filament\Fiscal\Resources\NfeEntradaResource\Actions\DownloadPdfAction;
+use App\Filament\Fiscal\Resources\CteSaidaResource\Pages;
+use App\Filament\Fiscal\Resources\CteSaidaResource\RelationManagers;
 use App\Filament\Fiscal\Resources\NfeEntradaResource\Actions\DownloadXmlAction;
 use App\Filament\Fiscal\Resources\CteEntradaResource\Actions\DownloadCtePdfAction;
 use App\Filament\Fiscal\Resources\NfeEntradaResource\Actions\ToggleEscrituracaoTableAction;
 
-class CteEntradaResource extends Resource
+class CteSaidaResource extends Resource
 {
     protected static ?string $model = ConhecimentoTransporteEletronico::class;
 
-    protected static ?string $modelLabel = 'CTe Entrada';
+    protected static ?string $modelLabel = 'CTe Saída';
 
-    protected static ?string $pluralLabel = 'CTes Entrada';
+    protected static ?string $pluralLabel = 'CTes Saída';
 
-    protected static ?string $navigationLabel = 'CTe Entrada';
+    protected static ?string $navigationLabel = 'CTe Saída';
 
-    protected static ?string $slug = 'ctes-entrada';
+    protected static ?string $slug = 'ctes-saida';
 
     protected static ?string $navigationGroup = 'CTe';
-
 
     public static function form(Form $form): Form
     {
         return $form
-            ->schema([]);
+            ->schema([
+                //
+            ]);
     }
 
     public static function table(Table $table): Table
     {
         return $table
             ->query(function () {
-                return ConhecimentoTransporteEletronico::query()->entradasDestinatario(getOrganizationCached());
+                return ConhecimentoTransporteEletronico::query()->emitidos(getOrganizationCached());
             })
-            ->recordUrl(null)
             ->columns([
                 TextColumn::make('numero')
                     ->label('Nº')
@@ -61,13 +59,13 @@ class CteEntradaResource extends Resource
                     ->label('Série')
                     ->searchable(),
 
-                TextColumn::make('nome_emitente')
-                    ->label('Emitente')
+                TextColumn::make('nome_destinatario')
+                    ->label('Destinatário')
                     ->limit(30)
                     ->searchable()
                     ->size('sm')
                     ->description(function (ConhecimentoTransporteEletronico $record) {
-                        return $record->cnpj_emitente;
+                        return $record->cnpj_destinatario;
                     }),
 
                 TextColumn::make('chaves_nfe_referenciadas')
@@ -110,14 +108,6 @@ class CteEntradaResource extends Resource
                     ->toggleable()
                     ->sortable(),
 
-                // TagColumnNfe::make('tagged')
-                //     ->label('Etiqueta')
-                //     ->alignCenter()
-                //     ->toggleable()
-                //     ->showTagCode(function () {
-                //         $organizationId = getOrganizationCached()->id;
-                //         return config_organizacao($organizationId, 'geral', null, null, 'mostrar_codigo_etiqueta', false);
-                //     }),
 
                 TextColumn::make('status_cte')
                     ->label('Status')
@@ -200,7 +190,11 @@ class CteEntradaResource extends Resource
                 ]),
 
             ])
-            ->bulkActions([]);
+            ->bulkActions([
+                Tables\Actions\BulkActionGroup::make([
+                    Tables\Actions\DeleteBulkAction::make(),
+                ]),
+            ]);
     }
 
     public static function getRelations(): array
@@ -213,10 +207,10 @@ class CteEntradaResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListCteEntradas::route('/'),
-            //'create' => Pages\CreateCteEntrada::route('/create'),
-            // 'edit' => Pages\EditCteEntrada::route('/{record}/edit'),
-            'view' => Pages\ViewCteEntrada::route('/{record}'),
+            'index' => Pages\ListCteSaidas::route('/'),
+            //  'create' => Pages\CreateCteSaida::route('/create'),
+            'view' => Pages\ViewCteSaida::route('/{record}'),
+            // 'edit' => Pages\EditCteSaida::route('/{record}/edit'),
         ];
     }
 }
