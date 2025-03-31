@@ -56,25 +56,7 @@ class XmlCteReaderService implements ServicoLeituraDocumentoFiscal
             $vPrest = $this->xml->CTe->infCte->vPrest;
                         
             // Verifica se há documentos referenciados (NFes, outros CTes, etc)
-            $possuiReferencia = false;
-            $chaveReferenciada = null;
-            $tipoReferencia = null;
-            
-            // Verifica referências a NFes
-            if (isset($this->xml->CTe->infCte->infCTeNorm->infDoc->infNFe)) {
-                $possuiReferencia = true;
-                $refNFe = $this->xml->CTe->infCte->infCTeNorm->infDoc->infNFe;
-                $chaveReferenciada = (string) $refNFe->chave;
-                $tipoReferencia = 'NFE';
-            }
-            
-            // Verifica referências a outros CTes
-            if (isset($this->xml->CTe->infCte->infCTeNorm->infDoc->infCTe)) {
-                $possuiReferencia = true;
-                $refCTe = $this->xml->CTe->infCte->infCTeNorm->infDoc->infCTe;
-                $chaveReferenciada = (string) $refCTe->chave;
-                $tipoReferencia = 'CTE';
-            }
+            $referencias = $this->extrairReferencias();
             
             // Extrai o status da nota do protCTe (se existir)
             $status = 'EMITIDO'; // Status padrão
@@ -149,9 +131,8 @@ class XmlCteReaderService implements ServicoLeituraDocumentoFiscal
                 
                 
                 // Dados de referência
-                'possui_referencia' => $possuiReferencia,
-                'chave_referenciada' => $chaveReferenciada,
-                'tipo_referencia' => $tipoReferencia,
+                'possui_referencias' => !empty($referencias),
+                'referencias' => $referencias,
                 'modal' => (string) $ide->modal,
                 'tpServ' => (string) $ide->tpServ,
                 'cMunIni' => (string) $ide->cMunIni,
@@ -301,13 +282,9 @@ class XmlCteReaderService implements ServicoLeituraDocumentoFiscal
                 $chaveAcesso = $this->data['chave_acesso'];
                 
                 // Remove campos que serão tratados separadamente
-                $possuiReferencia = $this->data['possui_referencia'] ?? false;
-                $chaveReferenciada = $this->data['chave_referenciada'] ?? null;
-                $tipoReferencia = $this->data['tipo_referencia'] ?? 'NFE';
-                
-                unset($this->data['possui_referencia']);
-                unset($this->data['chave_referenciada']);
-                unset($this->data['tipo_referencia']);
+                $referencias = $this->data['referencias'] ?? [];
+                unset($this->data['referencias']);
+                unset($this->data['possui_referencias']);
                 
                 // Busca o CTe existente
                 $cte = ConhecimentoTransporteEletronico::where('chave_acesso', $chaveAcesso)->first();
@@ -319,9 +296,17 @@ class XmlCteReaderService implements ServicoLeituraDocumentoFiscal
                     $cte = ConhecimentoTransporteEletronico::create($this->data);
                 }
                 
-                // Se este CTe faz referência a outro documento, registra esta referência
-                if ($possuiReferencia && $chaveReferenciada) {
-                    $cte->adicionarReferencia($chaveReferenciada, $tipoReferencia);
+                // Limpa referências existentes para atualizar com novas
+                $cte->referenciasFeitas()->delete();
+                
+                // Adiciona novas referências
+                foreach ($referencias as $referencia) {
+                    if (!empty($referencia['chave'])) {
+                        $cte->adicionarReferencia(
+                            $referencia['chave'], 
+                            $referencia['tipo']
+                        );
+                    } 
                 }
                 
                 // Retorna o CTe
@@ -388,23 +373,24 @@ class XmlCteReaderService implements ServicoLeituraDocumentoFiscal
         $toma = null;
         $tomaEnder = null;
         $tomadorIndice = null;
-        
+                
         // Verifica qual tipo de tomador está presente no XML
         if (isset($this->xml->CTe->infCte->ide->toma0)) {
-            $tomadorIndice = (int)($this->xml->CTe->infCte->ide->toma0);
+            $tomadorIndice = (int)($this->xml->CTe->infCte->ide->toma0->toma);
         } elseif (isset($this->xml->CTe->infCte->ide->toma1)) {
-            $tomadorIndice = (int)($this->xml->CTe->infCte->ide->toma1);
+            $tomadorIndice = (int)($this->xml->CTe->infCte->ide->toma1->toma);
         } elseif (isset($this->xml->CTe->infCte->ide->toma2)) {
-            $tomadorIndice = (int)($this->xml->CTe->infCte->ide->toma2);
+            $tomadorIndice = (int)($this->xml->CTe->infCte->ide->toma2->toma);
         } elseif (isset($this->xml->CTe->infCte->ide->toma3)) {
-            $tomadorIndice = (int)($this->xml->CTe->infCte->ide->toma3);
-        } elseif (isset($this->xml->CTe->infCte->ide->toma4)) {
+            $tomadorIndice = (int)($this->xml->CTe->infCte->ide->toma3->toma);            
+        } elseif (isset($this->xml->CTe->infCte->ide->toma4->toma)) {
             $tomadorIndice = 4; // Toma4 sempre é tipo 4 (Outros)
         } elseif (isset($this->xml->CTe->infCte->ide->indToma)) {
             // Versão mais recente do CT-e usa indToma
-            $tomadorIndice = (int)($this->xml->CTe->infCte->ide->indToma);
+            $tomadorIndice = (int)($this->xml->CTe->infCte->ide->indToma->toma);
         }
-        
+
+ 
         // Determina quem é o tomador baseado no índice
         switch ($tomadorIndice) {
             case 0: // Remetente
@@ -443,6 +429,7 @@ class XmlCteReaderService implements ServicoLeituraDocumentoFiscal
                 $result['tipo_tomador'] = 'DESCONHECIDO';
                 break;
         }
+
         
         // Extrair dados do tomador quando disponíveis
         if ($toma) {
@@ -467,5 +454,44 @@ class XmlCteReaderService implements ServicoLeituraDocumentoFiscal
         }
         
         return $result;
+    }
+
+    /**
+     * Extrai as referências a outros documentos (NFe, CTe, etc) contidas no CT-e
+     * 
+     * @return array Array com as referências encontradas
+     */
+    private function extrairReferencias(): array
+    {
+        $referencias = [];
+        
+        // Verificar se existe o nó de documentos
+        if (!isset($this->xml->CTe->infCte->infCTeNorm->infDoc)) {
+            return $referencias;
+        }
+        
+        $infDoc = $this->xml->CTe->infCte->infCTeNorm->infDoc;
+        
+        // Extrair referências a NFes
+        if (isset($infDoc->infNFe)) {
+            foreach ($infDoc->infNFe as $refNFe) {
+                $referencias[] = [
+                    'chave' => (string) $refNFe->chave,
+                    'tipo' => 'NFE',
+                ];
+            }
+        }
+        
+        // Extrair referências a CTes
+        if (isset($infDoc->infCTe)) {
+            foreach ($infDoc->infCTe as $refCTe) {
+                $referencias[] = [
+                    'chave' => (string) $refCTe->chave,
+                    'tipo' => 'CTE',
+                ];
+            }
+        }
+       
+        return $referencias;
     }
 } 

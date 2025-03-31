@@ -7,11 +7,12 @@ use SimpleXMLElement;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use App\Models\Tenant\NotaFiscalEletronica;
 use App\Models\Tenant\DocumentoReferencia;
-use App\Interfaces\ServicoLeituraDocumentoFiscal;
+use App\Models\Tenant\NotaFiscalEletronica;
 use App\Services\Tenant\Xml\Traits\HasXmlReader;
+use App\Interfaces\ServicoLeituraDocumentoFiscal;
 use App\Services\Tenant\Xml\Traits\HasXmlValidator;
+use App\Models\Tenant\ConhecimentoTransporteEletronico;
 
 class XmlNfeReaderService implements ServicoLeituraDocumentoFiscal
 {
@@ -54,17 +55,10 @@ class XmlNfeReaderService implements ServicoLeituraDocumentoFiscal
             $dest = $this->xml->NFe->infNFe->dest;
             $total = $this->xml->NFe->infNFe->total->ICMSTot;
             
-            // Verifica se há NFes referenciadas
-            $possuiReferencia = false;
-            $chaveReferenciada = null;
+            // Extrai as referências
+            $referencias = $this->extrairReferencias();
+            $possuiReferencia = !empty($referencias);
             
-            if (isset($this->xml->NFe->infNFe->ide->NFref)) {
-                $possuiReferencia = true;
-                // Verificamos se existe a tag refNFe, que contém a chave da nota referenciada
-                if (isset($this->xml->NFe->infNFe->ide->NFref->refNFe)) {
-                    $chaveReferenciada = (string) $this->xml->NFe->infNFe->ide->NFref->refNFe;
-                }
-            }
             
             // Extrai o status da nota do protNFe (se existir)
             $status = 'EMITIDA'; // Status padrão
@@ -129,9 +123,8 @@ class XmlNfeReaderService implements ServicoLeituraDocumentoFiscal
                 'natureza_operacao' => (string) $this->xml->NFe->infNFe->ide->natOp,
                 
                 // Dados de referência de NFe
-                'possui_referencia' => $possuiReferencia,
-                'chave_referenciada' => $chaveReferenciada,
-                'referenciada_por_outra' => false,
+                'possui_referencias' => $possuiReferencia,
+                'referencias' => $referencias,
                 
                 // Valores
                 'valor_base_icms' => (float) $total->vBC,
@@ -278,12 +271,9 @@ class XmlNfeReaderService implements ServicoLeituraDocumentoFiscal
                 info($chaveAcesso);
                 
                 // Remove campos que serão tratados separadamente
-                $possuiReferencia = $this->data['possui_referencia'] ?? false;
-                $chaveReferenciada = $this->data['chave_referenciada'] ?? null;
-                
-                unset($this->data['possui_referencia']);
-                unset($this->data['chave_referenciada']);
-                unset($this->data['referenciada_por_outra']);
+                $referencias = $this->data['referencias'] ?? [];
+                unset($this->data['referencias']);
+                unset($this->data['possui_referencias']);
                 
                 // Busca a nota fiscal existente
                 $nfe = NotaFiscalEletronica::where('chave_acesso', $chaveAcesso)->first();
@@ -304,10 +294,8 @@ class XmlNfeReaderService implements ServicoLeituraDocumentoFiscal
                     }
                 }
                 
-                // Se esta nota faz referência a outra, registra esta referência
-                if ($possuiReferencia && $chaveReferenciada) {
-                    $nfe->adicionarReferencia($chaveReferenciada, 'NFE');
-                }
+                // Processa as referências
+                $this->processarReferencias($nfe, $referencias);
                 
                 // Retorna a nota fiscal
                 return $nfe;
@@ -318,17 +306,7 @@ class XmlNfeReaderService implements ServicoLeituraDocumentoFiscal
         }
     }
 
-    /**
-     * Registra o histórico de alteração da nota fiscal
-     */
-    private function registrarHistoricoAlteracao(NotaFiscalEletronica $nfe, array $dadosAtualizados): void
-    {
-        $nfe->historicos()->create([
-            'data_alteracao' => now(),
-            'campos_alterados' => $dadosAtualizados,
-            'usuario_id' => auth()->id() ?? null,
-        ]);
-    }
+
 
     /**
      * Retorna os dados extraídos do XML
@@ -336,5 +314,125 @@ class XmlNfeReaderService implements ServicoLeituraDocumentoFiscal
     public function getData(): array
     {
         return $this->data;
+    }
+
+    /**
+     * Extrai as referências a outros documentos contidas na NF-e
+     * 
+     * @return array Array com as referências encontradas
+     */
+    private function extrairReferencias(): array
+    {
+        $referencias = [];
+
+        // Verifica se existe o nó de documentos referenciados
+        if (!isset($this->xml->NFe->infNFe->ide->NFref)) {
+            return $referencias;
+        }
+        
+        // Percorre todos os nós NFref para extrair as referências
+        foreach ($this->xml->NFe->infNFe->ide->NFref as $nfRef) {
+            // Referência a uma NF-e
+            if (isset($nfRef->refNFe)) {
+                $referencias[] = [
+                    'chave' => (string) $nfRef->refNFe,
+                    'tipo' => 'NFE'
+                ];
+            }
+            
+            // Referência a uma NF (modelo 1/1A)
+            elseif (isset($nfRef->refNF)) {
+                $referencias[] = [
+                    'chave' => null,
+                    'tipo' => 'NF'
+                ];
+            }
+            
+            // Referência a uma NF de produtor rural
+            elseif (isset($nfRef->refNFP)) {
+                $referencias[] = [
+                    'chave' => null,
+                    'tipo' => 'NFP',
+                    'dados_adicionais' => [
+                        'cUF' => (string) $nfRef->refNFP->cUF,
+                        'AAMM' => (string) $nfRef->refNFP->AAMM,
+                        'CNPJ' => isset($nfRef->refNFP->CNPJ) ? (string) $nfRef->refNFP->CNPJ : null,
+                        'CPF' => isset($nfRef->refNFP->CPF) ? (string) $nfRef->refNFP->CPF : null,
+                        'IE' => (string) $nfRef->refNFP->IE,
+                        'mod' => (string) $nfRef->refNFP->mod,
+                        'serie' => (string) $nfRef->refNFP->serie,
+                        'nNF' => (string) $nfRef->refNFP->nNF
+                    ]
+                ];
+            }
+            
+            // Referência a um CT-e
+            elseif (isset($nfRef->refCTe)) {
+                $referencias[] = [
+                    'chave' => (string) $nfRef->refCTe,
+                    'tipo' => 'CTE'
+                ];
+            }
+            
+            // Referência a uma ECF (Cupom Fiscal)
+            elseif (isset($nfRef->refECF)) {
+                $referencias[] = [
+                    'chave' => null,
+                    'tipo' => 'ECF',
+                    'dados_adicionais' => [
+                        'mod' => (string) $nfRef->refECF->mod,
+                        'nECF' => (string) $nfRef->refECF->nECF,
+                        'nCOO' => (string) $nfRef->refECF->nCOO
+                    ]
+                ];
+            }
+        }
+        
+        return $referencias;
+    }
+
+    /**
+     * Processa as referências a outros documentos
+     * 
+     * @param NotaFiscalEletronica $nfe A NF-e que referencia outros documentos
+     * @param array $referencias Lista de referências encontradas no XML
+     */
+    private function processarReferencias(NotaFiscalEletronica $nfe, array $referencias): void
+    {
+        if (empty($referencias)) {
+            return;
+        }
+        
+        // Limpar referências antigas desta NFe para outros documentos
+        DocumentoReferencia::where([
+            'documento_origem_type' => get_class($nfe),
+            'documento_origem_id' => $nfe->id
+        ])->delete();
+        
+        foreach ($referencias as $referencia) {
+            if (!empty($referencia['chave'])) {
+                $tipoDocumento = $referencia['tipo']; // 'NFE' ou 'CTE'
+                $chaveAcesso = $referencia['chave'];
+                
+                // Verificar se o documento referenciado existe no sistema
+                $documentoReferenciado = null;
+                
+                if ($tipoDocumento === 'NFE') {
+                    $documentoReferenciado = NotaFiscalEletronica::where('chave_acesso', $chaveAcesso)->first();
+                } elseif ($tipoDocumento === 'CTE') {
+                    $documentoReferenciado = ConhecimentoTransporteEletronico::where('chave_acesso', $chaveAcesso)->first();
+                }
+                
+                // Criar a referência usando o método estático existente
+                DocumentoReferencia::criarReferencia(
+                    $nfe,                   // documento de origem (NF-e)
+                    $chaveAcesso,           // chave de acesso do documento referenciado
+                    $tipoDocumento,         // tipo de documento (NFE ou CTE)
+                    $documentoReferenciado  // modelo do documento referenciado (se existir)
+                );
+            }
+            // Para documentos sem chave de acesso, como NF modelo 1, ECF, etc.
+            // podemos implementar uma lógica específica se necessário
+        }
     }
 } 

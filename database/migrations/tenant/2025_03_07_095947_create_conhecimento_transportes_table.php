@@ -13,19 +13,19 @@ return new class extends Migration
     {
         Schema::create('conhecimentos_transportes_eletronico', function (Blueprint $table) {
             $table->uuid('id')->primary();
-  
+
             // Identificação do CT-e
             $table->string('chave_acesso', 44)->unique();
             $table->string('numero', 20);
             $table->string('serie', 3);
             $table->datetime('data_emissao');
-            
+
             // Dados da prestação
             $table->string('modal', 2)->comment('01-Rodoviário, 02-Aéreo, 03-Aquaviário, 04-Ferroviário, 05-Dutoviário, 06-Multimodal');
             $table->string('tpServ', 1)->comment('0-Normal, 1-Subcontratação, 2-Redespacho, 3-Redespacho Intermediário, 4-Serviço Vinculado a Multimodal');
             $table->string('cfop')->nullable();
             $table->string('natureza_operacao')->nullable();
-            
+
             // Municípios e UF
             $table->string('cMunIni')->nullable()->comment('Código IBGE Município Início');
             $table->string('xMunIni')->nullable()->comment('Nome Município Início');
@@ -33,7 +33,7 @@ return new class extends Migration
             $table->string('cMunFim')->nullable()->comment('Código IBGE Município Fim');
             $table->string('xMunFim')->nullable()->comment('Nome Município Fim');
             $table->string('UFFim', 2)->nullable()->comment('UF Fim');
-            
+
             // Emitente
             $table->string('cnpj_emitente', 14);
             $table->string('nome_emitente');
@@ -45,9 +45,10 @@ return new class extends Migration
             $table->string('bairro_emitente')->nullable();
             $table->string('municipio_emitente')->nullable();
             $table->string('cod_municipio_emitente')->nullable();
+            $table->string('telefone_emitente')->nullable();
             $table->string('uf_emitente', 2)->nullable();
             $table->string('cep_emitente', 8)->nullable();
-            
+
             // Destinatário
             $table->string('cnpj_destinatario', 14);
             $table->string('nome_destinatario');
@@ -58,7 +59,8 @@ return new class extends Migration
             $table->string('complemento_destinatario')->nullable();
             $table->string('bairro_destinatario')->nullable();
             $table->string('municipio_destinatario')->nullable();
-            $table->string('cod_municipio_destinatario')->nullable();
+            $table->string('cod_municipio_destinatario')->nullable();            
+            $table->string('telefone_destinatario')->nullable();
             $table->string('uf_destinatario', 2)->nullable();
             $table->string('cep_destinatario', 8)->nullable();
 
@@ -72,7 +74,8 @@ return new class extends Migration
             $table->string('complemento_remetente')->nullable();
             $table->string('bairro_remetente')->nullable();
             $table->string('municipio_remetente')->nullable();
-            $table->string('cod_municipio_remetente')->nullable();
+            $table->string('cod_municipio_remetente')->nullable();        
+            $table->string('telefone_remetente')->nullable();
             $table->string('uf_remetente', 2)->nullable();
             $table->string('cep_remetente', 8)->nullable();
 
@@ -88,6 +91,7 @@ return new class extends Migration
             $table->string('bairro_expedidor')->nullable();
             $table->string('municipio_expedidor')->nullable();
             $table->string('cod_municipio_expedidor')->nullable();
+            $table->string('telefone_expedidor')->nullable();
             $table->string('uf_expedidor', 2)->nullable();
             $table->string('cep_expedidor', 8)->nullable();
 
@@ -104,7 +108,8 @@ return new class extends Migration
             $table->string('municipio_recebedor')->nullable();
             $table->string('cod_municipio_recebedor')->nullable();
             $table->string('uf_recebedor', 2)->nullable();
-            $table->string('cep_recebedor', 8)->nullable();
+            $table->string('cep_recebedor', 8)->nullable();          
+            
 
             // Tomador
             $table->string('tipo_tomador')->nullable()->comment('REMETENTE, EXPEDIDOR, RECEBEDOR, DESTINATARIO, OUTROS');
@@ -116,26 +121,27 @@ return new class extends Migration
             // $table->string('numero_tomador')->nullable();
             // $table->string('complemento_tomador')->nullable();
             // $table->string('bairro_tomador')->nullable();
-            $table->string('municipio_tomador')->nullable();
-            $table->string('cod_municipio_tomador')->nullable();
+            //  $table->string('municipio_tomador')->nullable();
+            //  $table->string('cod_municipio_tomador')->nullable();
+            // $table->string('email_tomador')->nullable();
+            // $table->string('telefone_tomador')->nullable();
             // $table->string('uf_tomador', 2)->nullable();
             // $table->string('cep_tomador', 8)->nullable();
-            $table->string('xPais')->nullable();
-            $table->string('cPais')->nullable();    
+
 
 
             // Valores
             $table->decimal('valor_total', 15, 2);
             $table->decimal('valor_receber', 15, 2);
             $table->decimal('valor_servico', 15, 2);
-            
+
             // Dados fiscais
             $table->string('cst_icms')->nullable()->comment('Código da Situação Tributária do ICMS');
             $table->decimal('valor_icms', 15, 2)->nullable();
             $table->decimal('base_calculo_icms', 15, 2)->nullable();
-            $table->decimal('aliquota_icms', 5, 2)->nullable();           
+            $table->decimal('aliquota_icms', 5, 2)->nullable();
             $table->decimal('peso_bruto', 15, 3)->nullable();
-            
+
             // Status e Controle
             $table->string('status_cte');
             $table->string('status_manifestacao')->default('PENDENTE');

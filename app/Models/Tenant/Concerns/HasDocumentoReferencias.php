@@ -3,6 +3,8 @@
 namespace App\Models\Tenant\Concerns;
 
 use App\Models\Tenant\DocumentoReferencia;
+use App\Models\Tenant\NotaFiscalEletronica;
+use App\Models\Tenant\ConhecimentoTransporteEletronico;
 
 /**
  * Trait para modelos que podem ter referências a outros documentos
@@ -58,10 +60,14 @@ trait HasDocumentoReferencias
      */
     public function adicionarReferencia(string $chaveAcesso, string $tipo = 'NFE'): void
     {
+        $documentoReferenciado = null;
+
         // Busca o documento referenciado se ele existir no sistema
-        $classeAtual = get_class($this);
-        $documentoReferenciado = $classeAtual::where('chave_acesso', $chaveAcesso)->first();
-        
+        if ($tipo === 'NFE') {
+            $documentoReferenciado = NotaFiscalEletronica::where('chave_acesso', $chaveAcesso)->first();
+        } elseif ($tipo === 'CTE') {
+            $documentoReferenciado = ConhecimentoTransporteEletronico::where('chave_acesso', $chaveAcesso)->first();
+        }
         // Cria a referência
         DocumentoReferencia::criarReferencia($this, $chaveAcesso, $tipo, $documentoReferenciado);
     }

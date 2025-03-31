@@ -53,8 +53,7 @@ class ConhecimentoTransporteEletronico extends Model implements DocumentoFiscal
     {
         $organization = $organization ?? getOrganizationCached();
         
-        return $query->where('cnpj_destinatario', $organization->cnpj)
-                    ->where('cnpj_emitente', '<>', $organization->cnpj);
+        return $query->where('cnpj_destinatario', $organization->cnpj);
     }
     
     /**

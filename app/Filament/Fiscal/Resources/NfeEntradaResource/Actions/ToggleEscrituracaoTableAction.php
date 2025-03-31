@@ -26,16 +26,16 @@ class ToggleEscrituracaoTableAction extends Action
                 $isEscriturada = $record->toggleEscrituracao($organization);
 
                 Notification::make()
-                    ->title($isEscriturada ? 'Nota fiscal escriturada com sucesso!' : 'Nota fiscal desescriturada com sucesso!')
-                    ->body($isEscriturada ? 'A nota fiscal foi marcada como escriturada.' : 'A nota fiscal foi marcada como não escriturada.')
+                    ->title($isEscriturada ? 'Documento escriturado com sucesso!' : 'Documento desescriturado com sucesso!')
+                    ->body($isEscriturada ? 'O documento foi marcado como escriturado.' : 'O documento foi foi marcado como não escriturado.')
                     ->success()
                     ->send();
             })
             ->requiresConfirmation()
-            ->modalHeading(fn($record) => $record->isEscrituradaParaOrganization(getOrganizationCached()) ? 'Marcar nota como não escriturada?' : 'Marcar nota como escriturada?')
+            ->modalHeading(fn($record) => $record->isEscrituradaParaOrganization(getOrganizationCached()) ? 'Marcar documento como não escriturado?' : 'Marcar documento como escriturado?')
             ->modalDescription(fn($record) => $record->isEscrituradaParaOrganization(getOrganizationCached())
-                ? 'Tem certeza que deseja marcar esta nota fiscal como não escriturada?'
-                : 'Tem certeza que deseja marcar esta nota fiscal como escriturada?')
+                ? 'Tem certeza que deseja marcar este documento como não escriturado?'
+                : 'Tem certeza que deseja marcar este documento como escriturado?')
             ->modalSubmitActionLabel('Confirmar')
             ->modalCancelActionLabel('Cancelar');
     }

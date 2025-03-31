@@ -9,7 +9,7 @@ return [
         ->collapsed(),
     NavigationGroup::make()
         ->label('CTe')
-        ->icon('heroicon-o-clipboard-document-list')
+        ->icon('heroicon-o-truck')
         ->collapsed(),
     NavigationGroup::make()
         ->label('NFSe')
