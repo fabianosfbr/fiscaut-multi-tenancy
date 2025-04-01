@@ -32,6 +32,7 @@ use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Stancl\Tenancy\Middleware\PreventAccessFromCentralDomains;
 use App\Filament\Fiscal\Pages\ClientesReport;
 use App\Filament\Fiscal\Pages\FornecedoresReport;
+use App\Filament\Fiscal\Pages\FaturamentoMensalReport;
 
 
 class FiscalPanelProvider extends PanelProvider
@@ -55,6 +56,7 @@ class FiscalPanelProvider extends PanelProvider
                 Dashboard::class,
                 ClientesReport::class,
                 FornecedoresReport::class,
+                FaturamentoMensalReport::class,
             ])
             ->navigationGroups(config('sidebar'))
             ->discoverWidgets(in: app_path('Filament/Fiscal/Widgets'), for: 'App\\Filament\\Fiscal\\Widgets')
