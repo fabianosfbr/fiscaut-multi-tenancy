@@ -30,6 +30,8 @@ use Filament\Http\Middleware\DispatchServingFilamentEvent;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Stancl\Tenancy\Middleware\PreventAccessFromCentralDomains;
+use App\Filament\Fiscal\Pages\ClientesReport;
+use App\Filament\Fiscal\Pages\FornecedoresReport;
 
 
 class FiscalPanelProvider extends PanelProvider
@@ -51,7 +53,8 @@ class FiscalPanelProvider extends PanelProvider
             ->discoverClusters(in: app_path('Filament/Clusters'), for: 'App\\Filament\\Clusters')
             ->pages([
                 Dashboard::class,
-               // TopProdutosChart::class,
+                ClientesReport::class,
+                FornecedoresReport::class,
             ])
             ->navigationGroups(config('sidebar'))
             ->discoverWidgets(in: app_path('Filament/Fiscal/Widgets'), for: 'App\\Filament\\Fiscal\\Widgets')
