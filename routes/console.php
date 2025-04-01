@@ -14,6 +14,7 @@ use App\Models\Tenant\Organization;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Artisan;
 use App\Enums\Tenant\PermissionTypeEnum;
+use Illuminate\Support\Facades\Schedule;
 use App\Services\Tenant\Sefaz\NfeService;
 use App\Models\Tenant\NotaFiscalEletronica;
 use Illuminate\Http\Client\RequestException;
@@ -21,6 +22,10 @@ use App\Services\Fiscal\SiegConnectionService;
 use App\Services\Fiscal\SefazConnectionService;
 use App\Models\Tenant\ShowChoiceOrganizationUrl;
 use App\Services\Tenant\Xml\XmlNfeReaderService;
+
+
+Schedule::command('analytics:update')->dailyAt('02:00');
+
 
 Artisan::command('play', function () {
 
