@@ -17,7 +17,9 @@ use App\Filament\Fiscal\Widgets\DocsOverview;
 use App\Filament\Fiscal\Pages\Importar\NfeCte;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\Cookie\Middleware\EncryptCookies;
+use App\Filament\Fiscal\Widgets\TopProdutosChart;
 use App\Http\Middleware\CheckUserHasOrganization;
+use App\Filament\Fiscal\Widgets\TopProdutosWidget;
 use App\Filament\Clusters\Profile\Pages\ViewProfile;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\AuthenticateSession;
@@ -45,10 +47,11 @@ class FiscalPanelProvider extends PanelProvider
             ->maxContentWidth(MaxWidth::Full)
             ->viteTheme('resources/css/filament/fiscal/theme.css')
             ->discoverResources(in: app_path('Filament/Fiscal/Resources'), for: 'App\\Filament\\Fiscal\\Resources')
-            ->discoverPages(in: app_path('Filament/Fiscal/Pages'), for: 'App\\Filament\\Fiscal\\Pages')            
+            ->discoverPages(in: app_path('Filament/Fiscal/Pages'), for: 'App\\Filament\\Fiscal\\Pages')
             ->discoverClusters(in: app_path('Filament/Clusters'), for: 'App\\Filament\\Clusters')
             ->pages([
                 Dashboard::class,
+               // TopProdutosChart::class,
             ])
             ->navigationGroups(config('sidebar'))
             ->discoverWidgets(in: app_path('Filament/Fiscal/Widgets'), for: 'App\\Filament\\Fiscal\\Widgets')
@@ -59,11 +62,11 @@ class FiscalPanelProvider extends PanelProvider
                 MenuItem::make()
                     ->label('Meu Perfil')
                     ->icon('heroicon-o-user')
-                    ->url(fn (): string => ViewProfile::getUrl()),
+                    ->url(fn(): string => ViewProfile::getUrl()),
             ])
             ->renderHook(
                 PanelsRenderHook::CONTENT_START,
-                fn (): string => Blade::render('@livewire(\'component.choice-organization\')'),
+                fn(): string => Blade::render('@livewire(\'component.choice-organization\')'),
             )
             ->middleware([
                 EncryptCookies::class,
@@ -88,7 +91,7 @@ class FiscalPanelProvider extends PanelProvider
             ])
             ->plugins([
                 \Hasnayeen\Themes\ThemesPlugin::make(),
-               // HooksHelperPlugin::make(),
+                // HooksHelperPlugin::make(),
             ])
             ->databaseNotifications();
     }
