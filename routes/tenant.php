@@ -27,8 +27,11 @@ Route::middleware([
 ])->group(function () {
     Route::get('/', function () {
 
-        return redirect('/app');
+        return redirect('/fiscal');
     });
+
+    Route::get('/fiscal/download-file/avancado-nfe/{filename}', [App\Http\Controllers\DownloadController::class, 'downloadAvancadoNfe'])
+        ->name('download.avancado.nfe');
 
     Route::get('/fiscal/download-file', function () {
 

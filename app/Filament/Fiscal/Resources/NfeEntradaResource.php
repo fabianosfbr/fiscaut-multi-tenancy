@@ -36,6 +36,7 @@ use App\Filament\Fiscal\Resources\NfeEntradaResource\Actions\DownloadXmlAction;
 use App\Filament\Fiscal\Resources\NfeEntradaResource\Actions\ClassificarNotaAction;
 use App\Filament\Fiscal\Resources\NfeEntradaResource\Actions\DownloadPdfBulkAction;
 use App\Filament\Fiscal\Resources\NfeEntradaResource\Actions\DownloadXmlBulkAction;
+use App\Filament\Fiscal\Resources\NfeEntradaResource\Actions\DownloadAvancadoBulkAction;
 use App\Filament\Fiscal\Resources\NfeEntradaResource\Actions\ManifestarDocumentoAction;
 use App\Filament\Fiscal\Resources\NfeEntradaResource\Actions\RemoveClassificacaoAction;
 use App\Filament\Fiscal\Resources\NfeEntradaResource\Actions\ToggleEscrituracaoTableAction;
@@ -478,6 +479,7 @@ class NfeEntradaResource extends Resource
                 Tables\Actions\BulkActionGroup::make([
                     DownloadXmlBulkAction::make(),
                     DownloadPdfBulkAction::make(),
+                    DownloadAvancadoBulkAction::make(),
                 ]),
             ]);
     }
