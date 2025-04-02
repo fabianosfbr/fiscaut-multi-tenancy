@@ -67,19 +67,19 @@
                                 <x-filament-tables::cell class="text-sm">
                                     {{ $item['mes'] }}
                                 </x-filament-tables::cell>
-                                <x-filament-tables::cell class="text-sm">
+                                <x-filament-tables::cell class="text-sm" style="padding-left: 15px;">
                                     {{ number_format($item['entradas'], 2, ',', '.') }}
                                 </x-filament-tables::cell>
-                                <x-filament-tables::cell class="text-sm">
+                                <x-filament-tables::cell class="text-sm" style="padding-left: 15px;">
                                     {{ number_format($item['saidas'], 2, ',', '.') }}
                                 </x-filament-tables::cell>
-                                <x-filament-tables::cell class="text-sm">
+                                <x-filament-tables::cell class="text-sm" style="padding-left: 15px;">
                                     {{ number_format($item['resultado'], 2, ',', '.') }}
                                 </x-filament-tables::cell>
-                                <x-filament-tables::cell class="text-sm">
+                                <x-filament-tables::cell class="text-sm" style="padding-left: 35px;">
                                     {{ $item['total_notas_entrada'] }}
                                 </x-filament-tables::cell>
-                                <x-filament-tables::cell class="text-sm">
+                                <x-filament-tables::cell class="text-sm" style="padding-left: 35px;">
                                     {{ $item['total_notas_saida'] }}
                                 </x-filament-tables::cell>
 
