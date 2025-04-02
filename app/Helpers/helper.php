@@ -339,3 +339,7 @@ if (!function_exists('config_organizacao')) {
         return $config->obterValor($tipo, $subtipo, $categoria, $chave, $valorPadrao);
     }
 }
+
+
+
+

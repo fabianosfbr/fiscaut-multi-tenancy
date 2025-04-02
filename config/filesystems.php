@@ -32,8 +32,8 @@ return [
 
         'tenant' => [
             'driver' => 'local',
-            'root' => storage_path('app/tenants'), // Pasta base para os arquivos dos tenants
-            'url' => env('APP_URL').'/storage/tenants',
+            'root' => storage_path('app/tenants')  . tenant('id'), // Pasta base para os arquivos dos tenants
+            'url' => env('APP_URL').'/storage/tenants/' . tenant('id'),
             'throw' => false,
         ],
 

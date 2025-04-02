@@ -5,9 +5,19 @@
                 <h2 class="text-xl font-bold tracking-tight sm:text-2xl">
                     Relatório de Faturamento Mensal
                 </h2>
-                <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">
-                    Visualize os dados de faturamento mensal dos últimos 12 meses.
-                </p>
+                <div class="flex justify-between items-center">
+                    <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">
+                        Visualize os dados de faturamento mensal dos últimos 12 meses.
+                    </p>
+                    <x-filament::button
+                        color="primary"
+                        wire:click="gerarDeclaracaoPdf"
+                        wire:loading.attr="disabled"
+                        wire:target="gerarDeclaracaoPdf"
+                    >
+                        Gerar Declaração de Faturamento
+                    </x-filament::button>
+                </div>
             </div>
         </div>
 
@@ -59,7 +69,7 @@
                                     {{ $item->total_notas }}
                                 </x-filament-tables::cell>
                                 <x-filament-tables::cell class="font-semibold text-primary-600 dark:text-primary-400">
-                                    {{ $this->formatMoney($item->valor_total) }}
+                                    {{ formatar_moeda($item->valor_total) }}
                                 </x-filament-tables::cell>
                             </x-filament-tables::row>
                             @empty
@@ -102,7 +112,7 @@
                             Valor Total Faturado
                         </div>
                         <div class="text-2xl font-bold mt-1 text-primary-600 dark:text-primary-400">
-                            {{ $this->formatMoney(array_sum(array_column($tableData, 'valor_total'))) }}
+                            {{ formatar_moeda(array_sum(array_column($tableData, 'valor_total'))) }}
                         </div>
                     </div>
                 </div>
