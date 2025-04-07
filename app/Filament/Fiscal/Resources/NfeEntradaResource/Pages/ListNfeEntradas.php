@@ -34,12 +34,12 @@ class ListNfeEntradas extends ListRecords
                 ->query(function(){
                     return NotaFiscalEletronica::query()->entradasTerceiros(getOrganizationCached());
                 }),
-            'terceiros' => Tab::make()
+            'terceiro' => Tab::make()
                 ->label('Entrada Própria')
                 ->query(function(){
                     return NotaFiscalEletronica::query()->entradasProprias(getOrganizationCached());
                 }),
-            'propria_terceiros' => Tab::make()
+            'propria_terceiro' => Tab::make()
                 ->label('Entrada Própria de Terceiros')
                 ->query(function(){
                     return NotaFiscalEletronica::query()->entradasPropriasTerceiros(getOrganizationCached());

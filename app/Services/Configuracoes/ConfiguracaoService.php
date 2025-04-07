@@ -122,16 +122,16 @@ class ConfiguracaoService
      */
     public function obterCfopsEntradaNfe(array $padrao = []): array
     {
-        // Determinar o tipo de nota (terceiros ou propria)
-        $tipo = $padrao['tipo'] ?? 'terceiros';
-        if (!in_array($tipo, ['terceiros', 'propria'])) {
-            $tipo = 'terceiros'; // Valor padrão
+        // Determinar o tipo de nota (terceiro ou propria)
+        $tipo = $padrao['tipo'] ?? 'terceiro';
+        if (!in_array($tipo, ['terceiro', 'propria'])) {
+            $tipo = 'terceiro'; // Valor padrão
         }
 
         // Adicionar sufixo para diferenciar as configurações
         $categoria = "nfe_{$tipo}";
 
-    
+ 
         $config = OrganizacaoConfiguracao::obterConfiguracao(
             $this->organizationId,
             'entrada',
@@ -142,6 +142,7 @@ class ConfiguracaoService
 
         // Garantir que o tipo está definido nos dados retornados
         $config['tipo'] = $tipo;
+
 
         return $config;
     }
@@ -158,14 +159,14 @@ class ConfiguracaoService
 
         // Garante que o tipo está definido
         if (!isset($configuracoes['tipo'])) {
-            $configuracoes['tipo'] = 'terceiros';
+            $configuracoes['tipo'] = 'terceiro';
         }
 
 
         // Verificar o tipo de nota para decidir onde salvar
         $tipo = $configuracoes['tipo'];
-        if (!in_array($tipo, ['terceiros', 'propria'])) {
-            $tipo = 'terceiros'; // Valor padrão
+        if (!in_array($tipo, ['terceiro', 'propria'])) {
+            $tipo = 'terceiro'; // Valor padrão
         }
 
         // Adicionar sufixo para diferenciar as configurações
@@ -255,10 +256,10 @@ class ConfiguracaoService
      */
     public function obterCfopsSaidaNfe(array $padrao = []): array
     {
-        // Determinar o tipo de nota (terceiros ou propria)
-        $tipo = $padrao['tipo'] ?? 'terceiros';
-        if (!in_array($tipo, ['terceiros', 'propria'])) {
-            $tipo = 'terceiros'; // Valor padrão
+        // Determinar o tipo de nota (terceiro ou propria)
+        $tipo = $padrao['tipo'] ?? 'terceiro';
+        if (!in_array($tipo, ['terceiro', 'propria'])) {
+            $tipo = 'terceiro'; // Valor padrão
         }
 
         // Adicionar sufixo para diferenciar as configurações
@@ -290,14 +291,14 @@ class ConfiguracaoService
 
         // Garante que o tipo está definido
         if (!isset($configuracoes['tipo'])) {
-            $configuracoes['tipo'] = 'terceiros';
+            $configuracoes['tipo'] = 'terceiro';
         }
 
 
         // Verificar o tipo de nota para decidir onde salvar
         $tipo = $configuracoes['tipo'];
-        if (!in_array($tipo, ['terceiros', 'propria'])) {
-            $tipo = 'terceiros'; // Valor padrão
+        if (!in_array($tipo, ['terceiro', 'propria'])) {
+            $tipo = 'terceiro'; // Valor padrão
         }
 
         // Adicionar sufixo para diferenciar as configurações
@@ -317,7 +318,7 @@ class ConfiguracaoService
      */
     public function obterCfopsEntradaCte(array $padrao = []): array
     {
-        // Determinar o tipo de nota (terceiros ou propria)
+        // Determinar o tipo de nota (terceiro ou propria)
         $tipo = $padrao['tipo'] ?? 'entrada';
         if (!in_array($tipo, ['entrada', 'saida'])) {
             $tipo = 'entrada'; // Valor padrão

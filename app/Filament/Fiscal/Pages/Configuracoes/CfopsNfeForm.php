@@ -26,7 +26,7 @@ class CfopsNfeForm extends Component implements HasForms
     public ?array $data = [];
 
     // Propriedade para rastrear o tipo de nota
-    public string $tipoNota = 'terceiros';
+    public string $tipoNota = 'terceiro';
 
     // Propriedade para rastrear o tipo de operação (entrada ou saída)
     public string $tipoOperacao = 'entrada';
@@ -133,7 +133,7 @@ class CfopsNfeForm extends Component implements HasForms
                     ])
                     ->columns(2)
                     ->itemLabel(fn(array $state): ?string =>
-                    !empty($state['tag_ids']) ? "Etiquetas: " . count($state['tag_ids']) : "Sem etiquetas")
+                    !empty($state['tag_id']) ? "Etiquetas: " . count($state['tag_id']) : "Sem etiquetas")
                     ->addActionLabel('Adicionar Etiqueta')
                     ->reorderable()
                     ->collapsible()
@@ -150,12 +150,13 @@ class CfopsNfeForm extends Component implements HasForms
             // Identifica o tipo de configuração e operação
             $tipoNota = $formData['tipo_nota'] ?? $this->tipoNota;
             $tipoOperacao = $formData['tipo_operacao'] ?? $this->tipoOperacao;
-            $tipoDescricao = $tipoNota === 'terceiros' ? 'terceiros' : 'própria';
+            $tipoDescricao = $tipoNota === 'terceiro' ? 'terceiro' : 'própria';
             $operacaoDescricao = $tipoOperacao === 'entrada' ? 'entrada' : 'saída';
 
             // Preserva o tipo nos dados salvos
             $formData['tipo'] = $tipoNota;
             $formData['operacao'] = $tipoOperacao;
+         
 
             // Remove os campos não necessários
             if (isset($formData['tipo_nota'])) {
@@ -170,18 +171,21 @@ class CfopsNfeForm extends Component implements HasForms
                 throw new \Exception('Nenhum item foi adicionado ao formulário.');
             }
 
+                 
             // Preparar os dados para salvar
             foreach ($formData['itens'] as $key => $item) {
-                // Verificar se tem tag_ids e cfops válidos
-                if (empty($item['tag_ids']) || empty($item['cfops'])) {
+                // Verificar se tem tag_id e cfops válidos
+                if (empty($item['tag_id']) || empty($item['cfops'])) {
                     throw new \Exception('Todos os itens devem ter pelo menos uma etiqueta e um CFOP.');
                 }
             }
 
+          
             // Salva as configurações
             $config = ConfiguracaoFactory::atual();
 
             if ($tipoOperacao === 'entrada') {
+            
                 $config->salvarCfopsEntradaNfe($formData);
             } else {
                 $config->salvarCfopsSaidaNfe($formData);

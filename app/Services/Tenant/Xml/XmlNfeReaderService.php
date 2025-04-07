@@ -54,12 +54,12 @@ class XmlNfeReaderService implements ServicoLeituraDocumentoFiscal
             $emit = $this->xml->NFe->infNFe->emit;
             $dest = $this->xml->NFe->infNFe->dest;
             $total = $this->xml->NFe->infNFe->total->ICMSTot;
-            
+
             // Extrai as referências
             $referencias = $this->extrairReferencias();
             $possuiReferencia = !empty($referencias);
-            
-            
+
+
             // Extrai o status da nota do protNFe (se existir)
             $status = 'EMITIDA'; // Status padrão
             if (isset($this->xml->protNFe)) {
@@ -121,11 +121,11 @@ class XmlNfeReaderService implements ServicoLeituraDocumentoFiscal
                 'ie_destinatario' => (string) ($dest->IE ?? ''),
                 'nome_destinatario' => (string) $dest->xNome,
                 'natureza_operacao' => (string) $this->xml->NFe->infNFe->ide->natOp,
-                
+
                 // Dados de referência de NFe
                 'possui_referencias' => $possuiReferencia,
                 'referencias' => $referencias,
-                
+
                 // Valores
                 'valor_base_icms' => (float) $total->vBC,
                 'valor_icms' => (float) $total->vICMS,
@@ -144,14 +144,14 @@ class XmlNfeReaderService implements ServicoLeituraDocumentoFiscal
                 'valor_seguro' => (float) $total->vSeg,
                 'valor_desconto' => (float) $total->vDesc,
                 'valor_outras_despesas' => (float) $total->vOutro,
-                'valor_imposto_importacao' => (float) ($total->vII ?? 0),                                            
+                'valor_imposto_importacao' => (float) ($total->vII ?? 0),
                 'valor_ipi' => (float) ($total->vIPI ?? 0),
                 'valor_ipi_devolucao' => (float) ($total->vIPIDevol ?? 0),
-                'valor_pis' => (float) $total->vPIS,                
+                'valor_pis' => (float) $total->vPIS,
                 'valor_cofins' => (float) $total->vCOFINS,
                 'valor_aproximado_tributos' => (float) ($total->vTotTrib ?? 0),
-            
-                
+
+
                 'status_nota' => $status,
                 'status_manifestacao' => $statusManifesto,
                 'origem' => 'IMPORTADO', // Pode ser: IMPORTADO, SEFAZ ou SIEG
@@ -181,6 +181,40 @@ class XmlNfeReaderService implements ServicoLeituraDocumentoFiscal
             // Extrai os itens
             $this->data['itens'] = [];
             foreach ($this->xml->NFe->infNFe->det as $det) {
+                // Verifica se existem campos do Simples Nacional no item
+                $vCredICMSSN = 0;
+                $pCredSN = 0;
+                $csosn = '';
+
+                // Verificar se existe o grupo ICMSSN101 a ICMSSN900
+                $icmsSNTags = [
+                    'ICMSSN101',
+                    'ICMSSN102',
+                    'ICMSSN201',
+                    'ICMSSN202',
+                    'ICMSSN500',
+                    'ICMSSN900'
+                ];
+
+                foreach ($icmsSNTags as $tag) {
+                    if (isset($det->imposto->ICMS->{$tag})) {
+                        $icmsSN = $det->imposto->ICMS->{$tag};
+                        $csosn = (string) ($icmsSN->CSOSN ?? '');
+
+                        // Nem todos os CSOSNs têm esses campos
+                        if (isset($icmsSN->pCredSN)) {
+                            $pCredSN = (float) $icmsSN->pCredSN;
+                        }
+
+                        if (isset($icmsSN->vCredICMSSN)) {
+                            $vCredICMSSN = (float) $icmsSN->vCredICMSSN;
+                        }
+
+                        break;
+                    }
+                }
+
+
                 $item = [
                     'numero_item' => (int) $det['nItem'],
                     'codigo' => (string) $det->prod->cProd,
@@ -199,21 +233,33 @@ class XmlNfeReaderService implements ServicoLeituraDocumentoFiscal
                     'valor_outras_despesas' => (float) ($det->prod->vOutro ?? 0),
 
                     // Dados do ICMS
-                    'origem' => (string) ($det->imposto->ICMS->ICMS00->orig ?? 
-                                        $det->imposto->ICMS->ICMS10->orig ?? 
-                                        $det->imposto->ICMS->ICMS20->orig ?? ''),
-                    'cst_icms' => (string) ($det->imposto->ICMS->ICMS00->CST ?? 
-                                          $det->imposto->ICMS->ICMS10->CST ?? 
-                                          $det->imposto->ICMS->ICMS20->CST ?? ''),
-                    'base_calculo_icms' => (float) ($det->imposto->ICMS->ICMS00->vBC ?? 
-                                                   $det->imposto->ICMS->ICMS10->vBC ?? 
-                                                   $det->imposto->ICMS->ICMS20->vBC ?? 0),
-                    'aliquota_icms' => (float) ($det->imposto->ICMS->ICMS00->pICMS ?? 
-                                               $det->imposto->ICMS->ICMS10->pICMS ?? 
-                                               $det->imposto->ICMS->ICMS20->pICMS ?? 0),
-                    'valor_icms' => (float) ($det->imposto->ICMS->ICMS00->vICMS ?? 
-                                           $det->imposto->ICMS->ICMS10->vICMS ?? 
-                                           $det->imposto->ICMS->ICMS20->vICMS ?? 0),
+                    'origem' => (string) ($det->imposto->ICMS->ICMS00->orig ??
+                        $det->imposto->ICMS->ICMS10->orig ??
+                        $det->imposto->ICMS->ICMS20->orig ??
+                        $det->imposto->ICMS->ICMSSN101->orig ??
+                        $det->imposto->ICMS->ICMSSN102->orig ??
+                        $det->imposto->ICMS->ICMSSN201->orig ??
+                        $det->imposto->ICMS->ICMSSN202->orig ??
+                        $det->imposto->ICMS->ICMSSN500->orig ??
+                        $det->imposto->ICMS->ICMSSN900->orig ?? ''),
+                    'cst_icms' => (string) ($det->imposto->ICMS->ICMS00->CST ??
+                        $det->imposto->ICMS->ICMS10->CST ??
+                        $det->imposto->ICMS->ICMS20->CST ?? ''),
+                    'csosn' => $csosn,
+                    'base_calculo_icms' => (float) ($det->imposto->ICMS->ICMS00->vBC ??
+                        $det->imposto->ICMS->ICMS10->vBC ??
+                        $det->imposto->ICMS->ICMS20->vBC ?? 0),
+                    'aliquota_icms' => (float) ($det->imposto->ICMS->ICMS00->pICMS ??
+                        $det->imposto->ICMS->ICMS10->pICMS ??
+                        $det->imposto->ICMS->ICMS20->pICMS ?? 0),
+                    'valor_icms' => (float) ($det->imposto->ICMS->ICMS00->vICMS ??
+                        $det->imposto->ICMS->ICMS10->vICMS ??
+                        $det->imposto->ICMS->ICMS20->vICMS ?? 0),
+
+
+                    // Campos do Simples Nacional
+                    'aliquota_credito_icmssn' => $pCredSN,
+                    'valor_credito_icmssn' => $vCredICMSSN,
 
                     // Dados do IPI
                     'cst_ipi' => (string) ($det->imposto->IPI->IPITrib->CST ?? ''),
@@ -237,7 +283,7 @@ class XmlNfeReaderService implements ServicoLeituraDocumentoFiscal
                 $this->data['itens'][] = $item;
             }
 
-         
+
 
             return $this;
         } catch (Exception $e) {
@@ -254,7 +300,7 @@ class XmlNfeReaderService implements ServicoLeituraDocumentoFiscal
         if (!in_array($origem, ['IMPORTADO', 'SEFAZ', 'SIEG'])) {
             throw new Exception('Origem inválida. Use: IMPORTADO, SEFAZ ou SIEG');
         }
-        
+
         $this->data['origem'] = $origem;
         return $this;
     }
@@ -269,15 +315,15 @@ class XmlNfeReaderService implements ServicoLeituraDocumentoFiscal
                 $chaveAcesso = $this->data['chave_acesso'];
 
                 info($chaveAcesso);
-                
+
                 // Remove campos que serão tratados separadamente
                 $referencias = $this->data['referencias'] ?? [];
                 unset($this->data['referencias']);
                 unset($this->data['possui_referencias']);
-                
+
                 // Busca a nota fiscal existente
                 $nfe = NotaFiscalEletronica::where('chave_acesso', $chaveAcesso)->first();
-                
+
                 // Atualiza ou cria a nota fiscal
                 if ($nfe) {
                     // Remove os itens para garantir que serão atualizados corretamente
@@ -286,17 +332,17 @@ class XmlNfeReaderService implements ServicoLeituraDocumentoFiscal
                 } else {
                     $nfe = NotaFiscalEletronica::create($this->data);
                 }
-                
+
                 // Cria os itens da nota
                 if (!empty($this->data['itens'])) {
                     foreach ($this->data['itens'] as $itemData) {
                         $nfe->itens()->create($itemData);
                     }
                 }
-                
+
                 // Processa as referências
                 $this->processarReferencias($nfe, $referencias);
-                
+
                 // Retorna a nota fiscal
                 return $nfe;
             });
@@ -329,7 +375,7 @@ class XmlNfeReaderService implements ServicoLeituraDocumentoFiscal
         if (!isset($this->xml->NFe->infNFe->ide->NFref)) {
             return $referencias;
         }
-        
+
         // Percorre todos os nós NFref para extrair as referências
         foreach ($this->xml->NFe->infNFe->ide->NFref as $nfRef) {
             // Referência a uma NF-e
@@ -339,7 +385,7 @@ class XmlNfeReaderService implements ServicoLeituraDocumentoFiscal
                     'tipo' => 'NFE'
                 ];
             }
-            
+
             // Referência a uma NF (modelo 1/1A)
             elseif (isset($nfRef->refNF)) {
                 $referencias[] = [
@@ -347,7 +393,7 @@ class XmlNfeReaderService implements ServicoLeituraDocumentoFiscal
                     'tipo' => 'NF'
                 ];
             }
-            
+
             // Referência a uma NF de produtor rural
             elseif (isset($nfRef->refNFP)) {
                 $referencias[] = [
@@ -365,7 +411,7 @@ class XmlNfeReaderService implements ServicoLeituraDocumentoFiscal
                     ]
                 ];
             }
-            
+
             // Referência a um CT-e
             elseif (isset($nfRef->refCTe)) {
                 $referencias[] = [
@@ -373,7 +419,7 @@ class XmlNfeReaderService implements ServicoLeituraDocumentoFiscal
                     'tipo' => 'CTE'
                 ];
             }
-            
+
             // Referência a uma ECF (Cupom Fiscal)
             elseif (isset($nfRef->refECF)) {
                 $referencias[] = [
@@ -387,7 +433,7 @@ class XmlNfeReaderService implements ServicoLeituraDocumentoFiscal
                 ];
             }
         }
-        
+
         return $referencias;
     }
 
@@ -402,27 +448,27 @@ class XmlNfeReaderService implements ServicoLeituraDocumentoFiscal
         if (empty($referencias)) {
             return;
         }
-        
+
         // Limpar referências antigas desta NFe para outros documentos
         DocumentoReferencia::where([
             'documento_origem_type' => get_class($nfe),
             'documento_origem_id' => $nfe->id
         ])->delete();
-        
+
         foreach ($referencias as $referencia) {
             if (!empty($referencia['chave'])) {
                 $tipoDocumento = $referencia['tipo']; // 'NFE' ou 'CTE'
                 $chaveAcesso = $referencia['chave'];
-                
+
                 // Verificar se o documento referenciado existe no sistema
                 $documentoReferenciado = null;
-                
+
                 if ($tipoDocumento === 'NFE') {
                     $documentoReferenciado = NotaFiscalEletronica::where('chave_acesso', $chaveAcesso)->first();
                 } elseif ($tipoDocumento === 'CTE') {
                     $documentoReferenciado = ConhecimentoTransporteEletronico::where('chave_acesso', $chaveAcesso)->first();
                 }
-                
+
                 // Criar a referência usando o método estático existente
                 DocumentoReferencia::criarReferencia(
                     $nfe,                   // documento de origem (NF-e)
@@ -435,4 +481,4 @@ class XmlNfeReaderService implements ServicoLeituraDocumentoFiscal
             // podemos implementar uma lógica específica se necessário
         }
     }
-} 
+}

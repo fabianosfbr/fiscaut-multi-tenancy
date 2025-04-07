@@ -2,6 +2,7 @@
 
 namespace App\Filament\Fiscal\Resources\NfeEntradaResource\Actions;
 
+use Illuminate\Support\Str;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\Auth;
 use Filament\Forms\Components\Checkbox;
@@ -10,6 +11,7 @@ use Filament\Notifications\Notification;
 use Illuminate\Database\Eloquent\Collection;
 use App\Jobs\Downloads\DownloadAvancadoNfeJob;
 use Webklex\PDFMerger\Facades\PDFMergerFacade as PDFMerger;
+use App\Services\Tenant\Integracoes\Dominio\Nfe\LeiautePadrao;
 
 class DownloadAvancadoBulkAction extends BulkAction
 {
@@ -37,21 +39,34 @@ class DownloadAvancadoBulkAction extends BulkAction
                     ->helperText('Organiza os arquivos conforme a estrutura de etiquetas das notas')
                     ->default(false),
 
-                Checkbox::make('gerar_arquivo_importacao')
-                    ->label('Gerar arquivo de importação')
-                    ->helperText('Gera um arquivo CSV com os dados das notas para importação')
-                    ->default(false),
-
                 Checkbox::make('adicionar_etiquetas_pdf')
                     ->label('Adicionar etiquetas no final do PDF')
                     ->helperText('Adiciona as etiquetas das notas no final de cada PDF')
+                    ->default(false),
+
+                Checkbox::make('gerar_arquivo_importacao')
+                    ->label('Gerar arquivo de importação Domínio')
+                    ->helperText('Gera um arquivo CSV com os dados para Domínio')
                     ->default(true),
             ])
             ->action(function (Collection $records, array $data) {
                 // Dispara o job para processar o download em background
 
-                DownloadAvancadoNfeJob::dispatch($records, $data, Auth::id(), tenant()->id);
+                if ($data['gerar_arquivo_importacao'] ?? false) {
 
+                    $conteudo_txt = LeiautePadrao::generate($records, getOrganizationCached());
+
+                    $txtContentAnsi = mb_convert_encoding($conteudo_txt, 'Windows-1252', 'UTF-8');
+
+                    return response()->streamDownload(function () use ($txtContentAnsi) {
+                        echo $txtContentAnsi;
+                    }, Str::random(10) . '.txt');
+
+                    
+                } else {
+
+                    DownloadAvancadoNfeJob::dispatch($records, $data, Auth::id(), tenant()->id);
+                }
 
                 Notification::make()
                     ->title('Download iniciado')

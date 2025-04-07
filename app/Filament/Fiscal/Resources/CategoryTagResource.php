@@ -42,7 +42,7 @@ class CategoryTagResource extends Resource
     {
         return $table
             ->recordUrl(null)
-            ->modifyQueryUsing(fn (Builder $query) => $query->where('organization_id', Auth::user()->last_organization_id))
+            ->modifyQueryUsing(fn(Builder $query) => $query->where('organization_id', Auth::user()->last_organization_id))
             ->reorderable('order')
             ->columns(self::getColumnTableSchema())
             ->filters([
@@ -127,6 +127,12 @@ class CategoryTagResource extends Resource
                     Toggle::make('is_devolucao')
                         ->label('Devolução')
                         ->default(false)
+                        ->required()
+                        ->columnSpan(1),
+
+                    Toggle::make('is_enable')
+                        ->label('Habilitado')
+                        ->default(true)
                         ->required()
                         ->columnSpan(1),
 

@@ -12,6 +12,8 @@ use App\Models\Tenant\ConfiguracaoGeral;
 use Filament\Notifications\Notification;
 use Filament\Forms\Components\DatePicker;
 use App\Forms\Components\SelectTagGrouped;
+use App\Models\Tenant\OrganizacaoConfiguracao;
+use App\Services\Configuracoes\ConfiguracaoFactory;
 use App\Models\Tenant\ConhecimentoTransporteEletronico;
 
 class ClassificarNotaAction extends Action
@@ -42,7 +44,9 @@ class ClassificarNotaAction extends Action
                     ->default(now())
                     ->displayFormat('d/m/Y')
                     ->visible(function () {
-                        $isShow = ConfiguracaoGeral::getValue('isNfeClassificarNaEntrada', Auth::user()->last_organization_id);
+                        $config = ConfiguracaoFactory::criar(getOrganizationCached()->id);
+                                               
+                        $isShow = $config->obterValor('geral', null, null, 'nfe_classificacao_data_entrada');
                         return $isShow;
                     }),
                 SelectTagGrouped::make('tags')

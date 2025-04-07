@@ -63,10 +63,10 @@ class ConfiguracoesGerais extends Page implements HasForms
                                                                         Tabs\Tab::make('Notas de Terceiros')
                                                                             ->schema([
                                                                                 Livewire::make(\App\Filament\Fiscal\Pages\Configuracoes\CfopsNfeForm::class, [
-                                                                                    'tipoNota' => 'terceiros',
+                                                                                    'tipoNota' => 'terceiro',
                                                                                     'tipoOperacao' => 'entrada'
                                                                                 ])
-                                                                                    ->id('cfops-terceiros'),
+                                                                                    ->id('cfops-terceiro'),
                                                                             ]),
                                                                         Tabs\Tab::make('Notas Próprias')
                                                                             ->schema([
@@ -113,7 +113,7 @@ class ConfiguracoesGerais extends Page implements HasForms
                                                                             Tabs\Tab::make('Notas de Terceiros')
                                                                                 ->schema([
                                                                                     Livewire::make(\App\Filament\Fiscal\Pages\Configuracoes\AcumuladoresNfeTerceiroForm::class)
-                                                                                        ->id('acumuladores-nfe-terceiros'),
+                                                                                        ->id('acumuladores-nfe-terceiro'),
                                                                                 ]),
                                                                             Tabs\Tab::make('Notas Próprias')
                                                                                 ->schema([

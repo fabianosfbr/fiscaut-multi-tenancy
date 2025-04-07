@@ -19,6 +19,8 @@ class Tag extends Model
 
     protected $appends = ['namecode'];
 
+    protected $with = ['category'];
+
     protected static function boot()
     {
         parent::boot();

@@ -5,9 +5,10 @@ namespace App\Filament\Fiscal\Pages\Configuracoes;
 use Livewire\Component;
 use Filament\Forms\Form;
 use Filament\Forms\Components\Grid;
-use Filament\Forms\Components\Checkbox;
+use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Contracts\HasForms;
+use Filament\Forms\Components\Checkbox;
 use Filament\Notifications\Notification;
 use Filament\Forms\Concerns\InteractsWithForms;
 use App\Services\Configuracoes\ConfiguracaoFactory;
@@ -22,7 +23,7 @@ class ConfiguracoesGeraisForm extends Component implements HasForms
     {
         $config = ConfiguracaoFactory::atual();
         $configGerais = $config->obterConfiguracoesGerais();
-        
+
         $this->form->fill($configGerais);
     }
 
@@ -45,14 +46,42 @@ class ConfiguracoesGeraisForm extends Component implements HasForms
                                 Checkbox::make('mostrar_codigo_etiqueta')
                                     ->label('Mostrar código da etiqueta ao invés do nome abreviado')
                                     ->helperText('Quando ativado, o sistema mostrará o código da etiqueta ao invés do nome abreviado'),
-                                
+
                                 Checkbox::make('icms_credito_cfop_1401')
                                     ->label('Considerar como crédito de ICMS as NF com CFOP 1.401')
+                                    ->live()
                                     ->helperText('Quando ativado, o sistema considerará crédito de ICMS para notas com CFOP 1.401'),
-                                
+
                                 Checkbox::make('cfop_verificar_uf')
                                     ->label('Verificar UF no processamento de CFOP')
                                     ->helperText('Quando ativado, verifica a UF do emitente e destinatário para processar os CFOPs corretamente'),
+                                Select::make('tags_com_credito_icms')
+                                    ->label('Notas com as etiquetas abaixo serão consideradas como credito de ICMS')
+                                    ->multiple(true)
+                                    ->options(function () {
+                                        $categoryTag = categoryWithTagForSearching(getOrganizationCached()->id);
+
+                                        $tags = [];
+                                        foreach ($categoryTag as $key => $category) {
+                                            foreach ($category->tags  as $tagKey => $tag) {
+                                                if (!$tag->is_enable) {
+                                                    continue;
+                                                }
+
+                                                $tags[$tag->id] = $tag->code . ' - ' . $tag->name;
+                                            }
+                                        }
+
+                                        return $tags;
+                                    })
+                                    ->required()
+                                    ->visible(function ($get) {
+                                        return $get('icms_credito_cfop_1401');
+                                    })
+                                    ->validationMessages([
+                                        'required' => 'É obrigatório informar as etiquetas para credito de ICMS',
+                                    ]),
+
                             ]),
                     ]),
             ])
@@ -62,22 +91,21 @@ class ConfiguracoesGeraisForm extends Component implements HasForms
     public function save(): void
     {
         try {
-           
+
             $formData = $this->form->getState();
-            
+
             // Salva as configurações
             $config = ConfiguracaoFactory::atual();
             $config->salvarConfiguracoesGerais($formData);
-            
+
             Notification::make()
                 ->success()
                 ->title("Configurações gerais salvas com sucesso")
                 ->body("As configurações gerais foram salvas com sucesso")
                 ->send();
-                
         } catch (\Exception $e) {
             \Illuminate\Support\Facades\Log::error("Erro ao salvar configurações gerais: " . $e->getMessage());
-            
+
             Notification::make()
                 ->danger()
                 ->title('Erro ao salvar')
@@ -90,6 +118,4 @@ class ConfiguracoesGeraisForm extends Component implements HasForms
     {
         return view('filament.fiscal.pages.configuracoes.configuracoes-gerais-form');
     }
-
-   
-} 
+}
