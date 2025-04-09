@@ -34,6 +34,8 @@ class ViewNfeEntrada extends ViewRecord
                 ->color('gray')
                 ->url(fn(): string => NfeEntradaResource::getUrl('index')),
 
+
+
             ToggleEscrituracaoPageAction::make()
                 ->tooltip('Marcar como'),
 
@@ -63,6 +65,7 @@ class ViewNfeEntrada extends ViewRecord
                     ->columnSpanFull()
                     ->tabs([
                         Tabs\Tab::make('Dados Gerais')
+                            ->id('dados-gerais')
                             ->schema([
 
                                 Section::make()
@@ -233,13 +236,15 @@ class ViewNfeEntrada extends ViewRecord
                                         Livewire::make(ProductTableInfolist::class, [
                                             'record' => $this->record,
                                         ])
+                                        ->key('produtos')
                                     ]),
 
 
-                                // Tabs para organizar o conteúdo
+
 
                             ]),
-                        Tabs\Tab::make('Difal')
+                        Tabs\Tab::make('Impostos Debitados')
+                            ->id('difal')
                             ->schema([
                                 Section::make('Diferencial de Alíquota (DIFAL)')
                                     ->description('Cálculo do diferencial de alíquota entre estado de origem e destino. As alíquotas são obtidas automaticamente da tabela de ICMS interestadual do sistema.')
@@ -251,7 +256,7 @@ class ViewNfeEntrada extends ViewRecord
                             ]),
                     ]),
 
-              ]);
+            ]);
     }
 
     protected function performAdvancedClassification(): void

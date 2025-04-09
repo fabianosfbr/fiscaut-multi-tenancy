@@ -45,7 +45,7 @@ class ClassificarNotaAction extends Action
                     ->displayFormat('d/m/Y')
                     ->visible(function () {
                         $config = ConfiguracaoFactory::criar(getOrganizationCached()->id);
-                                               
+
                         $isShow = $config->obterValor('geral', null, null, 'nfe_classificacao_data_entrada');
                         return $isShow;
                     }),
@@ -82,17 +82,16 @@ class ClassificarNotaAction extends Action
                     $record->saveQuietly();
                 }
 
-             $record->referenciasRecebidas()->where('documento_origem_type', ConhecimentoTransporteEletronico::class)
+                $record->referenciasRecebidas()->where('documento_origem_type', ConhecimentoTransporteEletronico::class)
                     ->get()
                     ->unique('chave_acesso_origem')
-                    ->map(function ($referencia) use ($data) {                        
-                        $cte = ConhecimentoTransporteEletronico::where('chave_acesso', $referencia->chave_acesso_origem)->first(); 
-                        if($cte)           {
+                    ->map(function ($referencia) use ($data) {
+                        $cte = ConhecimentoTransporteEletronico::where('chave_acesso', $referencia->chave_acesso_origem)->first();
+                        if ($cte) {
                             $cte->retag($data['tags']);
-                        }                        
+                        }
                         return $referencia;
                     });
-               
             })->after(function () {
                 Notification::make()
                     ->success()

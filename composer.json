@@ -9,6 +9,7 @@
     "license": "MIT",
     "require": {
         "php": "^8.2",
+        "aaronfrancis/fast-paginate": "^2.0",
         "agencetwogether/hookshelper": "^0.0.1",
         "ariaieboy/filament-currency": "^1.12",
         "barryvdh/laravel-dompdf": "^3.1",
@@ -16,7 +17,6 @@
         "davidhsianturi/blade-bootstrap-icons": "^1.5",
         "doctrine/dbal": "^4.2",
         "filament/filament": "^3.2",
-        "hammerstone/fast-paginate": "^2.0",
         "hasnayeen/themes": "^3.0",
         "laravel/framework": "^11.9",
         "laravel/horizon": "^5.28",

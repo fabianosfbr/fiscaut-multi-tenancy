@@ -15,6 +15,8 @@ use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Forms\Components\DatePicker;
 use App\Forms\Components\SelectTagGrouped;
+use App\Services\Configuracoes\ConfiguracaoFactory;
+use App\Models\Tenant\ConhecimentoTransporteEletronico;
 
 class ClassificarNotaAvancadoAction extends Action
 {
@@ -37,12 +39,12 @@ class ClassificarNotaAvancadoAction extends Action
             ->modalSubmitActionLabel('Classificar')
             ->form($this->getFormSchema())
             ->action(function (array $data, Model $record): void {
-           
+
                 $record->untag();
-               
+
 
                 //Aplica a etiqueta a nfe
-                foreach ($data['etiquetas'] as $tag_apply) {                    
+                foreach ($data['etiquetas'] as $tag_apply) {
                     $record->tag($tag_apply['tag_id'], $tag_apply['valor'], $tag_apply['produtos']);
                 }
 
@@ -52,15 +54,23 @@ class ClassificarNotaAvancadoAction extends Action
                 }
 
                 //Aplica a mesma tag ao CTe do tomador
-                // $ctes = ConhecimentoTransporteEletronico::whereJsonContains('nfe_chave', ['chave' => $record->chave])
-                //     ->where('tomador_cnpj', $record->destinatario_cnpj)->get();
+                $record->retag($data['tags']);
 
-                // if (isset($ctes)) {
-                //     foreach ($ctes as $cte) {
-                //         $cte->untag();
-                //         $cte->tag($tag, $cte->vCTe);
-                //     }
-                // }
+                if (isset($data['data_entrada'])) {
+                    $record->data_entrada = $data['data_entrada'];
+                    $record->saveQuietly();
+                }
+
+                $record->referenciasRecebidas()->where('documento_origem_type', ConhecimentoTransporteEletronico::class)
+                    ->get()
+                    ->unique('chave_acesso_origem')
+                    ->map(function ($referencia) use ($data) {
+                        $cte = ConhecimentoTransporteEletronico::where('chave_acesso', $referencia->chave_acesso_origem)->first();
+                        if ($cte) {
+                            $cte->retag($data['tags']);
+                        }
+                        return $referencia;
+                    });
             })
             ->after(function () {
                 Notification::make()
@@ -131,7 +141,12 @@ class ClassificarNotaAvancadoAction extends Action
                         ]),
                     DatePicker::make('data_entrada')
                         ->label('Data Entrada')
-                        ->validationAttribute('')
+                        ->visible(function () {
+                            $config = ConfiguracaoFactory::criar(getOrganizationCached()->id);
+
+                            $isShow = $config->obterValor('geral', null, null, 'nfe_classificacao_data_entrada');
+                            return $isShow;
+                        })
                         ->default(now())
                         ->required()
                         ->columnSpan(1),
