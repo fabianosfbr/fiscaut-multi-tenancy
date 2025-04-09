@@ -43,30 +43,11 @@ class DownloadAvancadoBulkAction extends BulkAction
                     ->label('Adicionar etiquetas no final do PDF')
                     ->helperText('Adiciona as etiquetas das notas no final de cada PDF')
                     ->default(false),
-
-                Checkbox::make('gerar_arquivo_importacao')
-                    ->label('Gerar arquivo de importação Domínio')
-                    ->helperText('Gera um arquivo CSV com os dados para Domínio')
-                    ->default(true),
             ])
             ->action(function (Collection $records, array $data) {
                 // Dispara o job para processar o download em background
 
-                if ($data['gerar_arquivo_importacao'] ?? false) {
-
-                    $conteudo_txt = LeiautePadrao::generate($records, getOrganizationCached());
-
-                    $txtContentAnsi = mb_convert_encoding($conteudo_txt, 'Windows-1252', 'UTF-8');
-
-                    return response()->streamDownload(function () use ($txtContentAnsi) {
-                        echo $txtContentAnsi;
-                    }, Str::random(10) . '.txt');
-
-                    
-                } else {
-
-                    DownloadAvancadoNfeJob::dispatch($records, $data, Auth::id(), tenant()->id);
-                }
+                DownloadAvancadoNfeJob::dispatch($records, $data, Auth::id(), tenant()->id);
 
                 Notification::make()
                     ->title('Download iniciado')
