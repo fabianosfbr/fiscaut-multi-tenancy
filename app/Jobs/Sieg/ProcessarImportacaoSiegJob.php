@@ -15,7 +15,6 @@ use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Http\Client\RequestException;
-use App\Services\Fiscal\SiegConnectionService;
 use Illuminate\Http\Client\ConnectionException;
 
 class ProcessarImportacaoSiegJob implements ShouldQueue
@@ -54,7 +53,7 @@ class ProcessarImportacaoSiegJob implements ShouldQueue
         private readonly string $tipoCnpj,
         private readonly bool $downloadEventos,
         private readonly ?string $userId = null,
-        private ?int $jobId = null
+        private readonly ?int $registroId = null
     ) {}
 
     /**
@@ -62,15 +61,12 @@ class ProcessarImportacaoSiegJob implements ShouldQueue
      */
     public function handle(): void
     {
-
         $superAdmin = User::find($this->userId);
-
         $apiKey = $superAdmin->sieg()->first()?->sieg_api_key;
 
         $skip = 0;
         $take = 50; // Máximo permitido pela API
         $temMaisPaginas = true;
-
 
         $resultadoFinal = [
             'success' => true,
@@ -81,9 +77,7 @@ class ProcessarImportacaoSiegJob implements ShouldQueue
         ];
 
         try {
-
             while ($temMaisPaginas) {
-
                 $requestData = [
                     'XmlType' => $this->tipoDocumento,
                     'Take' => $take,
@@ -101,30 +95,86 @@ class ProcessarImportacaoSiegJob implements ShouldQueue
                     );
 
                 $responseData = json_decode($response->json(), true);
-
                 $totalDocumentosPagina = count($responseData ?? []);
 
                 // Adiciona ao resultado final
                 $resultadoFinal['documentos_processados'] += $totalDocumentosPagina;
+                $resultadoFinal['total_documentos'] += $totalDocumentosPagina;
+
+                // Atualiza o registro da importação a cada lote processado
+                $this->atualizarRegistroImportacao([
+                    'documentos_processados' => $resultadoFinal['documentos_processados'],
+                    'eventos_processados' => $resultadoFinal['eventos_processados'],
+                    'total_documentos' => $resultadoFinal['total_documentos'],
+                    'status' => 'processando',
+                    'message' => "Processando lote {$skip}. {$resultadoFinal['documentos_processados']} documentos até o momento."
+                ]);
 
                 // Lógica para verificar se há mais páginas
                 // Se retornou menos que o máximo (take), provavelmente é a última página
                 $temMaisPaginas = $totalDocumentosPagina >= $take;
 
                 if (!empty($responseData)) {
-                    foreach ($responseData as $xml) {
+                    // Log para verificar se o ID do registro está sendo passado corretamente
+                    Log::info('Processando lote de documentos', [
+                        'importacao_id' => $this->registroId,
+                        'total_documentos' => count($responseData),
+                        'skip' => $skip
+                    ]);
 
-                        $this->processarResposta($xml, $this->organization, $requestData);
+                    foreach ($responseData as $xml) {
+                        $resultado = $this->processarResposta($xml, $this->organization, $requestData);
+
+                        // Atualiza contagem de eventos processados, se houver
+                        if (!empty($resultado['eventos_processados'])) {
+                            $resultadoFinal['eventos_processados'] += $resultado['eventos_processados'];
+
+                            // Atualiza o registro novamente se houver eventos processados
+                            $this->atualizarRegistroImportacao([
+                                'documentos_processados' => $resultadoFinal['documentos_processados'],
+                                'eventos_processados' => $resultadoFinal['eventos_processados'],
+                                'total_documentos' => $resultadoFinal['total_documentos'],
+                                'status' => 'processando',
+                                'message' => "Processando documentos e eventos. Lote {$skip}."
+                            ]);
+                        }
+
+                        // Adiciona erros, se houver
+                        if (!empty($resultado['erros'])) {
+                            $resultadoFinal['erros'] = array_merge($resultadoFinal['erros'], $resultado['erros']);
+                        }
                     }
                 }
 
                 $skip++;
             }
 
+            // Finaliza a importação com status "concluido"
+            $this->atualizarRegistroImportacao([
+                'documentos_processados' => $resultadoFinal['documentos_processados'],
+                'eventos_processados' => $resultadoFinal['eventos_processados'],
+                'total_documentos' => $resultadoFinal['total_documentos'],
+                'status' => 'concluido',
+                'message' => "Importação concluída com sucesso. {$resultadoFinal['documentos_processados']} documentos e {$resultadoFinal['eventos_processados']} eventos processados."
+            ]);
 
-            //code...
+
+            Log::info('Importação SIEG concluída com sucesso', [
+                'organization_id' => $this->organization->id,
+                'documentos_processados' => $resultadoFinal['documentos_processados'],
+                'eventos_processados' => $resultadoFinal['eventos_processados']
+            ]);
         } catch (ConnectionException $e) {
             Log::error('SIEG Service: Erro de conexão com a API.', ['message' => $e->getMessage()]);
+
+            // Atualiza o registro com status de erro
+            $this->atualizarRegistroImportacao([
+                'documentos_processados' => $resultadoFinal['documentos_processados'],
+                'eventos_processados' => $resultadoFinal['eventos_processados'],
+                'total_documentos' => $resultadoFinal['total_documentos'],
+                'status' => 'erro',
+                'message' => "Erro de conexão com a API SIEG: " . $e->getMessage()
+            ]);
         } catch (RequestException $e) {
             // Verifica se é um erro 404 com a mensagem específica de "Nenhum arquivo XML localizado"
             if ($e->response && $e->response->status() === 404) {
@@ -134,7 +184,6 @@ class ProcessarImportacaoSiegJob implements ShouldQueue
                     isset($responseBody[0]) &&
                     str_contains($responseBody[0], "Nenhum arquivo XML localizado")
                 ) {
-
                     // Registra como informação, não como erro
                     Log::info('SIEG Service: Nenhum arquivo XML localizado para os parâmetros informados.', [
                         'data_inicial' => $this->dataInicial,
@@ -142,14 +191,104 @@ class ProcessarImportacaoSiegJob implements ShouldQueue
                         'tipo_documento' => $this->tipoDocumento,
                         'tipo_cnpj' => $this->tipoCnpj
                     ]);
+
+                    // Atualiza o registro como concluído, mas sem documentos
+                    $this->atualizarRegistroImportacao([
+                        'documentos_processados' => 0,
+                        'eventos_processados' => 0,
+                        'total_documentos' => 0,
+                        'status' => 'concluido',
+                        'message' => "Nenhum arquivo XML localizado para os parâmetros informados."
+                    ]);
+                } else {
+                    // Outros erros 404
+                    $this->atualizarRegistroImportacao([
+                        'status' => 'erro',
+                        'message' => "Erro na API SIEG (404): " . json_encode($responseBody)
+                    ]);
                 }
+            } else {
+                // Outros erros de requisição
+                $this->atualizarRegistroImportacao([
+                    'status' => 'erro',
+                    'message' => "Erro na requisição à API SIEG: " . $e->getMessage()
+                ]);
             }
         } catch (Exception $e) {
             Log::error('SIEG Service: Erro inesperado.', [
                 'message' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
             ]);
+
+            // Atualiza o registro com status de erro
+            $this->atualizarRegistroImportacao([
+                'documentos_processados' => $resultadoFinal['documentos_processados'],
+                'eventos_processados' => $resultadoFinal['eventos_processados'],
+                'total_documentos' => $resultadoFinal['total_documentos'],
+                'status' => 'erro',
+                'message' => "Erro inesperado: " . $e->getMessage()
+            ]);
         }
+    }
+
+    /**
+     * Atualiza o registro de importação no banco de dados
+     * 
+     * @param array $dados Dados para atualização
+     * @return void
+     */
+    private function atualizarRegistroImportacao(array $dados): void
+    {
+
+
+        try {
+            // Log para verificar os parâmetros da busca
+            Log::info('Atualizando registro de importação SIEG', [
+                'id' => $this->registroId,
+                'status_atualizar' => $dados['status'] ?? 'processando',
+                'documentos_processados' => $dados['documentos_processados'] ?? 0,
+            ]);
+
+            DB::table('sieg_importacoes')
+                ->where('id', $this->registroId)
+                ->update([
+                    'documentos_processados' => $dados['documentos_processados'] ?? DB::raw('documentos_processados'),
+                    'eventos_processados' => $dados['eventos_processados'] ?? DB::raw('eventos_processados'),
+                    'total_documentos' => $dados['total_documentos'] ?? DB::raw('total_documentos'),
+                    'total_processados' => ($dados['documentos_processados'] ?? 0) + ($dados['eventos_processados'] ?? 0),
+                    'status' => $dados['status'] ?? 'processando',
+                    'mensagem' => $dados['message'] ?? null,
+                    'updated_at' => now(),
+                ]);
+
+            
+        } catch (Exception $e) {
+            Log::error('Erro ao atualizar registro de importação SIEG', [
+                'id' => $this->registroId,
+                'erro' => $e->getMessage(),
+                'arquivo' => $e->getFile(),
+                'linha' => $e->getLine(),
+                'organization_id' => $this->organization->id
+            ]);
+        }
+    }
+
+
+
+    /**
+     * Retorna os tipos de documentos disponíveis
+     * 
+     * @return array
+     */
+    private function getTiposDocumento(): array
+    {
+        return [
+            1 => 'NFe',
+            2 => 'CT-e',
+            3 => 'NFSe',
+            4 => 'NFCe',
+            5 => 'CF-e'
+        ];
     }
 
     /**
@@ -186,6 +325,13 @@ class ProcessarImportacaoSiegJob implements ShouldQueue
                 $params,
                 $isEvento
             );
+
+            // Incrementa o contador apropriado
+            if ($isEvento) {
+                $eventosProcessados++;
+            } else {
+                $documentosProcessados++;
+            }
         } catch (Exception $e) {
             $erros[] = [
                 'erro' => $e->getMessage(),
@@ -226,7 +372,9 @@ class ProcessarImportacaoSiegJob implements ShouldQueue
                 'evento',
                 'evtConfRecebto', // Evento de confirmação de recebimento
                 'evtCancNFe',     // Evento de cancelamento
-                'evtCCe'          // Evento de carta de correção
+                'evtCCe',         // Evento de carta de correção
+                'procEventoCTe',  // Evento de CTe
+                'eventoCTe'       // Evento de CTe
             ];
 
             foreach ($eventoNodes as $nodeName) {

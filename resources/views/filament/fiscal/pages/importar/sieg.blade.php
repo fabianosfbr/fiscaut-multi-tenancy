@@ -6,18 +6,18 @@
                     <x-heroicon-o-clock class="w-5 h-5 mr-3" />
                     <div>
                         <span class="font-medium">Importação em andamento.</span> 
-                        A página será atualizada automaticamente a cada 15 segundos.
+                        A página será atualizada automaticamente a cada 20 segundos.
                     </div>
                 </div>
             </div>
         </div>
         
         {{-- Script para atualizar a página automaticamente --}}
-        <!-- <script>
+        <script>
             setTimeout(function() {
                 window.location.reload();
-            }, 15000); // 15 segundos
-        </script> -->
+            }, 20000); // 20 segundos
+        </script>
     @endif
 
     <x-filament::section>

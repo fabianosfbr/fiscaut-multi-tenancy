@@ -33,6 +33,15 @@ use Illuminate\Http\Client\ConnectionException;
 
 class Sieg extends Page
 {
+
+    // Constantes para tipos de documentos
+    const XML_TYPE_NFE = 1;
+    const XML_TYPE_CTE = 2;
+    const XML_TYPE_NFSE = 3;
+    const XML_TYPE_NFCE = 4;
+    const XML_TYPE_CFE = 5;
+
+    
     protected static ?string $navigationGroup = 'Ferramentas';
 
     protected static ?string $modelLabel = 'Importar SIEG';
@@ -86,14 +95,14 @@ class Sieg extends Page
                         ->schema([
                             Select::make('tipoDocumento')
                                 ->label('Tipo de documento')
-                                ->options(SiegConnectionService::getTiposDocumento())
+                                ->options(self::getTiposDocumento())
                                 ->required()
                                 ->reactive()
                                 ->afterStateUpdated(function (Set $set, Get $get, $state) {
                                     if (filled($state)) {
                                         $this->tipoDocumento = $state;
 
-                                        if ($this->tipoDocumento == SiegConnectionService::XML_TYPE_CTE) {
+                                        if ($this->tipoDocumento == self::XML_TYPE_CTE) {
                                             $set('tipoCnpj', 'tomador');
                                             $this->tipoCnpj = 'tomador';
                                         } else {
@@ -107,7 +116,7 @@ class Sieg extends Page
                                 ->options(function (Get $get) {
                                     $tipoDoc = $get('tipoDocumento');
 
-                                    if ($tipoDoc == SiegConnectionService::XML_TYPE_CTE) {
+                                    if ($tipoDoc == self::XML_TYPE_CTE) {
                                         return [
                                             'tomador' => "CNPJ do Tomador",
                                             'remetente' => "CNPJ do Remetente",
@@ -207,84 +216,94 @@ class Sieg extends Page
             throw new Halt();
         }
 
-        ProcessarImportacaoSiegJob::dispatch(
-            getOrganizationCached(),
-            $this->dataInicial,
-            $this->dataFinal,
-            $this->tipoDocumento,
-            $this->tipoCnpj,
-            $this->downloadEventos,
-            Auth::id()
-        );
-
-
-
-
-        Notification::make()
-            ->title('Importação iniciada')
-            ->body("A importação foi iniciada em segundo plano. Você pode acompanhar o progresso na lista de importações e será notificado quando concluir.")
-            ->success()
-            ->send();
-
-
-
-
-
-        // try {
-        //     // Despacha o job para processamento em background
-        //     ProcessarImportacaoSiegJob::dispatch(
-        //         getOrganizationCached(),
-        //         $this->dataInicial,
-        //         $this->dataFinal,
-        //         $this->tipoDocumento,
-        //         $this->tipoCnpj,
-        //         $this->downloadEventos,
-        //         Auth::id()
-        //     );
-
-        //    
-
-        //     // Redireciona para a página atual para atualizar a lista de importações
-        //     $this->redirect(static::getUrl());
-        // } catch (\Exception $e) {
-        //     Notification::make()
-        //         ->title('Erro')
-        //         ->body($e->getMessage())
-        //         ->danger()
-        //         ->send();
-        // }
-    }
-
-    protected function registrarImportacao(array $resultado): void
-    {
         try {
-            $tiposDocumento = SiegConnectionService::getTiposDocumento();
+            // Registra a importação com status inicial antes de despachar o job
+            $tiposDocumento = self::getTiposDocumento();
             $tipoDesc = $tiposDocumento[$this->tipoDocumento] ?? "Tipo {$this->tipoDocumento}";
+            
+            // Verificar se já existe uma importação em processamento com os mesmos parâmetros
+            $importacaoExistente = DB::table('sieg_importacoes')
+                ->where('organization_id', getOrganizationCached()->id)
+                ->where('user_id', Auth::id())
+                ->where('data_inicial', $this->dataInicial)
+                ->where('data_final', $this->dataFinal)
+                ->where('status', 'processando')
+                ->where('tipo_documento', $tipoDesc)
+                ->where('tipo_cnpj', $this->tipoCnpj)
+                ->first();
 
-            $totalProcessados = ($resultado['documentos_processados'] ?? 0) + ($resultado['eventos_processados'] ?? 0);
-
-            DB::table('sieg_importacoes')->insert([
-                'organization_id' => Auth::user()->organization->id,
+         
+            if ($importacaoExistente) {
+                Notification::make()
+                    ->title('Importação já em andamento')
+                    ->body("Já existe uma importação em processamento para o período selecionado.")
+                    ->warning()
+                    ->send();
+                    
+                return;
+            }
+            
+            // Cria o registro inicial da importação
+            $idRegistro = DB::table('sieg_importacoes')->insertGetId([
+                'organization_id' => getOrganizationCached()->id,
                 'user_id' => Auth::id(),
                 'data_inicial' => $this->dataInicial,
                 'data_final' => $this->dataFinal,
                 'tipo_documento' => $tipoDesc,
                 'tipo_cnpj' => $this->tipoCnpj,
-                'documentos_processados' => $resultado['documentos_processados'] ?? 0,
-                'eventos_processados' => $resultado['eventos_processados'] ?? 0,
-                'total_processados' => $totalProcessados,
-                'total_documentos' => $resultado['total_documentos'] ?? 0,
-                'sucesso' => $resultado['success'] ?? false,
-                'mensagem' => $resultado['message'] ?? null,
+                'documentos_processados' => 0,
+                'eventos_processados' => 0,
+                'total_processados' => 0,
+                'total_documentos' => 0,
+                'sucesso' => false,
+                'status' => 'processando',
+                'mensagem' => 'Importação em processamento',
                 'download_eventos' => $this->downloadEventos,
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);
-        } catch (\Exception $e) {
-            // Apenas log se não conseguir registrar o histórico
-            \Illuminate\Support\Facades\Log::error('Erro ao registrar histórico de importação SIEG', [
-                'erro' => $e->getMessage()
+            
+            // Registra nos logs a criação do registro
+            Log::info('Registro de importação SIEG criado', [
+                'id' => $idRegistro,
+                'organization_id' => getOrganizationCached()->id,
+                'user_id' => Auth::id(),
+                'data_inicial' => $this->dataInicial,
+                'data_final' => $this->dataFinal,
+                'tipo_documento' => $tipoDesc,
+                'tipo_cnpj' => $this->tipoCnpj
             ]);
+
+            // Despacha o job para processamento em background
+            ProcessarImportacaoSiegJob::dispatch(
+                getOrganizationCached(),
+                $this->dataInicial,
+                $this->dataFinal,
+                $this->tipoDocumento,
+                $this->tipoCnpj,
+                $this->downloadEventos,
+                Auth::id(),
+                $idRegistro
+            );
+
+            Notification::make()
+                ->title('Importação iniciada')
+                ->body("A importação foi iniciada em segundo plano. Você pode acompanhar o progresso na lista de importações e será notificado quando concluir.")
+                ->success()
+                ->send();
+        
+        } catch (\Exception $e) {
+            Log::error('Erro ao iniciar importação SIEG', [
+                'error' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+            ]);
+            
+            Notification::make()
+                ->title('Erro')
+                ->body($e->getMessage())
+                ->danger()
+                ->send();
         }
     }
 
@@ -312,6 +331,7 @@ class Sieg extends Page
                             <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Processados</th>
                             <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Status</th>
                             <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Eventos</th>
+                            <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Mensagem</th>
                         </tr>
                     </thead>
                     <tbody class="bg-white divide-y divide-gray-200 dark:bg-gray-900 dark:divide-gray-700">';
@@ -344,6 +364,13 @@ class Sieg extends Page
                 }
                 $processados .= " / {$importacao->total_documentos}";
 
+                // Trunca a mensagem se for muito longa
+                $mensagem = $importacao->mensagem ?? '';
+                if (strlen($mensagem) > 50) {
+                    $mensagem = substr($mensagem, 0, 47) . '...';
+                }
+                $mensagem = e($mensagem); // Escape HTML
+
                 // Ícone para indicar se a importação incluiu eventos
                 $eventosIcon = $importacao->download_eventos
                     ? '<svg class="w-5 h-5 text-success-500 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>'
@@ -358,6 +385,7 @@ class Sieg extends Page
                         <td class='px-3 py-2 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100'>{$processados}</td>
                         <td class='px-3 py-2 whitespace-nowrap text-sm'>{$status}</td>
                         <td class='px-3 py-2 whitespace-nowrap text-sm' title='" . ($importacao->download_eventos ? 'Com download de eventos' : 'Sem download de eventos') . "'>{$eventosIcon}</td>
+                        <td class='px-3 py-2 text-sm text-gray-900 dark:text-gray-100'>{$mensagem}</td>
                     </tr>";
             }
 
@@ -365,7 +393,7 @@ class Sieg extends Page
             return $html;
         } catch (\Exception $e) {
             // Se houver erro, retorna mensagem
-            return '<div class="text-danger-500">Erro ao carregar histórico: ' . $e->getMessage() . '</div>';
+            return '<div class="text-danger-500">Erro ao carregar histórico: ' . e($e->getMessage()) . '</div>';
         }
     }
 
@@ -456,6 +484,21 @@ class Sieg extends Page
         return [
             'processando' => $processando,
             'historicoImportacoes' => $this->obterHistoricoImportacoes(),
+        ];
+    }
+
+
+    /**
+     * Retorna os tipos de documentos disponíveis
+     */
+    public static function getTiposDocumento(): array
+    {
+        return [
+            self::XML_TYPE_NFE => 'NFe',
+            self::XML_TYPE_CTE => 'CT-e',
+            self::XML_TYPE_NFSE => 'NFSe',
+            self::XML_TYPE_NFCE => 'NFCe',
+            self::XML_TYPE_CFE => 'CF-e'
         ];
     }
 }
