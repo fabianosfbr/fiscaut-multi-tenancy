@@ -206,10 +206,10 @@ class Sieg extends Page
             ->first();
 
 
-        if (!$superAdmin) {
+        if (!$superAdmin || !$superAdmin->sieg()->first()->sieg_api_key) {
             Notification::make()
                 ->title('Erro')
-                ->body('Nenhum super admin encontrado')
+                ->body('Nenhum super admin encontrado ou não possui chave de API SIEG.')
                 ->danger()
                 ->send();
 
@@ -263,16 +263,6 @@ class Sieg extends Page
                 'updated_at' => now(),
             ]);
             
-            // Registra nos logs a criação do registro
-            Log::info('Registro de importação SIEG criado', [
-                'id' => $idRegistro,
-                'organization_id' => getOrganizationCached()->id,
-                'user_id' => Auth::id(),
-                'data_inicial' => $this->dataInicial,
-                'data_final' => $this->dataFinal,
-                'tipo_documento' => $tipoDesc,
-                'tipo_cnpj' => $this->tipoCnpj
-            ]);
 
             // Despacha o job para processamento em background
             ProcessarImportacaoSiegJob::dispatch(

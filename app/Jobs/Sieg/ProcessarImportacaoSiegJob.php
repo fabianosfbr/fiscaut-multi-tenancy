@@ -33,7 +33,7 @@ class ProcessarImportacaoSiegJob implements ShouldQueue
      *
      * @var int
      */
-    public $timeout = 3600; // 1 hora
+    public $timeout = 1200; // 1 hora
 
     /**
      * Indica se o job deve ser marcado como falha na primeira exceção.
