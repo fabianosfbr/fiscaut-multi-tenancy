@@ -6,11 +6,11 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class EventoNfe extends Model
+class EventoCte extends Model
 {
     use HasUuids;
 
-    protected $table = 'eventos_nfe';
+    protected $table = 'eventos_cte';
 
     protected $keyType = 'string';
 
@@ -18,16 +18,14 @@ class EventoNfe extends Model
 
     protected $fillable = [
         'organization_id',
-        'chave_nfe',
+        'chave_cte',
         'tipo_evento',
         'numero_sequencial',
         'data_evento',
         'protocolo',
         'status_sefaz',
         'motivo',
-        'xml_evento',
-        'xml_resumo',
-        'tipo_documento'
+        'xml_evento'
     ];
 
     protected $casts = [
@@ -40,9 +38,9 @@ class EventoNfe extends Model
         return $this->belongsTo(Organization::class);
     }
 
-    public function notaFiscal(): BelongsTo
+    public function conhecimentoTransporte(): BelongsTo
     {
-        return $this->belongsTo(NotaFiscalEletronica::class, 'chave_nfe', 'chave');
+        return $this->belongsTo(ConhecimentoTransporteEletronico::class, 'chave_cte', 'chave_acesso');
     }
 
     /**
@@ -58,4 +56,4 @@ class EventoNfe extends Model
             default => 'Evento Desconhecido'
         };
     }
-} 
+}

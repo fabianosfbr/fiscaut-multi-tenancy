@@ -13,11 +13,11 @@
         </div>
         
         {{-- Script para atualizar a página automaticamente --}}
-        <script>
+        <!-- <script>
             setTimeout(function() {
                 window.location.reload();
             }, 15000); // 15 segundos
-        </script>
+        </script> -->
     @endif
 
     <x-filament::section>

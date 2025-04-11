@@ -314,8 +314,6 @@ class XmlNfeReaderService implements ServicoLeituraDocumentoFiscal
             return DB::transaction(function () {
                 $chaveAcesso = $this->data['chave_acesso'];
 
-                info($chaveAcesso);
-
                 // Remove campos que serão tratados separadamente
                 $referencias = $this->data['referencias'] ?? [];
                 unset($this->data['referencias']);

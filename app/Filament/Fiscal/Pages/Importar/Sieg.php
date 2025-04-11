@@ -2,6 +2,7 @@
 
 namespace App\Filament\Fiscal\Pages\Importar;
 
+use Exception;
 use Carbon\Carbon;
 use Filament\Forms\Get;
 use Filament\Forms\Set;
@@ -12,17 +13,23 @@ use Illuminate\Support\HtmlString;
 use App\Models\Tenant\Organization;
 use Filament\Forms\Components\Grid;
 use Filament\Forms\Components\Tabs;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Http;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Toggle;
+use Filament\Support\Exceptions\Halt;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Tabs\Tab;
 use Filament\Notifications\Notification;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Placeholder;
+use App\Jobs\Sieg\ProcessarDocumentoSiegJob;
+use Illuminate\Http\Client\RequestException;
 use App\Jobs\Sieg\ProcessarImportacaoSiegJob;
 use Filament\Forms\Components\Actions\Action;
 use App\Services\Fiscal\SiegConnectionService;
+use Illuminate\Http\Client\ConnectionException;
 
 class Sieg extends Page
 {
@@ -137,7 +144,7 @@ class Sieg extends Page
     {
         return [
             Action::make('importar')
-                ->label('Importar')                
+                ->label('Importar')
                 ->action('importarDocumentos')
                 ->color('primary')
         ];
@@ -181,33 +188,71 @@ class Sieg extends Page
             'tipoCnpj' => ['required', 'string'],
         ]);
 
-        try {
-            // Despacha o job para processamento em background
-            ProcessarImportacaoSiegJob::dispatch(
-                getOrganizationCached(),
-                $this->dataInicial,
-                $this->dataFinal,
-                $this->tipoDocumento,
-                $this->tipoCnpj,
-                $this->downloadEventos,
-                Auth::id()
-            );
+        $organization = getOrganizationCached();
 
-            Notification::make()
-                ->title('Importação iniciada')
-                ->body("A importação foi iniciada em segundo plano. Você pode acompanhar o progresso na lista de importações e será notificado quando concluir.")
-                ->success()
-                ->send();
-                
-            // Redireciona para a página atual para atualizar a lista de importações
-            $this->redirect(static::getUrl());
-        } catch (\Exception $e) {
+        $superAdmin = $organization->users()
+            ->whereHas('roles', function ($query) {
+                $query->where('name', 'super-admin');
+            })
+            ->first();
+
+
+        if (!$superAdmin) {
             Notification::make()
                 ->title('Erro')
-                ->body($e->getMessage())
+                ->body('Nenhum super admin encontrado')
                 ->danger()
                 ->send();
+
+            throw new Halt();
         }
+
+        ProcessarImportacaoSiegJob::dispatch(
+            getOrganizationCached(),
+            $this->dataInicial,
+            $this->dataFinal,
+            $this->tipoDocumento,
+            $this->tipoCnpj,
+            $this->downloadEventos,
+            Auth::id()
+        );
+
+
+
+
+        Notification::make()
+            ->title('Importação iniciada')
+            ->body("A importação foi iniciada em segundo plano. Você pode acompanhar o progresso na lista de importações e será notificado quando concluir.")
+            ->success()
+            ->send();
+
+
+
+
+
+        // try {
+        //     // Despacha o job para processamento em background
+        //     ProcessarImportacaoSiegJob::dispatch(
+        //         getOrganizationCached(),
+        //         $this->dataInicial,
+        //         $this->dataFinal,
+        //         $this->tipoDocumento,
+        //         $this->tipoCnpj,
+        //         $this->downloadEventos,
+        //         Auth::id()
+        //     );
+
+        //    
+
+        //     // Redireciona para a página atual para atualizar a lista de importações
+        //     $this->redirect(static::getUrl());
+        // } catch (\Exception $e) {
+        //     Notification::make()
+        //         ->title('Erro')
+        //         ->body($e->getMessage())
+        //         ->danger()
+        //         ->send();
+        // }
     }
 
     protected function registrarImportacao(array $resultado): void
@@ -215,7 +260,7 @@ class Sieg extends Page
         try {
             $tiposDocumento = SiegConnectionService::getTiposDocumento();
             $tipoDesc = $tiposDocumento[$this->tipoDocumento] ?? "Tipo {$this->tipoDocumento}";
-            
+
             $totalProcessados = ($resultado['documentos_processados'] ?? 0) + ($resultado['eventos_processados'] ?? 0);
 
             DB::table('sieg_importacoes')->insert([
@@ -275,24 +320,24 @@ class Sieg extends Page
                 $dataImportacao = Carbon::parse($importacao->created_at)->format('d/m/Y H:i');
                 $periodo = Carbon::parse($importacao->data_inicial)->format('d/m/Y') . ' a ' .
                     Carbon::parse($importacao->data_final)->format('d/m/Y');
-                
+
                 // Define a cor e texto do status
-                $statusClass = match($importacao->status ?? 'pendente') {
+                $statusClass = match ($importacao->status ?? 'pendente') {
                     'concluido' => 'text-success-600 dark:text-success-400',
                     'erro' => 'text-danger-600 dark:text-danger-400',
                     'processando' => 'text-warning-600 dark:text-warning-400',
                     default => 'text-gray-600 dark:text-gray-400'
                 };
-                
-                $statusText = match($importacao->status ?? 'pendente') {
+
+                $statusText = match ($importacao->status ?? 'pendente') {
                     'concluido' => 'Concluído',
                     'erro' => 'Erro',
                     'processando' => 'Processando...',
                     default => 'Pendente'
                 };
-                
+
                 $status = "<span class=\"{$statusClass}\">{$statusText}</span>";
-                
+
                 $processados = "{$importacao->documentos_processados}";
                 if ($importacao->eventos_processados > 0) {
                     $processados .= " + {$importacao->eventos_processados} eventos";
@@ -345,16 +390,16 @@ class Sieg extends Page
                 Placeholder::make('documentosProcessados')
                     ->label('Documentos processados')
                     ->content($documentosProcessados),
-                    
+
                 Placeholder::make('eventosProcessados')
                     ->label('Eventos processados')
                     ->content($eventosProcessados)
                     ->visible(fn() => $this->downloadEventos),
-                
+
                 Placeholder::make('totalProcessados')
                     ->label('Total processados')
                     ->content($totalProcessados),
-                
+
                 Placeholder::make('totalDocumentos')
                     ->label('Total de documentos')
                     ->content($totalDocumentos),
@@ -390,7 +435,7 @@ class Sieg extends Page
             \Filament\Actions\Action::make('atualizar')
                 ->label('Atualizar')
                 ->icon('heroicon-o-arrow-path')
-                ->action(fn () => $this->redirect(static::getUrl()))
+                ->action(fn() => $this->redirect(static::getUrl()))
                 ->color('gray'),
         ];
     }
@@ -400,7 +445,7 @@ class Sieg extends Page
      */
     protected function getViewData(): array
     {
-       
+
         // Verifica se existem importações em andamento
         $processando = DB::table('sieg_importacoes')
             ->where('organization_id', getOrganizationCached()->id)

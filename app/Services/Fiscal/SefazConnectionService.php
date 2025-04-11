@@ -3,394 +3,91 @@
 namespace App\Services\Fiscal;
 
 use Exception;
-use DOMDocument;
-use Carbon\Carbon;
-use NFePHP\Common\Certificate;
-use App\Models\Tenant\EventoNfe;
-use App\Models\Tenant\ResumoNfe;
-use NFePHP\CTe\Tools as CTeTools;
-use NFePHP\NFe\Tools as NFeTools;
-use App\Models\Tenant\ControleNsu;
 use App\Models\Tenant\Organization;
 use Illuminate\Support\Facades\Log;
-use App\Jobs\ProcessarDocumentoFiscal;
-use App\Services\Tenant\Xml\XmlNfeReaderService;
-use NFePHP\CTe\Common\Standardize as CTeStandardize;
-use NFePHP\NFe\Common\Standardize as NFeStandardize;
 
 class SefazConnectionService
 {
     private Organization $organization;
-    private NFeTools $nfeTools;
-    private CTeTools $cteTools;
+    private SefazNfeService $nfeService;
+    private SefazCteService $cteService;
     private string $ambiente;
 
     public function __construct(Organization $organization, string $ambiente = 'producao')
     {
         $this->organization = $organization;
         $this->ambiente = $ambiente;
-        $this->configurar();
+        $this->nfeService = new SefazNfeService($organization, $ambiente);
+        $this->cteService = new SefazCteService($organization, $ambiente);
     }
 
     /**
-     * Configura a conexão com a SEFAZ usando os dados da organização
-     *
-     * @throws Exception
+     * Retorna a instância do serviço para NFe
      */
-    private function configurar(): void
+    public function getNfeService(): SefazNfeService
     {
-        try {
-            if (empty($this->organization->certificado_content)) {
-                throw new Exception('Certificado digital não encontrado para a organização.');
-            }
+        return $this->nfeService;
+    }
 
-            $config = [
-                'atualizacao' => date('Y-m-d H:i:s'),
-                'tpAmb' => $this->ambiente === 'producao' ? 1 : 2,
-                'razaosocial' => $this->organization->razao_social,
-                'cnpj' => $this->organization->cnpj,
-                'ie' => $this->organization->inscricao_estadual,
-                'siglaUF' => $this->organization->estado ?? 'SP',
-                'schemes' => 'PL_009_V4',
-                'versao' => '4.00',
-                'tokenIBPT' => '',
-                'CSC' => '',
-                'CSCid' => '',
-                'aProxyConf' => [
-                    'proxyIp' => '',
-                    'proxyPort' => '',
-                    'proxyUser' => '',
-                    'proxyPass' => '',
-                ],
-            ];
-
-            $certificado = Certificate::readPfx(
-                base64_decode($this->organization->certificado_content),
-                $this->organization->senha_certificado
-            );
-
-            // Configura ferramentas para NFe
-            $this->nfeTools = new NFeTools(json_encode($config), $certificado);
-
-            // Configura ferramentas para CTe
-            $configCte = $config;
-            $configCte['schemes'] = 'PL_CTe_400';
-            $configCte['versao'] = '4.00';
-            $this->cteTools = new CTeTools(json_encode($configCte), $certificado);
-        } catch (Exception $e) {
-            throw new Exception('Erro ao configurar conexão com a SEFAZ: ' . $e->getMessage());
-        }
+    /**
+     * Retorna a instância do serviço para CTe
+     */
+    public function getCteService(): SefazCteService
+    {
+        return $this->cteService;
     }
 
     /**
      * Retorna a instância configurada do Tools para NFe
      */
-    public function getNFeTools(): NFeTools
+    public function getNFeTools()
     {
-        return $this->nfeTools;
+        return $this->nfeService->getTools();
     }
 
     /**
      * Retorna a instância configurada do Tools para CTe
      */
-    public function getCTeTools(): CTeTools
+    public function getCTeTools()
     {
-        return $this->cteTools;
+        return $this->cteService->getTools();
     }
 
     /**
      * Consulta documentos NFe destinados à organização
      *
      * @param int|null $nsuEspecifico NSU específico para consulta
-     * @param int $loopLimit Limite de loops para consulta (default 50)
      * @return array Resposta da SEFAZ
      */
     public function consultarNFeDestinadas(?int $nsuEspecifico = null): array
     {
-        try {
-            // Configura NFe para modelo 55
-            $this->nfeTools->model('55');
-            $this->nfeTools->setEnvironment(1); // Produção apenas
-
-            // Se for consulta de NSU específico, consulta apenas uma vez
-            if ($nsuEspecifico !== null) {
-                return $this->consultarNsuEspecifico($nsuEspecifico);
-            }
-
-            // Caso contrário, consulta todos os documentos a partir do último NSU
-            return $this->consultarTodosDocumentos();
-        } catch (Exception $e) {
-            return [
-                'success' => false,
-                'message' => $e->getMessage()
-            ];
-        }
-    }
-
-    /**
-     * Processa a resposta da SEFAZ e os documentos do lote
-     */
-    private function processarRespostaSefaz(string $response): array
-    {
-        $dom = new DOMDocument();
-        $dom->loadXML($response);
-        $node = $dom->getElementsByTagName('retDistDFeInt')->item(0);
-
-        // Extrai informações do retorno
-        $cStat = $node->getElementsByTagName('cStat')->item(0)->nodeValue;
-        $xMotivo = $node->getElementsByTagName('xMotivo')->item(0)->nodeValue;
-        $ultNSU = $node->getElementsByTagName('ultNSU')->item(0)->nodeValue;
-        $maxNSU = $node->getElementsByTagName('maxNSU')->item(0)->nodeValue;
-        $lote = $node->getElementsByTagName('loteDistDFeInt')->item(0);
-
-        // Verifica status de bloqueio ou sem documentos
-        if (in_array($cStat, ['137', '656'])) {
-            return [
-                'success' => false,
-                'message' => "Status $cStat: $xMotivo",
-                'ultimo_nsu' => $ultNSU,
-                'max_nsu' => $maxNSU,
-                'status' => $cStat,
-                'motivo' => $xMotivo,
-                'documentos_processados' => 0
-            ];
-        }
-
-        $documentosEnfileirados = 0;
-
-        if (!empty($lote)) {
-            $docs = $lote->getElementsByTagName('docZip');
-            foreach ($docs as $doc) {
-                $schema = $doc->getAttribute('schema');
-                $content = gzdecode(base64_decode($doc->nodeValue));
-
-                // Enfileira o processamento do documento
-                ProcessarDocumentoFiscal::dispatch(
-                    $this->organization,
-                    $content,
-                    $schema
-                )->onQueue('documentos-fiscais');
-
-                $documentosEnfileirados++;
-            }
-        }
-
-        return [
-            'success' => true,
-            'ultimo_nsu' => $ultNSU,
-            'max_nsu' => $maxNSU,
-            'status' => $cStat,
-            'motivo' => $xMotivo,
-            'xml_content' => $response,
-            'documentos_enfileirados' => $documentosEnfileirados
-        ];
-    }
-
-    /**
-     * Verifica e processa NSUs faltantes
-     */
-    public function verificarNsusFaltantes(): array
-    {
-        $ultimoControle = ControleNsu::where('organization_id', $this->organization->id)
-            ->orderBy('ultimo_nsu', 'desc')
-            ->first();
-
-        if (!$ultimoControle) {
-            return ['success' => true, 'message' => 'Nenhum NSU processado ainda.'];
-        }
-
-        $controles = ControleNsu::where('organization_id', $this->organization->id)
-            ->orderBy('ultimo_nsu')
-            ->get();
-
-        if ($controles->count() <= 1) {
-            return ['success' => true, 'message' => 'Nenhum NSU faltante encontrado.'];
-        }
-
-        $nsusFaltantes = [];
-        $anterior = null;
-
-        foreach ($controles as $controle) {
-            if ($anterior !== null) {
-                $esperado = $anterior->ultimo_nsu + 1;
-                if ($controle->ultimo_nsu > $esperado) {
-                    // Adiciona os NSUs faltantes entre o anterior e o atual
-                    for ($i = $esperado; $i < $controle->ultimo_nsu; $i++) {
-                        $nsusFaltantes[] = $i;
-                    }
-                }
-            }
-            $anterior = $controle;
-        }
-
-        dd($nsusFaltantes);
-
-        if (empty($nsusFaltantes)) {
-            return ['success' => true, 'message' => 'Nenhum NSU faltante encontrado.'];
-        }
-
-        // Processa os NSUs faltantes
-        $processados = 0;
-        foreach ($nsusFaltantes as $nsu) {
-            $resultado = $this->consultarNsuEspecifico($nsu);
-            if ($resultado['success']) {
-                $processados++;
-            }
-           
-        }
-
-        return [
-            'success' => true,
-            'message' => "Processados {$processados} NSUs faltantes.",
-            'nsus_faltantes' => $nsusFaltantes
-        ];
-    }
-
-    /**
-     * Consulta um NSU específico
-     */
-    private function consultarNsuEspecifico(int $nsu): array
-    {
-        try {
-            $response = $this->nfeTools->sefazDistDFe(0, $nsu);
-           
-            $resultado = $this->processarRespostaSefaz($response);
-        
-            $this->atualizarControleNsu($nsu, $resultado['max_nsu'], $resultado['xml_content']);
-
-            return $resultado;
-
-        } catch (Exception $e) {
-            Log::error("Erro ao consultar NSU {$nsu}: " . $e->getMessage());
-            return [
-                'success' => false,
-                'message' => $e->getMessage()
-            ];
-        }
-    }
-
-    /**
-     * Consulta todos os documentos a partir do último NSU
-     */
-    private function consultarTodosDocumentos(): array
-    {
-        try {
-            // Recupera último NSU consultado
-            $controleNsu = ControleNsu::where('organization_id', $this->organization->id)
-                ->orderBy('ultimo_nsu', 'desc')
-                ->first();
-            
-            $nsu = $controleNsu ? $controleNsu->ultimo_nsu : 0;
-            $maxNSU = $nsu;
-            $iCount = 0;
-            $loopLimit = 50;
-            $documentosProcessados = 0;
-            $errors = [];
-
-            while ($nsu <= $maxNSU) {
-                $iCount++;
-                if ($iCount >= $loopLimit) {
-                    break;
-                }
-
-                try {
-                    $response = $this->nfeTools->sefazDistDFe($nsu);
-                    $resultado = $this->processarRespostaSefaz($response);
-
-                    if (!$resultado['success']) {
-                        $errors[] = $resultado['message'];
-                        break;
-                    }
-
-                    $documentosProcessados += $resultado['documentos_processados'];
-                    $nsu = $resultado['ultimo_nsu'];
-                    $maxNSU = $resultado['max_nsu'];
-
-                    // Atualiza controle de NSU para cada resposta bem-sucedida
-                    $this->atualizarControleNsu($nsu, $maxNSU, $resultado['xml_content']);
-
-                    // Se atingiu o máximo, finaliza
-                    if ($nsu == $maxNSU) {
-                        break;
-                    }
-
-                    // Aguarda 2 segundos entre consultas
-                    sleep(2);
-                } catch (Exception $e) {
-                    $errors[] = $e->getMessage();
-                    break;
-                }
-            }
-
-            // Verifica se há NSUs faltantes
-            $resultadoVerificacao = $this->verificarNsusFaltantes();
-            if (!empty($resultadoVerificacao['nsus_faltantes'])) {
-                $errors[] = "NSUs faltantes encontrados e processados: " . implode(', ', $resultadoVerificacao['nsus_faltantes']);
-            }
-
-            return [
-                'success' => true,
-                'documentos_processados' => $documentosProcessados,
-                'ultimo_nsu' => $nsu,
-                'max_nsu' => $maxNSU,
-                'errors' => $errors
-            ];
-        } catch (Exception $e) {
-            return [
-                'success' => false,
-                'message' => $e->getMessage()
-            ];
-        }
-    }
-  
-
-   
-
-    /**
-     * Atualiza o controle de NSU 
-     */
-    private function atualizarControleNsu(int $ultNSU, int $maxNSU, string $xmlContent): void
-    {
-        ControleNsu::updateOrCreate(
-            [
-                'organization_id' => $this->organization->id,
-                'ultimo_nsu' => $ultNSU,
-            ],
-            [
-                'max_nsu' => $maxNSU,
-                'ultima_consulta' => now(),
-                'xml_content' => $xmlContent
-            ]
-        );
+        return $this->nfeService->consultarDocumentosDestinados($nsuEspecifico);
     }
 
     /**
      * Consulta documentos CTe destinados à organização
      *
-     * @param int $nsu Último NSU consultado
+     * @param int|null $nsuEspecifico NSU específico para consulta
      * @return array Resposta da SEFAZ
      */
-    public function consultarCTeDestinados(int $nsu = 0): array
+    public function consultarCTeDestinados(?int $nsuEspecifico = null): array
     {
-        try {
-            $response = $this->cteTools->sefazDistDFe(
-                $this->organization->cnpj,
-                $nsu
-            );
+        return $this->cteService->consultarDocumentosDestinados($nsuEspecifico);
+    }
 
-            // Padroniza a resposta
-            $st = new CTeStandardize();
-            $std = $st->toStd($response);
-
-            return [
-                'success' => true,
-                'response' => $response,
-                'std' => $std
-            ];
-        } catch (Exception $e) {
+    /**
+     * Verifica e processa NSUs faltantes
+     */
+    public function verificarNsusFaltantes($tipoDocumento): array
+    {
+        if ($tipoDocumento === 'NFe') {
+            return $this->nfeService->verificarNsusFaltantes();
+        } elseif ($tipoDocumento === 'CTe') {
+            return $this->cteService->verificarNsusFaltantes();
+        } else {
             return [
                 'success' => false,
-                'message' => $e->getMessage()
+                'message' => 'Tipo de documento inválido'
             ];
         }
     }
@@ -405,30 +102,7 @@ class SefazConnectionService
      */
     public function manifestarNFe(string $chave, string $manifestacao, ?string $justificativa = null): array
     {
-        try {
-            $response = $this->nfeTools->sefazManifesta(
-                chave: $chave,
-                tpEvento: $manifestacao,
-                nSeqEvento: 1, // Sequencial do evento
-                xJust: $justificativa
-            );
-
-           
-            // Padroniza a resposta
-            $st = new NFeStandardize();
-            $std = $st->toStd($response);
-
-            return [
-                'success' => true,
-                'response' => $response,
-                'std' => $std
-            ];
-        } catch (Exception $e) {
-            return [
-                'success' => false,
-                'message' => $e->getMessage()
-            ];
-        }
+        return $this->nfeService->manifestar($chave, $manifestacao, $justificativa);
     }
 
     /**
@@ -441,29 +115,7 @@ class SefazConnectionService
      */
     public function manifestarCTe(string $chave, string $manifestacao, ?string $justificativa = null): array
     {
-        try {
-            $response = $this->cteTools->sefazManifesta(
-                $chave,
-                $manifestacao,
-                1, // Sequencial do evento
-                $justificativa
-            );
-
-            // Padroniza a resposta
-            $st = new CTeStandardize();
-            $std = $st->toStd($response);
-
-            return [
-                'success' => true,
-                'response' => $response,
-                'std' => $std
-            ];
-        } catch (Exception $e) {
-            return [
-                'success' => false,
-                'message' => $e->getMessage()
-            ];
-        }
+        return $this->cteService->manifestar($chave, $manifestacao, $justificativa);
     }
 
     /**
@@ -474,24 +126,7 @@ class SefazConnectionService
      */
     public function downloadXmlNFe(string $chave): array
     {
-        try {
-            $response = $this->nfeTools->sefazDownload($chave);
-
-            // Padroniza a resposta
-            $st = new NFeStandardize();
-            $std = $st->toStd($response);
-
-            return [
-                'success' => true,
-                'response' => $response,
-                'std' => $std
-            ];
-        } catch (Exception $e) {
-            return [
-                'success' => false,
-                'message' => $e->getMessage()
-            ];
-        }
+        return $this->nfeService->downloadXml($chave);
     }
 
     /**
@@ -502,24 +137,7 @@ class SefazConnectionService
      */
     public function downloadXmlCTe(string $chave): array
     {
-        try {
-            $response = $this->cteTools->sefazDownload($chave);
-
-            // Padroniza a resposta
-            $st = new CTeStandardize();
-            $std = $st->toStd($response);
-
-            return [
-                'success' => true,
-                'response' => $response,
-                'std' => $std
-            ];
-        } catch (Exception $e) {
-            return [
-                'success' => false,
-                'message' => $e->getMessage()
-            ];
-        }
+        return $this->cteService->downloadXml($chave);
     }
 
     /**

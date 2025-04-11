@@ -44,14 +44,14 @@ Artisan::command('play', function () {
     //         'take' => 50,
     //         'Downloadevent' => false,
     //     ];
-    
+
     //     $response = Http::retry(3, 100)
     //     ->post(
     //         $apiUrl . '?api_key=' . $apiKey,
     //         $requestData
     //     )
     //     ->throw();
-    
+
     //     dd($response->status());
     //     //code...
     // } catch (RequestException $e) {
@@ -69,7 +69,20 @@ Artisan::command('play', function () {
     // dd('parei');
 
 
-    $tenant = Tenant::where('id', '330f85f4-0b59-4490-9ada-5b6343032cf5')->first();
+    $tenant = Tenant::where('id', '4f4a0af5-30c7-4122-9d5f-094ad5d53a78')->first();
+
+    $tenant->run(function ($tenant) {
+        $organization = Organization::where('cnpj', '08357463000117')->first();
+
+ 
+        $service = new SefazConnectionService($organization);
+
+        //$result = $service->verificarNsusFaltantes();
+        $result = $service->consultarNFeDestinadas(439789);
+        //$result = $service->consultarCTeDestinados(246716);
+
+        dd($result);
+    });
 
 
 
@@ -200,14 +213,9 @@ Artisan::command('play', function () {
             'emitente',
             false // com eventos
         );
-        
+
         dd($resultado);
 
-        //$service = new SefazConnectionService($organization);
-
-        // Act
-        // $result = $service->verificarNsusFaltantes();
-        // $result = $service->consultarNFeDestinadas(434393);
 
 
         $result = $service->consultarDocumentosPorPeriodo('2023-01-01', '2023-01-31');

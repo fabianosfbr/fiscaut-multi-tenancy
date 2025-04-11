@@ -6,11 +6,11 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class ControleNsu extends Model
+class ControleNsuCte extends Model
 {
     use HasUuids;
     
-    protected $table = 'controle_nsu';
+    protected $table = 'controle_nsu_cte';
 
     protected $keyType = 'string';
 
@@ -21,7 +21,6 @@ class ControleNsu extends Model
         'ultimo_nsu',
         'max_nsu',
         'ultima_consulta',
-        'tipo_documento',
         'xml_content'
     ];
 

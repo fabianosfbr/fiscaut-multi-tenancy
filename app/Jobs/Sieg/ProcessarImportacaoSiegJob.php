@@ -4,15 +4,19 @@ namespace App\Jobs\Sieg;
 
 use Exception;
 use Carbon\Carbon;
+use App\Models\Tenant\User;
 use Illuminate\Bus\Queueable;
+use Illuminate\Support\Facades\DB;
 use App\Models\Tenant\Organization;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Queue\InteractsWithQueue;
-use App\Services\Fiscal\SiegConnectionService;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Http\Client\RequestException;
+use App\Services\Fiscal\SiegConnectionService;
+use Illuminate\Http\Client\ConnectionException;
 
 class ProcessarImportacaoSiegJob implements ShouldQueue
 {
@@ -58,198 +62,183 @@ class ProcessarImportacaoSiegJob implements ShouldQueue
      */
     public function handle(): void
     {
-        $startTime = microtime(true);
-        Log::info("Iniciando processamento de importação SIEG", [
-            'organization_id' => $this->organization->id,
-            'user_id' => $this->userId,
-            'tipo_documento' => $this->tipoDocumento,
-            'data_inicial' => $this->dataInicial,
-            'data_final' => $this->dataFinal,
-            'download_eventos' => $this->downloadEventos
-        ]);
 
-        try {
-            // Inicializa o registro da importação no banco
-            $jobId = $this->iniciarRegistroImportacao();
-            $this->jobId = $jobId;
+        $superAdmin = User::find($this->userId);
 
-            // Inicializa serviço
-            $siegService = new SiegConnectionService($this->organization);
+        $apiKey = $superAdmin->sieg()->first()?->sieg_api_key;
 
-            // Define a função de callback para atualização de progresso
-            $progressCallback = function ($skip, $totalDocs = null) {
-                $this->atualizarProgresso($skip, $totalDocs);
-            };
+        $skip = 0;
+        $take = 50; // Máximo permitido pela API
+        $temMaisPaginas = true;
 
-            // Executa a busca de acordo com o tipo de documento
-            $resultado = $this->executarConsultaPorTipo($siegService, $progressCallback);
 
-            // Finaliza o registro da importação
-            $this->finalizarRegistroImportacao($resultado);
-
-            $timeElapsed = round(microtime(true) - $startTime, 2);
-            Log::info("Importação SIEG concluída com sucesso", [
-                'organization_id' => $this->organization->id,
-                'job_id' => $this->jobId,
-                'documentos_processados' => $resultado['documentos_processados'] ?? 0,
-                'eventos_processados' => $resultado['eventos_processados'] ?? 0,
-                'tempo_execucao' => $timeElapsed . 's'
-            ]);
-        } catch (Exception $e) {
-            Log::error("Erro no processamento da importação SIEG", [
-                'organization_id' => $this->organization->id,
-                'job_id' => $this->jobId,
-                'erro' => $e->getMessage(),
-                'linha' => $e->getLine(),
-                'arquivo' => $e->getFile()
-            ]);
-
-            // Em caso de erro, finaliza o registro com status de falha
-            if ($this->jobId) {
-                $this->finalizarRegistroImportacao([
-                    'success' => false,
-                    'message' => "Erro: " . $e->getMessage(),
-                    'documentos_processados' => 0,
-                    'eventos_processados' => 0,
-                    'total_documentos' => 0
-                ]);
-            }
-
-            throw $e; // Relança a exceção para que o job seja marcado como falha
-        }
-    }
-
-    /**
-     * Executa a consulta de acordo com o tipo de documento.
-     */
-    private function executarConsultaPorTipo(
-        SiegConnectionService $siegService, 
-        callable $progressCallback
-    ): array {
-        return match ($this->tipoDocumento) {
-            SiegConnectionService::XML_TYPE_NFE => $siegService->baixarTodosXmlsNFePorPeriodo(
-                $this->dataInicial,
-                $this->dataFinal,
-                $this->tipoCnpj,
-                $this->downloadEventos,
-                $progressCallback
-            ),
-            SiegConnectionService::XML_TYPE_CTE => $siegService->baixarTodosCTePorPeriodo(
-                $this->dataInicial,
-                $this->dataFinal,
-                $this->tipoCnpj,
-                $this->downloadEventos,
-                $progressCallback
-            ),
-            default => $siegService->baixarTodosDocumentosPorTipo(
-                $this->dataInicial,
-                $this->dataFinal,
-                $this->tipoDocumento,
-                $this->tipoCnpj,
-                $this->downloadEventos,
-                $progressCallback
-            ),
-        };
-    }
-
-    /**
-     * Inicia o registro da importação no banco.
-     */
-    private function iniciarRegistroImportacao(): int
-    {
-        $tiposDocumento = SiegConnectionService::getTiposDocumento();
-        $tipoDesc = $tiposDocumento[$this->tipoDocumento] ?? "Tipo {$this->tipoDocumento}";
-        
-        return DB::table('sieg_importacoes')->insertGetId([
-            'organization_id' => $this->organization->id,
-            'user_id' => $this->userId,
-            'data_inicial' => $this->dataInicial,
-            'data_final' => $this->dataFinal,
-            'tipo_documento' => $tipoDesc,
-            'tipo_cnpj' => $this->tipoCnpj,
+        $resultadoFinal = [
+            'success' => true,
             'documentos_processados' => 0,
             'eventos_processados' => 0,
-            'total_processados' => 0,
             'total_documentos' => 0,
-            'sucesso' => false,
-            'mensagem' => 'Importação em andamento...',
-            'download_eventos' => $this->downloadEventos,
-            'status' => 'processando',
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
+            'erros' => []
+        ];
+
+        try {
+
+            while ($temMaisPaginas) {
+
+                $requestData = [
+                    'XmlType' => $this->tipoDocumento,
+                    'Take' => $take,
+                    'Skip' => $skip,
+                    'DataEmissaoInicio' => $this->dataInicial,
+                    'DataEmissaoFim' => $this->dataFinal,
+                    'CnpjEmit' => $this->organization->cnpj,
+                    'Downloadevent' => $this->downloadEventos,
+                ];
+
+                $response = Http::retry(3, 100)->withHeader('Accept', 'application/json')
+                    ->post(
+                        'https://api.sieg.com/BaixarXmls' . '?api_key=' . $apiKey,
+                        $requestData
+                    );
+
+                $responseData = json_decode($response->json(), true);
+
+                $totalDocumentosPagina = count($responseData ?? []);
+
+                // Adiciona ao resultado final
+                $resultadoFinal['documentos_processados'] += $totalDocumentosPagina;
+
+                // Lógica para verificar se há mais páginas
+                // Se retornou menos que o máximo (take), provavelmente é a última página
+                $temMaisPaginas = $totalDocumentosPagina >= $take;
+
+                if (!empty($responseData)) {
+                    foreach ($responseData as $xml) {
+
+                        $this->processarResposta($xml, $this->organization, $requestData);
+                    }
+                }
+
+                $skip++;
+            }
+
+
+            //code...
+        } catch (ConnectionException $e) {
+            Log::error('SIEG Service: Erro de conexão com a API.', ['message' => $e->getMessage()]);
+        } catch (RequestException $e) {
+            // Verifica se é um erro 404 com a mensagem específica de "Nenhum arquivo XML localizado"
+            if ($e->response && $e->response->status() === 404) {
+                $responseBody = $e->response->json();
+                if (
+                    is_array($responseBody) &&
+                    isset($responseBody[0]) &&
+                    str_contains($responseBody[0], "Nenhum arquivo XML localizado")
+                ) {
+
+                    // Registra como informação, não como erro
+                    Log::info('SIEG Service: Nenhum arquivo XML localizado para os parâmetros informados.', [
+                        'data_inicial' => $this->dataInicial,
+                        'data_final' => $this->dataFinal,
+                        'tipo_documento' => $this->tipoDocumento,
+                        'tipo_cnpj' => $this->tipoCnpj
+                    ]);
+                }
+            }
+        } catch (Exception $e) {
+            Log::error('SIEG Service: Erro inesperado.', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+        }
     }
 
     /**
-     * Atualiza o progresso da importação.
+     * Processa a resposta da API
+     *
+     * @param string $value Resposta da API
+     * @param array $params Parâmetros da requisição
+     * @param Organization $organization
+     * @return array
      */
-    private function atualizarProgresso(int $skip, ?int $totalDocs = null, bool $finished = false): void
+    private function processarResposta(string $value, Organization $organization, array $params = []): array
     {
-        if (!$this->jobId) {
-            return;
+        $documentosProcessados = 0;
+        $eventosProcessados = 0;
+        $erros = [];
+        $downloadEvents = $params['Downloadevent'] ?? false;
+
+        try {
+            $decodedData = base64_decode($value);
+            $xml = iconv('ASCII', 'UTF-8//IGNORE', $decodedData);
+
+            if (empty(trim($xml))) {
+                $erros[] = ['erro' => 'XML vazio após decodificação'];
+                return  $erros;
+            }
+
+            // Verifica se o XML é um evento ou documento principal
+            $isEvento = $this->isXmlEvento($xml);
+
+            // Despacha um job para processar esse documento em background
+            ProcessarDocumentoSiegJob::dispatch(
+                $organization,
+                $xml,
+                $params,
+                $isEvento
+            );
+        } catch (Exception $e) {
+            $erros[] = [
+                'erro' => $e->getMessage(),
+                'xml_hash' => isset($xml) ? md5($xml) : 'não disponível'
+            ];
+            Log::error('Erro ao processar conteúdo da Sieg', [
+                'erro' => $e->getMessage(),
+                'is_evento' => $isEvento ?? 'não identificado'
+            ]);
         }
 
-        // Status a ser definido
-        $status = $finished ? 'concluido' : 'processando';
-        
-        // Mensagem a ser exibida
-        $progressoMsg = $finished 
-            ? "Importação concluída com sucesso. Documentos encontrados: {$totalDocs}"
-            : "Processando página {$skip}. " . ($totalDocs ? "Total de documentos: {$totalDocs}" : "");
-
-        // Atualiza a tabela de importações
-        DB::table('sieg_importacoes')
-            ->where('id', $this->jobId)
-            ->update([
-                'mensagem' => $progressoMsg,
-                'status' => $status,
-                'sucesso' => true,
-                'total_documentos' => $totalDocs ?? 0,
-                'updated_at' => now(),
-            ]);
-        
-        Log::info("Atualização de progresso da importação SIEG", [
-            'job_id' => $this->jobId,
-            'skip' => $skip,
-            'status' => $status,
-            'finished' => $finished,
-            'total_docs' => $totalDocs
-        ]);
+        return [
+            'success' => true,
+            'documentos_processados' => $documentosProcessados,
+            'eventos_processados' => $eventosProcessados,
+            'total_processados' => $documentosProcessados + $eventosProcessados,
+            'download_eventos' => $downloadEvents,
+            'erros' => $erros,
+        ];
     }
 
     /**
-     * Finaliza o registro da importação.
+     * Verifica se o XML é um evento
+     * 
+     * @param string $xml Conteúdo XML
+     * @return bool
      */
-    private function finalizarRegistroImportacao(array $resultado): void
+    private function isXmlEvento(string $xml): bool
     {
-        if (!$this->jobId) {
-            return;
-        }
+        try {
+            // Carrega o XML como um objeto DOMDocument
+            $dom = new \DOMDocument();
+            $dom->loadXML($xml);
 
-        $totalProcessados = ($resultado['documentos_processados'] ?? 0) + ($resultado['eventos_processados'] ?? 0);
-        
-        // Define o status como concluído mesmo se não houver documentos, desde que a consulta tenha sido bem-sucedida
-        $status = $resultado['success'] ?? false ? 'concluido' : 'erro';
-        
-        // Define uma mensagem apropriada para o caso de sucesso sem documentos
-        $mensagem = $resultado['message'] ?? null;
-        if ($resultado['success'] && $totalProcessados == 0) {
-            $mensagem = 'Consulta concluída com sucesso. Nenhum documento encontrado para os parâmetros informados.';
-        } elseif ($resultado['success']) {
-            $mensagem = "Importação concluída com sucesso. Foram processados {$totalProcessados} documentos.";
-        }
+            // Verifica nodes que identificam eventos
+            $eventoNodes = [
+                'procEventoNFe',
+                'evento',
+                'evtConfRecebto', // Evento de confirmação de recebimento
+                'evtCancNFe',     // Evento de cancelamento
+                'evtCCe'          // Evento de carta de correção
+            ];
 
-        DB::table('sieg_importacoes')
-            ->where('id', $this->jobId)
-            ->update([
-                'documentos_processados' => $resultado['documentos_processados'] ?? 0,
-                'eventos_processados' => $resultado['eventos_processados'] ?? 0,
-                'total_processados' => $totalProcessados,
-                'total_documentos' => $resultado['total_documentos'] ?? 0,
-                'sucesso' => $resultado['success'] ?? false,
-                'mensagem' => $mensagem,
-                'status' => $status,
-                'updated_at' => now(),
-            ]);
+            foreach ($eventoNodes as $nodeName) {
+                if ($dom->getElementsByTagName($nodeName)->length > 0) {
+                    return true;
+                }
+            }
+
+            return false;
+        } catch (Exception $e) {
+            Log::warning('Erro ao verificar se o XML é um evento: ' . $e->getMessage());
+            return false; // Em caso de erro, assume que não é um evento
+        }
     }
-} 
+}

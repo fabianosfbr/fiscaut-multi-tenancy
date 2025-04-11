@@ -344,6 +344,7 @@ class SiegConnectionService
                     $requestData
                 )->throw();
            
+            
 
             // Para outros tipos de falha na requisição
             if ($response->failed()) {
