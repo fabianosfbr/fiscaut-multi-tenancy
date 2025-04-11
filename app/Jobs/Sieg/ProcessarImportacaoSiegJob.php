@@ -115,13 +115,7 @@ class ProcessarImportacaoSiegJob implements ShouldQueue
                 $temMaisPaginas = $totalDocumentosPagina >= $take;
 
                 if (!empty($responseData)) {
-                    // Log para verificar se o ID do registro está sendo passado corretamente
-                    Log::info('Processando lote de documentos', [
-                        'importacao_id' => $this->registroId,
-                        'total_documentos' => count($responseData),
-                        'skip' => $skip
-                    ]);
-
+     
                     foreach ($responseData as $xml) {
                         $resultado = $this->processarResposta($xml, $this->organization, $requestData);
 
@@ -158,12 +152,6 @@ class ProcessarImportacaoSiegJob implements ShouldQueue
                 'message' => "Importação concluída com sucesso. {$resultadoFinal['documentos_processados']} documentos e {$resultadoFinal['eventos_processados']} eventos processados."
             ]);
 
-
-            Log::info('Importação SIEG concluída com sucesso', [
-                'organization_id' => $this->organization->id,
-                'documentos_processados' => $resultadoFinal['documentos_processados'],
-                'eventos_processados' => $resultadoFinal['eventos_processados']
-            ]);
         } catch (ConnectionException $e) {
             Log::error('SIEG Service: Erro de conexão com a API.', ['message' => $e->getMessage()]);
 
@@ -239,16 +227,8 @@ class ProcessarImportacaoSiegJob implements ShouldQueue
      */
     private function atualizarRegistroImportacao(array $dados): void
     {
-
-
         try {
-            // Log para verificar os parâmetros da busca
-            Log::info('Atualizando registro de importação SIEG', [
-                'id' => $this->registroId,
-                'status_atualizar' => $dados['status'] ?? 'processando',
-                'documentos_processados' => $dados['documentos_processados'] ?? 0,
-            ]);
-
+   
             DB::table('sieg_importacoes')
                 ->where('id', $this->registroId)
                 ->update([
@@ -335,7 +315,7 @@ class ProcessarImportacaoSiegJob implements ShouldQueue
         } catch (Exception $e) {
             $erros[] = [
                 'erro' => $e->getMessage(),
-                'xml_hash' => isset($xml) ? md5($xml) : 'não disponível'
+                'xml' => $xml
             ];
             Log::error('Erro ao processar conteúdo da Sieg', [
                 'erro' => $e->getMessage(),

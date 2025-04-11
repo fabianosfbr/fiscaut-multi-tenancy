@@ -99,7 +99,7 @@ class ProcessarDocumentoSiegJob implements ShouldQueue
                 'erro' => $e->getMessage(),
                 'is_evento' => $this->isEvento,
                 'tipo_documento' => $this->tipoDocumento,
-                'xml_hash' => md5($this->xmlContent)
+                'xml' => $this->xmlContent
             ]);
 
             throw $e; // Relança a exceção para que o job seja retentado
@@ -140,7 +140,7 @@ class ProcessarDocumentoSiegJob implements ShouldQueue
                 $motivo = $retEvento->infEvento->xEvento ?? $retEvento->infEvento->xMotivo ?? null;                
             } else {
                 Log::warning("Formato de evento NFe não reconhecido", [
-                    'xml_hash' => md5($this->xmlContent),
+                    'xml' => $this->xmlContent,
                     'params' => $this->params
                 ]);
                 return;
@@ -228,8 +228,8 @@ class ProcessarDocumentoSiegJob implements ShouldQueue
                 
                 if (!$evento || !$retEvento) {
                     Log::warning("Formato de evento CTe não reconhecido", [
-                        'xml_hash' => md5($this->xmlContent),
-                        'params' => $this->params
+                        'params' => $this->params,
+                        'xml' => $this->xmlContent,
                     ]);
                     return;
                 }
@@ -243,7 +243,7 @@ class ProcessarDocumentoSiegJob implements ShouldQueue
                 $motivo = $retEvento->infEvento->xEvento ?? $retEvento->infEvento->xMotivo ?? null;
             } else {
                 Log::warning("Formato de evento CTe não reconhecido", [
-                    'xml_hash' => md5($this->xmlContent),
+                    'xml' => $this->xmlContent,
                     'params' => $this->params
                 ]);
                 return;
