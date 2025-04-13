@@ -31,6 +31,7 @@ class ContabilPanelProvider extends PanelProvider
         return $panel
             ->id('contabil')
             ->path('contabil')
+            ->breadcrumbs(false)
             ->colors([
                 'primary' => Color::Amber,
             ])

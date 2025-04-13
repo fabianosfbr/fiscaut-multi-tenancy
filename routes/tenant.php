@@ -5,6 +5,8 @@ declare(strict_types=1);
 use App\Models\Tenant\FileUpload;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
+use App\Http\Controllers\DownloadController;
+use App\Http\Controllers\PlanoDeContaSelectController;
 use Stancl\Tenancy\Middleware\InitializeTenancyByDomain;
 use Stancl\Tenancy\Middleware\PreventAccessFromCentralDomains;
 
@@ -25,12 +27,16 @@ Route::middleware([
     InitializeTenancyByDomain::class,
     PreventAccessFromCentralDomains::class,
 ])->group(function () {
+
+    Route::get('/fiscal/remote-select/search', [PlanoDeContaSelectController::class, 'search'])
+        ->name('fiscal.remote-select.search');
+
     Route::get('/', function () {
 
         return redirect('/fiscal');
     });
 
-    Route::get('/fiscal/download-file/avancado-nfe/{filename}', [App\Http\Controllers\DownloadController::class, 'downloadAvancadoNfe'])
+    Route::get('/fiscal/download-file/avancado-nfe/{filename}', [DownloadController::class, 'downloadAvancadoNfe'])
         ->name('download.avancado.nfe');
 
     Route::get('/fiscal/download-file', function () {

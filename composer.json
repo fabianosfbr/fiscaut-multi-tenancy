@@ -21,6 +21,7 @@
         "laravel/framework": "^11.9",
         "laravel/horizon": "^5.28",
         "laravel/tinker": "^2.9",
+        "maatwebsite/excel": "^3.1",
         "malzariey/filament-daterangepicker-filter": "^3.2",
         "nfephp-org/sped-cte": "dev-master",
         "nfephp-org/sped-da": "^1.1",
