@@ -26,33 +26,26 @@ use Filament\Http\Middleware\DisableBladeIconComponents;
 use Stancl\Tenancy\Middleware\InitializeTenancyByDomain;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
+use App\Providers\Filament\Traits\SharedPanelConfiguration;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Stancl\Tenancy\Middleware\PreventAccessFromCentralDomains;
 use Filament\Pages\Auth\EmailVerification\EmailVerificationPrompt;
 
 class ClientPanelProvider extends PanelProvider
 {
+    use SharedPanelConfiguration;
+    
     public function panel(Panel $panel): Panel
     {
-        return $panel
+        
+        $panel
             ->id('client')
-            ->path('app')
-            ->brandLogo(asset('images/application/logo-lading-white.png'))
-            ->darkModeBrandLogo(asset('images/application/logo-lading-black.png'))
-            ->brandLogoHeight('38px')
-            ->colors([
-                'primary' => Color::Blue,
-            ])
+            ->path('app');
 
-            ->login(LoginPage::class)
-            ->registration(RegisterPage::class)
-            ->emailVerification(EmailVerificationPrompt::class)
-            ->passwordReset(
-                resetAction: PasswordReset::class
-            )
-
-            ->viteTheme('resources/css/filament/client/theme.css')
-            ->discoverResources(in: app_path('Filament/Client/Resources'), for: 'App\\Filament\\Client\\Resources')            
+            $panel
+             ->viteTheme('resources/css/filament/client/theme.css')
+            ->discoverResources(in: app_path('Filament/Client/Resources'), for: 'App\\Filament\\Client\\Resources')
+            ->discoverClusters(in: app_path('Filament/Clusters'), for: 'App\\Filament\\Clusters')
             ->pages([
                 Pages\Dashboard::class,
             ])
@@ -60,37 +53,21 @@ class ClientPanelProvider extends PanelProvider
             ->widgets([
                 Widgets\AccountWidget::class,
                 Widgets\FilamentInfoWidget::class,
-            ])
-           
-            ->renderHook(
-                PanelsRenderHook::CONTENT_START,
-                fn (): string => Blade::render('@livewire(\'component.choice-organization\')'),
-            )
-            ->middleware([
-                EncryptCookies::class,
-                AddQueuedCookiesToResponse::class,
-                StartSession::class,
-                AuthenticateSession::class,
-                ShareErrorsFromSession::class,
-                VerifyCsrfToken::class,
-                SubstituteBindings::class,
-                DisableBladeIconComponents::class,
-                DispatchServingFilamentEvent::class,
-            ])
-            ->middleware([
-                'web',
-                InitializeTenancyByDomain::class,
-                PreventAccessFromCentralDomains::class,
-                CheckUserHasOrganization::class,
-                \Hasnayeen\Themes\Http\Middleware\SetTheme::class,
-            ], isPersistent: true)
-            ->authMiddleware([
-                Authenticate::class,
-
-            ])
-            ->plugins([
-                \Hasnayeen\Themes\ThemesPlugin::make(),
-               // HooksHelperPlugin::make(),
             ]);
+
+            $panel = $this->getSharedBaseConfiguration($panel);
+
+            $panel = $this->getUserMenuConfiguration($panel);
+    
+            $panel = $this->getOrganizationSelectorConfiguration($panel);
+    
+            $panel = $this->getSharedMiddlewareConfiguration($panel);
+    
+            $panel = $this->getTenantMiddlewareConfiguration($panel);
+    
+            $panel = $this->getSharedPluginsConfiguration($panel);
+    
+    
+            return $panel;
     }
 }
