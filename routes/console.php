@@ -24,7 +24,8 @@ use App\Models\Tenant\ShowChoiceOrganizationUrl;
 use App\Services\Tenant\Xml\XmlNfeReaderService;
 
 
-Schedule::command('analytics:update')->dailyAt('02:00');
+//Schedule::command('analytics:update')->dailyAt('02:00');
+//Schedule::command('scheduled-commands:run')->everyMinute();
 
 
 Artisan::command('play', function () {
@@ -74,7 +75,7 @@ Artisan::command('play', function () {
     $tenant->run(function ($tenant) {
         $organization = Organization::where('cnpj', '08357463000117')->first();
 
- 
+
         $service = new SefazConnectionService($organization);
 
         //$result = $service->verificarNsusFaltantes();

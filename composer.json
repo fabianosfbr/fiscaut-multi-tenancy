@@ -16,6 +16,7 @@
         "bezhansalleh/filament-panel-switch": "^1.0",
         "davidhsianturi/blade-bootstrap-icons": "^1.5",
         "doctrine/dbal": "^4.2",
+        "dragonmantank/cron-expression": "^3.4",
         "filament/filament": "^3.2",
         "hasnayeen/themes": "^3.0",
         "laravel/framework": "^11.9",

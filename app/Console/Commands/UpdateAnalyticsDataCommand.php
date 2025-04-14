@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Models\Tenant;
 use Illuminate\Console\Command;
 use App\Models\Tenant\Organization;
 use App\Jobs\Tenant\UpdateAnalyticsCache;
@@ -13,7 +14,7 @@ class UpdateAnalyticsDataCommand extends Command
      *
      * @var string
      */
-    protected $signature = 'analytics:update {--organization= : ID da organização específica para atualizar (opcional)}';
+    protected $signature = 'fiscal:analytics-update {--tenant_id= : ID do tenant específico para atualizar (opcional)}';
 
     /**
      * A descrição do comando.
@@ -27,52 +28,61 @@ class UpdateAnalyticsDataCommand extends Command
      */
     public function handle()
     {
-        $organizationId = $this->option('organization');
-        
-        if ($organizationId) {
-            // Atualizar apenas uma organização específica
-            $organization = Organization::find($organizationId);
-            
-            if (!$organization) {
-                $this->error("Organização com ID {$organizationId} não encontrada.");
+        $tenantId = $this->option('tenant_id');
+
+
+        if ($tenantId) {
+            // Atualizar apenas um tenant específico
+            $tenant = Tenant::find($tenantId);
+
+            if (!$tenant) {
+                $this->error("Tenant com ID {$tenantId} não encontrado.");
                 return Command::FAILURE;
             }
-            
-            $this->updateOrganizationCache($organization);
-            $this->info("Cache analítico atualizado para {$organization->razao_social}.");
-            
+
+            $this->updateOrganizationForTenantCache($tenant);
+            $this->info("Cache analítico atualizado para o tenant {$tenant->razao_social}.");
+
             return Command::SUCCESS;
         }
-        
-        // Atualizar todas as organizações ativas
-        $organizations = Organization::where('active', true)->get();
-        $count = $organizations->count();
-        
-        $this->info("Iniciando atualização do cache analítico para {$count} organizações...");
-        
+
+        // Atualizar todos os tenants
+        $tenants = Tenant::all();
+        $count = $tenants->count();
+
+        $this->info("Iniciando atualização do cache analítico para {$count} tenants...");
+
         $bar = $this->output->createProgressBar($count);
         $bar->start();
-        
-        foreach ($organizations as $organization) {
-            $this->updateOrganizationCache($organization);
+
+        foreach ($tenants as $tenant) {
+            $this->updateOrganizationForTenantCache($tenant);
             $bar->advance();
         }
-        
+
         $bar->finish();
         $this->newLine();
-        $this->info('Cache analítico atualizado com sucesso.');
-        
+        $this->info('Cache analítico atualizado com sucesso para todos os tenants.');
+
         return Command::SUCCESS;
     }
-    
+
     /**
-     * Atualiza o cache para uma organização específica
+     * Atualiza o cache para as organizações do tenant específico
      */
-    private function updateOrganizationCache(Organization $organization): void
+    private function updateOrganizationForTenantCache(Tenant $tenant): void
     {
-        UpdateAnalyticsCache::dispatch(
-            $organization->id,
-            $organization->cnpj
-        );
+        tenancy()->initialize($tenant->id);
+
+        Organization::all()
+            ->each(function ($organization) use ($tenant) {
+                $this->info("Atualizando cache para a organização {$organization->cnpj} do tenant {$tenant->id}...");
+                UpdateAnalyticsCache::dispatch(
+                    $organization->id,
+                    $organization->cnpj
+                );
+            });
+
+        tenancy()->end();
     }
-} 
+}
