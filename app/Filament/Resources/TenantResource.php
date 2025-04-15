@@ -51,7 +51,7 @@ class TenantResource extends Resource
                             ->unique(ignoreRecord: true)
                             ->rules([
                                 fn(): Closure => function (string $attribute, $value, Closure $fail) {
-                                    $value = str_replace(['-', '.', '/'], '', $value);
+                                    $value = sanitize($value);                                    
                                     $domain = Tenant::where('cnpj', $value)->first();
                                     if ($domain) {
                                         $fail('Este cnpj já está sendo utilizado por outra empresa.');
@@ -95,28 +95,7 @@ class TenantResource extends Resource
                             ->suffix('.localhost'),
                     ])->columns(2),
 
-                Section::make('Configuração do Banco de Dados')
-                    ->schema([
-                        TextInput::make('db_host')
-                            ->label('Host do Banco de Dados')
-                            ->placeholder('localhost')
-                            ->helperText('Deixe em branco para usar o padrão do sistema')
-                            ->columnSpan(1),
-                        TextInput::make('db_name')
-                            ->label('Nome do Banco')
-                            ->helperText('Deixe em branco para usar o padrão do sistema')
-                            ->columnSpan(1),
-                        TextInput::make('db_username')
-                            ->label('Usuário do Banco')
-                            ->helperText('Deixe em branco para usar o padrão do sistema')
-                            ->columnSpan(1),
-                        TextInput::make('db_password')
-                            ->label('Senha do Banco')
-                            ->password()
-                            ->revealable()
-                            ->helperText('Deixe em branco para usar o padrão do sistema')
-                            ->columnSpan(1),
-                    ])->columns(2)
+                
             ]);
     }
 

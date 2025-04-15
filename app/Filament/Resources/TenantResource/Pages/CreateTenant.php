@@ -12,7 +12,7 @@ class CreateTenant extends CreateRecord
     protected function mutateFormDataBeforeCreate(array $data): array
     {
 
-        $this->data['cnpj'] = str_replace(['-', '.', '/'], '', $data['cnpj']);
+        $this->data['cnpj'] = sanitize($data['cnpj']);
         $this->data['password'] = bcrypt($this->data['password']);
 
         return $this->data;

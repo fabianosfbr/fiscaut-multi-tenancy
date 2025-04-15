@@ -4,7 +4,8 @@ namespace App\Jobs\Tenant;
 
 use App\Enums\Tenant\PermissionTypeEnum;
 use App\Enums\Tenant\UserTypeEnum;
-use App\Events\CreateOrganizationProcessed;
+use App\Events\RegisterPermissionForUserOrganizationEvent;
+use App\Events\RegisterPanelForUserOrganizationEvent;
 use App\Models\Tenant;
 use App\Models\Tenant\Organization;
 use App\Models\Tenant\Permission;
@@ -40,6 +41,7 @@ class CreateOrganizationAndUserForTenant implements ShouldQueue
                     'name' => $this->tenant->name,
                     'email' => $this->tenant->email,
                     'password' => $this->tenant->password,
+                    'owner' => true,
                 ]);
 
                 $organization = Organization::create([
@@ -54,8 +56,9 @@ class CreateOrganizationAndUserForTenant implements ShouldQueue
 
                 $roles = $this->registerRolesAndPermissionsForUser();
 
-                event(new CreateOrganizationProcessed($user, $roles));
-
+                event(new RegisterPermissionForUserOrganizationEvent($user, $roles));
+                event(new RegisterPanelForUserOrganizationEvent($user, config('admin.panels')));
+               
                 DB::commit();
             } catch (\Exception $e) {
                 DB::rollback();
