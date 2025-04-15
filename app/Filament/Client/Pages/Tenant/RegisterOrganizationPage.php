@@ -5,7 +5,8 @@ namespace App\Filament\Client\Pages\Tenant;
 use App\Enums\Tenant\AtividadesEmpresariaisEnum;
 use App\Enums\Tenant\RegimesEmpresariaisEnum;
 use App\Enums\Tenant\UserTypeEnum;
-use App\Events\CreateOrganizationProcessed;
+use App\Events\RegisterPermissionForUserOrganizationEvent;
+use App\Events\RegisterPanelForUserOrganizationEvent;
 use App\Services\Tenant\OrganizationService;
 use Closure;
 use Exception;
@@ -86,7 +87,8 @@ class RegisterOrganizationPage extends Page
             $user->saveQuietly();
 
             $roles = UserTypeEnum::toArray();
-            event(new CreateOrganizationProcessed($user, $roles));
+            event(new RegisterPermissionForUserOrganizationEvent($user, $roles));
+            event(new RegisterPanelForUserOrganizationEvent($user, array_keys(config('admin.panels'))));
 
         } catch (Exception $e) {
             Notification::make()

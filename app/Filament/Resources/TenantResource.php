@@ -7,6 +7,7 @@ use App\Filament\Resources\TenantResource\Pages;
 use App\Models\PaymentLog;
 use App\Models\PricePlan;
 use App\Models\Tenant;
+use App\Models\Domain;
 use Closure;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Select;
@@ -25,11 +26,15 @@ class TenantResource extends Resource
 {
     protected static ?string $model = Tenant::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static ?string $navigationIcon = 'heroicon-o-building-office';
+
+    protected static ?string $navigationLabel = 'Empresas';
 
     protected static ?string $modelLabel = 'Empresa';
 
-    protected static ?string $pluralLabel = 'Empresas';
+    protected static ?string $pluralModelLabel = 'Empresas';
+
+    protected static ?string $navigationGroup = 'Configurações';
 
     public static function form(Form $form): Form
     {
@@ -42,7 +47,7 @@ class TenantResource extends Resource
                             ->validationAttribute('Razão Social')
                             ->required()
                             ->live(onBlur: true)
-                            ->afterStateUpdated(fn(Set $set, ?string $state) => $set('domains', Str::slug($state)))
+                            ->afterStateUpdated(fn(Set $set, ?string $state) => $set('domain', Str::slug($state)))
                             ->columnSpan(1),
                         TextInput::make('cnpj')
                             ->label('CNPJ')
@@ -51,9 +56,9 @@ class TenantResource extends Resource
                             ->unique(ignoreRecord: true)
                             ->rules([
                                 fn(): Closure => function (string $attribute, $value, Closure $fail) {
-                                    $value = str_replace(['-', '.', '/'], '', $value);
-                                    $domain = Tenant::where('cnpj', $value)->first();
-                                    if ($domain) {
+                                    $value = sanitize($value);
+                                    $tenant = Tenant::where('cnpj', $value)->first();
+                                    if ($tenant) {
                                         $fail('Este cnpj já está sendo utilizado por outra empresa.');
                                     }
                                 },
@@ -92,31 +97,8 @@ class TenantResource extends Resource
                             ])
                             ->columnSpan(1)
                             ->prefix('https://')
-                            ->suffix('.localhost'),
+                            ->suffix('.' . config('app.domain')),
                     ])->columns(2),
-
-                Section::make('Configuração do Banco de Dados')
-                    ->schema([
-                        TextInput::make('db_host')
-                            ->label('Host do Banco de Dados')
-                            ->placeholder('localhost')
-                            ->helperText('Deixe em branco para usar o padrão do sistema')
-                            ->columnSpan(1),
-                        TextInput::make('db_name')
-                            ->label('Nome do Banco')
-                            ->helperText('Deixe em branco para usar o padrão do sistema')
-                            ->columnSpan(1),
-                        TextInput::make('db_username')
-                            ->label('Usuário do Banco')
-                            ->helperText('Deixe em branco para usar o padrão do sistema')
-                            ->columnSpan(1),
-                        TextInput::make('db_password')
-                            ->label('Senha do Banco')
-                            ->password()
-                            ->revealable()
-                            ->helperText('Deixe em branco para usar o padrão do sistema')
-                            ->columnSpan(1),
-                    ])->columns(2)
             ]);
     }
 
@@ -143,7 +125,6 @@ class TenantResource extends Resource
                 //
             ])
             ->actions([
-                Tables\Actions\EditAction::make(),
                 Action::make('assinar-pacote')
                     ->label('Assinar pacote')
                     ->icon('heroicon-o-credit-card')
@@ -174,6 +155,7 @@ class TenantResource extends Resource
 
                         PaymentLog::create($subscription);
                     }),
+                Tables\Actions\EditAction::make(),
             ])
             ->bulkActions([]);
     }

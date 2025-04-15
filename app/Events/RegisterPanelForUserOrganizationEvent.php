@@ -9,7 +9,7 @@ use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
-class CreateOrganizationProcessed
+class RegisterPanelForUserOrganizationEvent
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
@@ -18,7 +18,7 @@ class CreateOrganizationProcessed
      */
     public function __construct(
         public User|Authenticatable $user,
-        public array $roles
+        public array $panels
     ) {
         //
     }

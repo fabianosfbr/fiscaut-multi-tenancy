@@ -2,17 +2,18 @@
 
 namespace App\Jobs\Tenant;
 
-use App\Enums\Tenant\PermissionTypeEnum;
-use App\Enums\Tenant\UserTypeEnum;
-use App\Events\CreateOrganizationProcessed;
 use App\Models\Tenant;
-use App\Models\Tenant\Organization;
-use App\Models\Tenant\Permission;
 use App\Models\Tenant\Role;
 use App\Models\Tenant\User;
-use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Foundation\Queue\Queueable;
+use App\Models\Tenant\Permission;
+use App\Enums\Tenant\UserTypeEnum;
 use Illuminate\Support\Facades\DB;
+use App\Models\Tenant\Organization;
+use App\Enums\Tenant\PermissionTypeEnum;
+use Illuminate\Foundation\Queue\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
+use App\Events\RegisterPanelForUserOrganizationEvent;
+use App\Events\RegisterPermissionForUserOrganizationEvent;
 
 class CreateOrganizationAndUserForTenant implements ShouldQueue
 {
@@ -52,10 +53,11 @@ class CreateOrganizationAndUserForTenant implements ShouldQueue
                 $user->last_organization_id = $organization->id;
                 $user->saveQuietly();
 
-                $roles = $this->registerRolesAndPermissionsForUser();
+                $roles = $this->getRolesAndPermissionsForUser();
 
-                event(new CreateOrganizationProcessed($user, $roles));
-
+                event(new RegisterPermissionForUserOrganizationEvent($user, $roles));
+                event(new RegisterPanelForUserOrganizationEvent($user, array_keys(config('admin.panels'))));
+    
                 DB::commit();
             } catch (\Exception $e) {
                 DB::rollback();
@@ -63,7 +65,7 @@ class CreateOrganizationAndUserForTenant implements ShouldQueue
         });
     }
 
-    private function registerRolesAndPermissionsForUser(): array
+    private function getRolesAndPermissionsForUser(): array
     {
         $roles = UserTypeEnum::toArray();
         $permissions = PermissionTypeEnum::toArray();

@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\TenantResource\Pages;
 
+use Illuminate\Support\Str;
 use App\Filament\Resources\TenantResource;
 use Filament\Resources\Pages\CreateRecord;
 
@@ -21,9 +22,21 @@ class CreateTenant extends CreateRecord
     protected function afterCreate(): void
     {
         $tenant = $this->getRecord();
+
+        $domain = Str::slug($this->data['domain']);
+        $appDomain = config('app.domain');
+
+        // Cria o domínio completo
+        $fullDomain = $domain . '.' . $appDomain;
+
         $tenant->domains()->create([
-            'domain' => $this->data['domain'].'.'.config('app.domain'),
+            'domain' => $fullDomain,
         ]);
 
+    }
+
+    protected function getRedirectUrl(): string
+    {
+        return $this->getResource()::getUrl('index');
     }
 }

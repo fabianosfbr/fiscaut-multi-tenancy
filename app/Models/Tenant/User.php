@@ -72,7 +72,9 @@ class User extends Authenticatable implements FilamentUser, HasDefaultTenant, Ha
 
     public function canAccessPanel(Panel $panel): bool
     {
-        return true;
+        return UserPanelPermission::where('user_id', $this->id)
+            ->where('panel', $panel->getId())
+            ->exists();
     }
 
     public function roles(): BelongsToMany
@@ -183,5 +185,10 @@ class User extends Authenticatable implements FilamentUser, HasDefaultTenant, Ha
     public function sieg()
     {
         return $this->hasOne(SiegConfiguration::class);
+    }
+
+    public function panelPermissions()
+    {
+        return $this->hasMany(UserPanelPermission::class);
     }
 }
