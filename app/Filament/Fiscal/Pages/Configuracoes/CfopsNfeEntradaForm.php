@@ -72,7 +72,7 @@ class CfopsNfeEntradaForm extends Component implements HasForms
                                     ->required()
                                     ->options(function () {
 
-                                        return Cfop::getAllForTag()
+                                        return getCfopForTag()
                                             ->pluck('full_name', 'codigo')
                                             ->toArray();
                                     })

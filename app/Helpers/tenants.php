@@ -4,6 +4,7 @@ use App\Models\Tenant\Tag;
 use App\Models\Tenant\FileUpload;
 use Saloon\XmlWrangler\XmlReader;
 use App\Models\Tenant\CategoryTag;
+use Illuminate\Support\Facades\DB;
 use App\Models\Tenant\Organization;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
@@ -17,6 +18,17 @@ if (! function_exists('getOrganizationCached')) {
     }
 }
 
+if (! function_exists('getCfopForTag')) {
+    function getCfopForTag()
+    {
+        return DB::connection('central')
+            ->table('cfops')->select(
+                'codigo',
+                DB::raw("CONCAT(cfops.codigo,'-',cfops.descricao) as full_name")
+            )->get();
+    }
+}
+
 if (! function_exists('getAllValidOrganizationsForUser')) {
     function getAllValidOrganizationsForUser($user)
     {
@@ -25,8 +37,8 @@ if (! function_exists('getAllValidOrganizationsForUser')) {
             return Organization::whereHas('users', function ($q) use ($user) {
                 $q->where('is_active', 1)->where('user_id', $user->id);
             })
-            ->orderBy('razao_social', 'asc')
-            ->get();
+                ->orderBy('razao_social', 'asc')
+                ->get();
         });
     }
 }
@@ -91,5 +103,3 @@ if (! function_exists('getLabelTag')) {
         return $word;
     }
 }
-
-

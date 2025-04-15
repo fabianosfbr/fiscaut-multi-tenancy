@@ -82,7 +82,7 @@ class CteSaidaForm extends Component implements HasForms
     public function cfopsForSearching()
     {
 
-        $tagData = Cfop::getAllForTag()->pluck('full_name', 'codigo');
+        $tagData = getCfopForTag()->pluck('full_name', 'codigo');
 
         return $tagData;
     }

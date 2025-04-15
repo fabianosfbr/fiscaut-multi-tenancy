@@ -97,7 +97,7 @@ class CfopsNfeForm extends Component implements HasForms
                                     ->preload()
                                     ->required()
                                     ->options(function () {
-                                        return Cfop::getAllForTag()
+                                        return getCfopForTag()
                                             ->pluck('full_name', 'codigo')
                                             ->toArray();
                                     })
