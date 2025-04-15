@@ -17,6 +17,15 @@ class RenderHookUrlResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-link';
 
+    protected static ?string $navigationGroup = 'Configurações';
+
+    protected static ?string $navigationLabel = 'URLs de Render Hook';
+
+    protected static ?string $pluralLabel = 'URLs de Render Hook';
+
+    protected static ?string $modelLabel = 'URL de Render Hook';
+
+
     public static function form(Form $form): Form
     {
         return $form

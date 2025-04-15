@@ -41,6 +41,8 @@ class CreateOrganizationAndUserForTenant implements ShouldQueue
                     'name' => $this->tenant->name,
                     'email' => $this->tenant->email,
                     'password' => $this->tenant->password,
+                    'email_verified_at' => now(),
+                    'owner' => true,
                 ]);
 
                 $organization = Organization::create([

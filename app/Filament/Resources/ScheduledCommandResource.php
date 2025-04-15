@@ -23,9 +23,15 @@ class ScheduledCommandResource extends Resource
     protected static ?string $model = ScheduledCommand::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-clock';
+    
     protected static ?string $navigationLabel = 'Comandos Agendados';
+
     protected static ?string $pluralLabel = 'Comandos Agendados';
+
     protected static ?string $modelLabel = 'Comando Agendado';
+
+    protected static ?string $navigationGroup = 'Configurações';
+
 
     public static function form(Form $form): Form
     {
