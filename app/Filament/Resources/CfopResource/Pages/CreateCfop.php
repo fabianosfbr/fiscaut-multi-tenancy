@@ -9,4 +9,9 @@ use Filament\Resources\Pages\CreateRecord;
 class CreateCfop extends CreateRecord
 {
     protected static string $resource = CfopResource::class;
+
+    protected function getRedirectUrl(): string
+    {
+        return $this->getResource()::getUrl('index');
+    }
 }
