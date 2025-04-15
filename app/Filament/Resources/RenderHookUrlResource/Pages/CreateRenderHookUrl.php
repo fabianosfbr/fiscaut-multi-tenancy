@@ -8,4 +8,9 @@ use Filament\Resources\Pages\CreateRecord;
 class CreateRenderHookUrl extends CreateRecord
 {
     protected static string $resource = RenderHookUrlResource::class;
+
+    protected function getRedirectUrl(): string
+    {
+        return $this->getResource()::getUrl('index');
+    }
 }

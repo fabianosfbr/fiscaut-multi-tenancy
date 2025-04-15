@@ -1,14 +1,14 @@
 <?php
 
-namespace App\Filament\Resources\TenantResource\Pages;
+namespace App\Filament\Resources\CfopResource\Pages;
 
-use App\Filament\Resources\TenantResource;
+use App\Filament\Resources\CfopResource;
 use Filament\Actions;
 use Filament\Resources\Pages\EditRecord;
 
-class EditTenant extends EditRecord
+class EditCfop extends EditRecord
 {
-    protected static string $resource = TenantResource::class;
+    protected static string $resource = CfopResource::class;
 
     protected function getHeaderActions(): array
     {
@@ -19,6 +19,4 @@ class EditTenant extends EditRecord
     {
         return $this->getResource()::getUrl('index');
     }
-
-    
 }

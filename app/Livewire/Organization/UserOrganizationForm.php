@@ -2,31 +2,33 @@
 
 namespace App\Livewire\Organization;
 
-use App\Enums\Tenant\UserTypeEnum;
-use App\Models\Tenant\Organization;
+use Livewire\Component;
+use Filament\Tables\Table;
 use App\Models\Tenant\User;
-use Filament\Forms\Components\Actions\Action as FormAction;
-use Filament\Forms\Components\Fieldset;
+use App\Enums\Tenant\UserTypeEnum;
+use Illuminate\Support\Facades\DB;
+use App\Models\Tenant\Organization;
 use Filament\Forms\Components\Grid;
-use Filament\Forms\Components\Placeholder;
-use Filament\Forms\Components\Section;
-use Filament\Forms\Components\Select;
-use Filament\Forms\Components\TextInput;
-use Filament\Forms\Components\Toggle;
-use Filament\Forms\Components\ToggleButtons;
-use Filament\Forms\Concerns\InteractsWithForms;
-use Filament\Forms\Contracts\HasForms;
-use Filament\Notifications\Notification;
 use Filament\Tables\Actions\Action;
+use Filament\Support\Enums\MaxWidth;
+use Illuminate\Support\Facades\Hash;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Toggle;
+use Illuminate\Support\Facades\Cache;
+use Filament\Forms\Components\Section;
+use Filament\Forms\Contracts\HasForms;
+use Filament\Forms\Components\Fieldset;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
-use Filament\Tables\Concerns\InteractsWithTable;
 use Filament\Tables\Contracts\HasTable;
-use Filament\Tables\Table;
-use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Hash;
-use Livewire\Component;
+use Filament\Forms\Components\TextInput;
+use Filament\Notifications\Notification;
+use App\Models\Tenant\UserPanelPermission;
+use Filament\Forms\Components\Placeholder;
+use Filament\Forms\Components\ToggleButtons;
+use Filament\Forms\Concerns\InteractsWithForms;
+use Filament\Tables\Concerns\InteractsWithTable;
+use Filament\Forms\Components\Actions\Action as FormAction;
 
 class UserOrganizationForm extends Component implements HasForms, HasTable
 {
@@ -73,6 +75,14 @@ class UserOrganizationForm extends Component implements HasForms, HasTable
                         return $role ?? [];
                     })
                     ->badge(),
+                TextColumn::make('panels')
+                    ->label('Painéis')
+                    ->getStateUsing(function (User $record) {
+                        return UserPanelPermission::where('user_id', $record->id)
+                            ->pluck('panel')
+                            ->toArray();
+                    })
+                    ->badge(),
 
                 IconColumn::make('is_active')
                     ->label('Ativo')
@@ -98,7 +108,7 @@ class UserOrganizationForm extends Component implements HasForms, HasTable
                     ->label('Editar')
                     ->icon('heroicon-o-pencil-square')
                     ->modalHeading('Atualizar permissões')
-                    ->modalWidth('lg')
+                    ->modalWidth(MaxWidth::TwoExtraLarge)
                     ->modalSubmitActionLabel('Salvar')
                     ->fillForm(function (User $user) {
 
@@ -107,21 +117,30 @@ class UserOrganizationForm extends Component implements HasForms, HasTable
                             ->where('organizations.id', $this->organization->id)
                             ->first();
 
+                        $panels = UserPanelPermission::where('user_id', $user->id)
+                            ->pluck('panel')
+                            ->toArray();
+
                         return [
                             'is_active' => $organization->pivot->is_active,
                             'roles' => $user->roles()->wherePivot('organization_id', $organization->id)->get()->pluck('name')->toArray(),
+                            'panels' => $panels,
                             // 'expires_at' => $organization->pivot->expires_at,
                         ];
                     })
                     ->form($this->userVinculationForm())
                     ->action(function (User $user, array $data) {
+
                         $user->organizations()
                             ->updateExistingPivot($this->organization->id, ['is_active' => $data['is_active']]);
 
                         $user->syncRolesWithOrganization($data['roles'], $this->organization->id);
 
+                        UserPanelPermission::syncPermissions($user, $data['panels']);
 
-                        Cache::forget('all_valid_organizations_for_user_'.$user->id);
+                        Cache::forget('all_valid_organizations_for_user_' . $user->id);
+
+                        $this->redirect(request()->header('Referer'));
 
                         Notification::make()
                             ->title('Usuário atualizado com sucesso.')
@@ -133,7 +152,7 @@ class UserOrganizationForm extends Component implements HasForms, HasTable
             ->headerActions([
                 Action::make('attach')
                     ->label('Vincular')
-                    ->modalWidth('lg')
+                    ->modalWidth(MaxWidth::TwoExtraLarge)
                     ->modalSubmitActionLabel('Vincular')
                     ->form([
                         Grid::make(2)
@@ -169,8 +188,8 @@ class UserOrganizationForm extends Component implements HasForms, HasTable
                                                     ->label('Senha')
                                                     ->password()
                                                     ->revealable()
-                                                    ->dehydrateStateUsing(fn (string $state): string => Hash::make($state))
-                                                    ->dehydrated(fn (?string $state): bool => filled($state))
+                                                    ->dehydrateStateUsing(fn(string $state): string => Hash::make($state))
+                                                    ->dehydrated(fn(?string $state): bool => filled($state))
                                                     ->required()
                                                     ->columnSpan(2),
                                             ]),
@@ -208,7 +227,7 @@ class UserOrganizationForm extends Component implements HasForms, HasTable
 
                         $user->syncRolesWithOrganization($data['roles'], $this->organization->id);
 
-                        Cache::forget('all_valid_organizations_for_user_'.$user->id);
+                        Cache::forget('all_valid_organizations_for_user_' . $user->id);
 
                         Notification::make()
                             ->title('Usuário vinculado com sucesso')
@@ -231,10 +250,23 @@ class UserOrganizationForm extends Component implements HasForms, HasTable
                         ->options(function () {
                             $roles = UserTypeEnum::toArray();
 
-                            //  unset($roles[UserTypeEnum::SUPER_ADMIN->value]);
                             return $roles;
                         })
-                        ->disableOptionWhen(fn (string $value): bool => $value === 'super-admin')
+                        ->disableOptionWhen(fn(string $value): bool => $value === 'super-admin')
+                        ->columnSpan(2),
+
+                ]),
+            Fieldset::make('Painéis')
+                ->schema([
+                    ToggleButtons::make('panels')
+                        ->hiddenLabel()
+                        ->inline()
+                        ->multiple()
+                        ->required()
+                        ->options(config('admin.panels'))
+                        ->validationMessages([
+                            'panels.required' => 'É necessário selecionar pelo menos um painel.',
+                        ])
                         ->columnSpan(2),
                 ]),
 

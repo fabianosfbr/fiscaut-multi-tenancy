@@ -98,6 +98,7 @@ trait ImportarLancamentoContabilTrait
         foreach ($data as $index => $row) {
 
             $rowLine = [];
+            $rowLine['data_da_operacao'] = null;
             $rowLine['operacao_de_debito'] = null;
             $rowLine['operacao_de_credito'] = null;
             $rowLine['valor_da_operacao'] = null;
@@ -214,11 +215,13 @@ trait ImportarLancamentoContabilTrait
             return null;
         }
 
-        return match ($column->data_type) {
+        $value = match ($column->data_type) {
             'number' => self::formatNumberValue($value, $column),
             'date' => self::formatDateValue($value, $layout, $rule),
             default => $value
         };
+
+        return $value;
     }
 
     private static function formatNumberValue($value, $column)
@@ -248,11 +251,13 @@ trait ImportarLancamentoContabilTrait
                 return Carbon::now();
             }
 
+            
             $date = self::adjustDateBasedRule($layoutColumn, $date);
-
+         
             return $date;
         } catch (Exception $e) {
             Log::error("Erro ao formatar a data: " . $e->getMessage());
+            Log::error($e->getTraceAsString());
             return null;
         }
     }

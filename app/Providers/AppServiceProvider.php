@@ -5,10 +5,12 @@ namespace App\Providers;
 use Filament\Tables\Table;
 use Filament\Support\Assets\Js;
 use Filament\Support\Assets\Css;
+use Illuminate\Support\Facades\Auth;
 use App\Services\TenantDatabaseManager;
 use Illuminate\Support\ServiceProvider;
 use Filament\Tables\Enums\FiltersLayout;
 use BezhanSalleh\PanelSwitch\PanelSwitch;
+use App\Models\Tenant\UserPanelPermission;
 use Filament\Support\Facades\FilamentAsset;
 
 class AppServiceProvider extends ServiceProvider
@@ -18,7 +20,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-       // $this->app->singleton(TenantDatabaseManager::class);
+        // $this->app->singleton(TenantDatabaseManager::class);
     }
 
     /**
@@ -42,7 +44,6 @@ class AppServiceProvider extends ServiceProvider
         FilamentAsset::register([
             Css::make('tom-select', 'https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/css/tom-select.css'),
         ]);
-
     }
 
     protected function configurePanelSwitch(): void
@@ -51,7 +52,19 @@ class AppServiceProvider extends ServiceProvider
             $panelSwitch
                 ->modalHeading('Escolha o módulo')
                 ->modalWidth('md')
-                ->panels(['client', 'contabil', 'fiscal'])
+                ->panels(function () {
+
+                    $user = Auth::user();
+                                        
+                    if ($user?->last_organization_id) {
+
+                        $panels = UserPanelPermission::getUserPanels(Auth::user(), getOrganizationCached());
+
+                        return array_values($panels ?? []);
+                    }
+
+                    return ['admin'];
+                })
                 ->iconSize(16)
                 ->simple()
                 ->renderHook('panels::sidebar.nav.start')

@@ -16,6 +16,5 @@ class DatabaseSeeder extends Seeder
             PricePlanSeeder::class,
             TenantSeeder::class,
         ]);
-
     }
 }

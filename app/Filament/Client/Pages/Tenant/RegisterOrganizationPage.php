@@ -2,28 +2,29 @@
 
 namespace App\Filament\Client\Pages\Tenant;
 
-use App\Enums\Tenant\AtividadesEmpresariaisEnum;
-use App\Enums\Tenant\RegimesEmpresariaisEnum;
-use App\Enums\Tenant\UserTypeEnum;
-use App\Events\CreateOrganizationProcessed;
-use App\Services\Tenant\OrganizationService;
 use Closure;
 use Exception;
+use Filament\Forms\Form;
+use Filament\Pages\Page;
 use Filament\Actions\Action;
-use Filament\Forms\Components\Actions\Action as WizardAction;
-use Filament\Forms\Components\FileUpload;
-use Filament\Forms\Components\Section;
+use App\Enums\Tenant\UserTypeEnum;
+use Illuminate\Support\HtmlString;
 use Filament\Forms\Components\Select;
-use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Forms\Components\Wizard;
-use Filament\Forms\Contracts\HasForms;
-use Filament\Forms\Form;
-use Filament\Notifications\Notification;
-use Filament\Pages\Page;
 use Illuminate\Support\Facades\Blade;
+use Filament\Forms\Components\Section;
+use Filament\Forms\Contracts\HasForms;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\HtmlString;
+use Filament\Forms\Components\TextInput;
+use Filament\Notifications\Notification;
+use Filament\Forms\Components\FileUpload;
+use App\Services\Tenant\OrganizationService;
+use App\Enums\Tenant\RegimesEmpresariaisEnum;
+use App\Enums\Tenant\AtividadesEmpresariaisEnum;
+use App\Events\RegisterPanelForUserOrganizationEvent;
+use App\Events\RegisterPermissionForUserOrganizationEvent;
+use Filament\Forms\Components\Actions\Action as WizardAction;
 
 class RegisterOrganizationPage extends Page
 {
@@ -86,8 +87,9 @@ class RegisterOrganizationPage extends Page
             $user->saveQuietly();
 
             $roles = UserTypeEnum::toArray();
-            event(new CreateOrganizationProcessed($user, $roles));
-
+            event(new RegisterPermissionForUserOrganizationEvent($user, $roles));
+            event(new RegisterPanelForUserOrganizationEvent($user, config('admin.panels')));
+         
         } catch (Exception $e) {
             Notification::make()
                 ->danger()

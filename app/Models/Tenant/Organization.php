@@ -61,7 +61,7 @@ class Organization extends Model implements HasCurrentTenantLabel, HasName
     }
 
     public static function getCached(string $organizationId, string $userId)
-    {
+    {        
         $cacheKey = "organization_{$organizationId}_{$userId}";
         return Cache::remember($cacheKey, now()->addDay(), function () use ($organizationId) {
             return static::where('id', $organizationId)->first();

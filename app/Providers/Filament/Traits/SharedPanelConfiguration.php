@@ -8,6 +8,7 @@ use Filament\Support\Colors\Color;
 use Filament\View\PanelsRenderHook;
 use Filament\Support\Enums\MaxWidth;
 use Illuminate\Support\Facades\Blade;
+use App\Http\Middleware\CheckPanelAccess;
 use Filament\Http\Middleware\Authenticate;
 use App\Filament\Client\Pages\Auth\LoginPage;
 use Illuminate\Session\Middleware\StartSession;
@@ -68,6 +69,7 @@ trait SharedPanelConfiguration
                 SubstituteBindings::class,
                 DisableBladeIconComponents::class,
                 DispatchServingFilamentEvent::class,
+                
             ])
             ->authMiddleware([
                 Authenticate::class,
@@ -85,6 +87,7 @@ trait SharedPanelConfiguration
                 InitializeTenancyByDomain::class,
                 PreventAccessFromCentralDomains::class,
                 CheckUserHasOrganization::class,
+               // CheckPanelAccess::class,
                 \Hasnayeen\Themes\Http\Middleware\SetTheme::class,
             ], isPersistent: true);
     }

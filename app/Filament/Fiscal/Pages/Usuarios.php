@@ -4,8 +4,11 @@ namespace App\Filament\Fiscal\Pages;
 
 use App\Livewire\Organization\UserOrganizationForm;
 use Filament\Forms\Components\Livewire;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Section;
 use Filament\Forms\Form;
 use Filament\Pages\Page;
+use Illuminate\Support\Facades\Auth;
 
 class Usuarios extends Page
 {
@@ -25,8 +28,20 @@ class Usuarios extends Page
     {
         return $form
             ->schema([
-                Livewire::make(UserOrganizationForm::class),
+                Section::make('Configurações de Usuário')
+                    ->description('Defina as permissões e painéis de acesso do usuário')
+                    ->schema([
+                        Livewire::make(UserOrganizationForm::class),
+                        
+                    ])
             ])
             ->statePath('data');
+    }
+
+    public function mount(): void
+    {
+        $this->form->fill([
+            'panels' => ['fiscal'] // Valor padrão
+        ]);
     }
 }

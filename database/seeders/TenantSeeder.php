@@ -23,42 +23,42 @@ class TenantSeeder extends Seeder
             'password' => bcrypt('asdfasdf'),
         ]);
 
-        $tenant = Tenant::create([
-            'name' => 'Foo',
-            'email' => 'email@email.com',
-            'password' => bcrypt('asdfasdf'),
-            'razao_social' => 'Foo Ltd.',
-            'cnpj' => '11111111111111',
-        ]);
-        $tenant->domains()->create(['domain' => 'foo.localhost']);
+        // $tenant = Tenant::create([
+        //     'name' => 'Foo',
+        //     'email' => 'email@email.com',
+        //     'password' => bcrypt('asdfasdf'),
+        //     'razao_social' => 'Foo Ltd.',
+        //     'cnpj' => '11111111111111',
+        // ]);
+        // $tenant->domains()->create(['domain' => 'foo.localhost']);
 
-        $package = PricePlan::where('title', 'Premium Plan')->first();
+        // $package = PricePlan::where('title', 'Premium Plan')->first();
 
-        $subscription = [
-            'package_id' => $package->id,
-            'package_name' => $package->title,
-            'package_price' => $package->price,
-            'status' => PaymentLogStatusEnum::PAID->value,
-            'name' => $tenant->name,
-            'email' => $tenant->email,
-            'tenant_id' => $tenant->id,
-            'start_date' => now(),
-            'expire_date' => '2100-12-31',
-            'track' => Str::random(10).Str::random(10),
+        // $subscription = [
+        //     'package_id' => $package->id,
+        //     'package_name' => $package->title,
+        //     'package_price' => $package->price,
+        //     'status' => PaymentLogStatusEnum::PAID->value,
+        //     'name' => $tenant->name,
+        //     'email' => $tenant->email,
+        //     'tenant_id' => $tenant->id,
+        //     'start_date' => now(),
+        //     'expire_date' => '2100-12-31',
+        //     'track' => Str::random(10).Str::random(10),
 
-        ];
+        // ];
 
-        PaymentLog::create($subscription);
+        // PaymentLog::create($subscription);
 
-        $tenant->run(function () use ($subscription) {
+        // $tenant->run(function () use ($subscription) {
 
-            // $user = User::where('email', tenant()->email)->first();
+        //     // $user = User::where('email', tenant()->email)->first();
 
-            $subscription['user_id'] = tenant()->id;
-            $subscription['email'] = tenant()->email;
-            $subscription['name'] = tenant()->name;
+        //     $subscription['user_id'] = tenant()->id;
+        //     $subscription['email'] = tenant()->email;
+        //     $subscription['name'] = tenant()->name;
 
-            PaymentLog::create($subscription);
-        });
+        //     PaymentLog::create($subscription);
+        // });
     }
 }
