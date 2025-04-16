@@ -18,11 +18,11 @@ class PaymentLog extends BaseProfile implements HasForms, HasTable
 
     protected static ?string $navigationIcon = 'heroicon-o-document-text';
 
-    protected static bool $shouldRegisterNavigation = true;
-
     protected static ?string $navigationLabel = 'Pagamentos';
 
     protected static ?string $slug = 'me/payment';
+
+    protected static bool $shouldRegisterNavigation = true;
 
     protected static ?int $navigationSort = 5;
 
@@ -33,7 +33,7 @@ class PaymentLog extends BaseProfile implements HasForms, HasTable
     public function table(Table $table): Table
     {
         return $table
-            ->query(PaymentLogModel::query())
+            ->query(PaymentLogModel::query()->where('tenant_id', tenant('id')))
             ->columns([
                 TextColumn::make('package_name')
                     ->label('Nome do Pacote'),
@@ -54,7 +54,7 @@ class PaymentLog extends BaseProfile implements HasForms, HasTable
     }
 
     public static function canAccess(): bool
-    {
+    {        
         return auth()->user()->hasRole(['admin', 'super-admin']);
     }
 }

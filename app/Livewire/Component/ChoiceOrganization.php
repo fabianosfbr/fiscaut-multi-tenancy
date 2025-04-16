@@ -59,14 +59,14 @@ class ChoiceOrganization extends Component implements HasForms
                     ->options(function () {
                         return $this->organizations->mapWithKeys(function ($organization) {
                             $razaoSocial = $organization->razao_social;
-                            
+
                             if (str_contains($razaoSocial, ':')) {
                                 $razaoSocial = trim(explode(':', $razaoSocial)[0]);
                             }
-                            
+
                             return [$organization->id => $razaoSocial];
                         });
-                    })                 
+                    })
                     ->afterStateUpdated(function (?string $state) {
                         if (filled($state)) {
 
@@ -76,7 +76,7 @@ class ChoiceOrganization extends Component implements HasForms
 
                             $user->last_organization_id = $state;
                             $user->saveQuietly();
-                                                    
+
                             Cache::forget($cacheKey);
 
                             $this->redirect(request()->header('Referer'));
@@ -89,27 +89,16 @@ class ChoiceOrganization extends Component implements HasForms
 
     public function urlRenderAvoid()
     {
-  
-        $showUrl = Cache::remember('url_render_avoid_'.auth()->user()->id, 60 * 60 * 24, function () {
-            return ShowChoiceOrganizationUrl::show()->get()->toArray();
-        });
-
 
         $routeName = Route::current()->getName();
 
-        //dump($routeName);
-        $url = [];
-        foreach ($showUrl as $key => $values) {
-
-            foreach ($values['render_hook_url'] as $key => $value) {
-                $url[] = $value['url_pattern'];
-            }
-        }
-        foreach ($url as $exclusion) {
-
-            if ($routeName == $exclusion) {
-                $this->exclude_page = true;
-                break;
+        if (is_array(config('excluded-pages.urls'))) {
+            $exclusions = config('excluded-pages.urls');
+            foreach ($exclusions as $exclusion) {
+                if ($routeName == $exclusion) {
+                    $this->exclude_page = true;
+                    break;
+                }
             }
         }
     }

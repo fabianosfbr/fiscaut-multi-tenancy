@@ -5,12 +5,14 @@ namespace App\Providers;
 use Filament\Tables\Table;
 use Filament\Support\Assets\Js;
 use Filament\Support\Assets\Css;
+use Filament\View\PanelsRenderHook;
+use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Auth;
-use App\Services\TenantDatabaseManager;
 use Illuminate\Support\ServiceProvider;
 use Filament\Tables\Enums\FiltersLayout;
 use BezhanSalleh\PanelSwitch\PanelSwitch;
 use App\Models\Tenant\UserPanelPermission;
+use Filament\Support\Facades\FilamentView;
 use Filament\Support\Facades\FilamentAsset;
 
 class AppServiceProvider extends ServiceProvider
@@ -29,6 +31,11 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         $this->configurePanelSwitch();
+
+        FilamentView::registerRenderHook(
+            PanelsRenderHook::BODY_END,
+            fn (): View => view('components.footer'),
+        );
 
         Table::configureUsing(function (Table $table): void {
             $table

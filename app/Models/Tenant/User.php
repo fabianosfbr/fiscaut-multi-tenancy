@@ -182,10 +182,6 @@ class User extends Authenticatable implements FilamentUser, HasDefaultTenant, Ha
         return Guard::getDefaultName(static::class);
     }
 
-    public function sieg()
-    {
-        return $this->hasOne(SiegConfiguration::class);
-    }
 
     public function panelPermissions()
     {

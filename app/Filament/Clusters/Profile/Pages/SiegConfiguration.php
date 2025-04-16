@@ -2,13 +2,15 @@
 
 namespace App\Filament\Clusters\Profile\Pages;
 
-use App\Filament\Clusters\Profile;
+use Filament\Forms\Form;
+use App\Models\Tenant\User;
 use Filament\Actions\Action;
+use App\Filament\Clusters\Profile;
+use Illuminate\Support\Facades\Auth;
+use Filament\Support\Enums\Alignment;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Components\TextInput;
-use Filament\Forms\Form;
 use Filament\Pages\Concerns\InteractsWithFormActions;
-use Filament\Support\Enums\Alignment;
 
 class SiegConfiguration extends BaseProfile
 {
@@ -16,11 +18,11 @@ class SiegConfiguration extends BaseProfile
 
     protected static ?string $navigationIcon = 'heroicon-o-pencil-square';
 
-    protected static bool $shouldRegisterNavigation = true;
-
     protected static ?string $navigationLabel = 'Configuração Sieg';
 
     protected static ?string $slug = 'me/sieg-configuration';
+
+    protected static bool $shouldRegisterNavigation = true;
 
     protected static ?int $navigationSort = 4;
 
@@ -32,8 +34,8 @@ class SiegConfiguration extends BaseProfile
 
     public function mount(): void
     {
-        $data = $this->getUser()->sieg()->first()?->attributesToArray();
-
+        $data = User::where('owner', true)->select('id', 'sieg_api_key')->first()?->attributesToArray();
+     
         $this->form->fill($data);
     }
 
@@ -61,10 +63,11 @@ class SiegConfiguration extends BaseProfile
     {
         $data = $this->form->getState();
 
+        $user = User::where('owner', true)->first();
 
-        $user = $this->getUser();
+        $user->sieg_api_key = $data['sieg_api_key'];
 
-        $user->sieg()->create($data);
+        $user->saveQuietly();
 
         $this->getSavedNotification('Informações atualizadas com sucesso')->send();
     }
@@ -96,4 +99,11 @@ class SiegConfiguration extends BaseProfile
     {
         return Alignment::End;
     }
+
+    public static function canAccess(): bool
+    {        
+        return auth()->user()->hasRole(['admin', 'super-admin']);
+    }
+
+ 
 }

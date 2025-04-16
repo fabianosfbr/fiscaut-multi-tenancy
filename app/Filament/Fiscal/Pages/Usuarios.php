@@ -38,4 +38,10 @@ class Usuarios extends Page
             ->statePath('data');
     }
 
+    
+    public static function canAccess(): bool
+    {        
+        return auth()->user()->hasRole(['admin', 'super-admin']);
+    }
+
 }
