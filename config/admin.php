@@ -23,8 +23,8 @@ return [
     ],
 
     'panels' => [
-        'client' => 'Painel Cliente',
         'contabil' => 'Painel Contábil',
         'fiscal' => 'Painel Fiscal',
+        'ged' => 'Painel GED',
     ],
 ];

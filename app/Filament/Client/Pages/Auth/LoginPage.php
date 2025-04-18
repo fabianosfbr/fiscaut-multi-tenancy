@@ -18,7 +18,7 @@ class LoginPage extends BaseLogin
                         'email' => 'O email deve ser um email válido',
                     ]),
                 $this->getPasswordFormComponent()
-                    ->default('Mudar@1234*')
+                    ->default('asdfasdf')
                     ->validationMessages([
                         'required' => 'A senha é obrigatória',
                         'password' => 'A senha deve ter pelo menos 8 caracteres',

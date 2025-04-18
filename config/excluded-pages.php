@@ -15,5 +15,6 @@ return [
         'filament.fiscal.resources.organizations.index',
         'filament.fiscal.resources.organizations.create',
         'filament.fiscal.resources.organizations.edit',
+        'filament.ged.pages.dashboard'
     ],
 ];

@@ -75,8 +75,8 @@ class AppServiceProvider extends ServiceProvider
                 ->iconSize(16)
                 ->simple()
                 ->renderHook('panels::sidebar.nav.start')
-                ->labels([
-                    'client' => __('Configuração'),
+                ->labels([               
+                    'ged' => __('GED'),
                     'fiscal' => __('Fiscal'),
                     'contabil' => __('Contabil'),
                 ]);
