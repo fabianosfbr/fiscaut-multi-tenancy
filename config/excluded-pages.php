@@ -15,6 +15,9 @@ return [
         'filament.fiscal.resources.organizations.index',
         'filament.fiscal.resources.organizations.create',
         'filament.fiscal.resources.organizations.edit',
-        'filament.ged.pages.dashboard'
+        'filament.ged.pages.dashboard',
+        'filament.ged.resources.documentos-enviados.index',
+        'filament.ged.resources.documentos-enviados.create',
+        'filament.ged.resources.documentos-enviados.edit',
     ],
 ];

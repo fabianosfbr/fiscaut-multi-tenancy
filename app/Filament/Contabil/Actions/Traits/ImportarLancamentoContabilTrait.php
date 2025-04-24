@@ -13,6 +13,7 @@ use App\Models\Tenant\HistoricoContabil;
 use App\Enums\Tenant\TipoRegraExportacaoEnum;
 use App\Models\Tenant\ImportarLancamentoContabil;
 use App\Models\Tenant\ParametrosConciliacaoBancaria;
+use App\Models\Tenant\PlanoDeConta;
 
 trait ImportarLancamentoContabilTrait
 {
@@ -192,7 +193,7 @@ trait ImportarLancamentoContabilTrait
 
         $value = match ($rule->data_source_type->value) {
             'column' => self::processColumnSource($rule, $row, $layout),
-            'constant' => $rule->data_source_constant,
+            'constant' => self::processConstantValue($rule),
             'parametros_gerais' => self::processParametrosGerais($rule, $row, $layout),
             'query' => self::processQuerySource($rule, $row),
             default => $rule->default_value ?? null
@@ -219,6 +220,30 @@ trait ImportarLancamentoContabilTrait
             'date' => self::formatDateValue($value, $layout, $rule),
             default => $value
         };
+    }
+
+    private static function processConstantValue($rule)
+    {
+
+        $organization_id = $rule->layout->organization_id;
+        $codigo = $rule->data_source_constant;
+        $cacheKey = "plano_conta_org_{$organization_id}_codigo_{$codigo}";
+
+        $planoDeConta =  cache()->remember($cacheKey, now()->addHours(24), function () use ($codigo) {
+            return PlanoDeConta::where('codigo', $codigo)->first();
+        });
+
+        if (!$planoDeConta) {
+            return null;
+        }
+
+
+        return [
+            'conta_contabil' => $planoDeConta->codigo,
+            'nome' => $planoDeConta->nome,
+            'codigo_historico' => $rule->data_source_historico ?? null,
+
+        ];
     }
 
     private static function formatNumberValue($value, $column)
@@ -575,6 +600,7 @@ trait ImportarLancamentoContabilTrait
                     break;
 
                 default:
+                    $codigo = strtr($codigo, "_", " ");
                     // Verifica se é uma chave do array row
                     if (isset($lancamento->metadata['row'][$codigo])) {
                         $valor = $lancamento->metadata['row'][$codigo];

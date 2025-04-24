@@ -94,7 +94,7 @@ class LayoutRulesRelationManager extends RelationManager
                     ->searchable(),
 
                 Forms\Components\TextInput::make('data_source_constant')
-                    ->label('Valor Constante')
+                    ->label('Código do Plano de Contas')
                     ->required(fn(Get $get): bool => $get('data_source_type') === 'constant')
                     ->visible(fn(Get $get): bool => $get('data_source_type') === 'constant'),
 
@@ -228,8 +228,8 @@ class LayoutRulesRelationManager extends RelationManager
 
                         return $values;
                     })
-                    ->required(fn(Get $get): bool => $get('data_source_type') === 'query' && $get('data_source_table') === 'contabil_clientes' || $get('data_source_table') === 'contabil_fornecedores')
-                    ->visible(fn(Get $get): bool => $get('data_source_type') === 'query' && $get('data_source_table') === 'contabil_clientes' || $get('data_source_table') === 'contabil_fornecedores'),
+                    ->required(fn(Get $get): bool => $get('data_source_type') === 'constant' || $get('data_source_type') === 'query' && $get('data_source_table') === 'contabil_clientes' || $get('data_source_table') === 'contabil_fornecedores')
+                    ->visible(fn(Get $get): bool => $get('data_source_type') === 'constant' || $get('data_source_type') === 'query' && $get('data_source_table') === 'contabil_clientes' || $get('data_source_table') === 'contabil_fornecedores'),
 
                 Forms\Components\Select::make('condition_type')
                     ->label('Tipo de Condição')

@@ -5,10 +5,12 @@ use App\Models\PricePlan;
 use App\Models\Tenant\Tag;
 use App\Models\Tenant\Role;
 use App\Models\Tenant\User;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
 use App\Models\Tenant\PaymentLog;
 use App\Models\Tenant\Permission;
 use App\Enums\Tenant\UserTypeEnum;
+use Gemini\Laravel\Facades\Gemini;
 use Illuminate\Support\Facades\DB;
 use App\Models\Tenant\Organization;
 use Illuminate\Support\Facades\Http;
@@ -18,10 +20,14 @@ use Illuminate\Support\Facades\Schedule;
 use App\Services\Tenant\Sefaz\NfeService;
 use App\Models\Tenant\NotaFiscalEletronica;
 use Illuminate\Http\Client\RequestException;
+use MoeMizrak\LaravelOpenrouter\DTO\ChatData;
 use App\Services\Fiscal\SiegConnectionService;
 use App\Services\Fiscal\SefazConnectionService;
+use MoeMizrak\LaravelOpenrouter\Types\RoleType;
 use App\Models\Tenant\ShowChoiceOrganizationUrl;
 use App\Services\Tenant\Xml\XmlNfeReaderService;
+use MoeMizrak\LaravelOpenrouter\DTO\MessageData;
+use MoeMizrak\LaravelOpenrouter\Facades\LaravelOpenRouter;
 
 
 //Schedule::command('analytics:update')->dailyAt('02:00');
@@ -29,6 +35,27 @@ use App\Services\Tenant\Xml\XmlNfeReaderService;
 
 
 Artisan::command('play', function () {
+
+
+    $content = 'Who am I?'; // Your desired prompt or content
+    $model = 'mistralai/mistral-7b-instruct:free';
+    $messageData = new MessageData(
+        content: $content,
+        role: RoleType::USER,
+    );
+
+    $chatData = new ChatData(
+        messages: [
+            $messageData,
+        ],
+        model: $model,
+        max_tokens: 100, // Adjust this value as needed
+    );
+
+    $response = LaravelOpenRouter::chatRequest($chatData);
+
+    $content = Arr::get($response->choices[0], 'message.content');
+    dd($content);
 
 
     // $apiUrl = 'https://api.sieg.com/BaixarXmls';

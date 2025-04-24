@@ -35,6 +35,7 @@ RUN apt-get update \
     && echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_$NODE_VERSION.x nodistro main" > /etc/apt/sources.list.d/nodesource.list \
     && apt-get update \
     && apt-get install -y nodejs \
+    && apt-get install -y tesseract-ocr tesseract-ocr-por poppler-utils \
     && npm install -g npm \
     && npm install -g pnpm \
     && npm install -g bun \
@@ -58,11 +59,13 @@ RUN useradd -ms /bin/bash --no-user-group -g $WWWGROUP -u 1337 sail
 RUN sed -i '/^default = default_sect/a legacy = legacy_sect' /etc/ssl/openssl.cnf
 RUN sed -i '/^\[default_sect\]/a activate = 1' /etc/ssl/openssl.cnf
 RUN printf "[legacy_sect]\nactivate = 1" >> /etc/ssl/openssl.cnf
+RUN sed -i 's/rights="none" pattern="PDF"/rights="read|write" pattern="PDF"/' /etc/ImageMagick-6/policy.xml
 
 COPY start-container /usr/local/bin/start-container
 COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 COPY php.ini /etc/php/8.2/cli/conf.d/99-sail.ini
 RUN chmod +x /usr/local/bin/start-container
+
 
 EXPOSE 80/tcp
 

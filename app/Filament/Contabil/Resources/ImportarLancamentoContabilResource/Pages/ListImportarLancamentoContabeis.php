@@ -160,7 +160,9 @@ class ListImportarLancamentoContabeis extends ListRecords
 
                         $txtContent = $this->gerarRelatorio($lancamentos, $data, ';');
 
-                        Storage::disk('downloads-files')->put($filename, $txtContent);
+                        $txtContentAnsi = mb_convert_encoding($txtContent, 'Windows-1252', 'UTF-8');
+
+                        Storage::disk('downloads-files')->put($filename, $txtContentAnsi);
 
 
                         Notification::make()

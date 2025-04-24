@@ -39,20 +39,20 @@ Route::middleware([
     Route::get('/fiscal/download-file/avancado-nfe/{filename}', [DownloadController::class, 'downloadAvancadoNfe'])
         ->name('download.avancado.nfe');
 
-    Route::get('/fiscal/download-file', function () {
+    Route::get('/fiscal/download-file/{document}', function (App\Models\Tenant\FileUpload $document) {
 
-        $file = FileUpload::where('id', request()->input('id'))
-            ->first();
-
-        if (!$file) {
-            return abort(404, 'Arquivo indisponível');
+        if (!$document->path) {
+            return abort(404, 'Documento não encontrado');
+        }
+        
+        $filePath = storage_path('app/public/' . $document->path);
+   
+        if (!file_exists($filePath)) {
+            return abort(404, 'Arquivo não encontrado');
         }
 
-        //Conteúdo do arquivo
-        $file_content = Storage::disk('public')->get($file->path);
-
-        //Tipo do arquivo
-        $mimeType = Storage::disk('public')->mimeType($file->path);
+        $mimeType = mime_content_type($filePath);
+  
 
         $headers = [
             'Content-Description' => 'File Transfer',
@@ -60,21 +60,42 @@ Route::middleware([
         ];
 
         if ($mimeType == 'application/zip') {
-            $name = $file->id . '-' . $file->title . '.zip';
+            $name = $document->id . '-' . $document->title . '.zip';
             $name = str_replace('/', '-', $name);
             ob_end_clean();
 
-            return Storage::disk('public')->download($file->path, $name, $headers);
+            return Storage::disk('public')->download($document->path, $name, $headers);
         }
 
         if ($mimeType == 'application/x-rar') {
-            $name = $file->id . '-' . $file->title . '.rar';
+            $name = $document->id . '-' . $document->title . '.rar';
             $name = str_replace('/', '-', $name);
             ob_end_clean();
 
-            return Storage::disk('public')->download($file->path, $name, $headers);
+            return Storage::disk('public')->download($document->path, $name, $headers);
         }
 
         return response($file_content)->header('Content-Type', $mimeType);
     })->name('download.file');
+
+    Route::get('/ged/document-ocr/{document}', function (App\Models\Tenant\DocumentOCR $document) {
+
+        if (!$document->file) {
+            return abort(404, 'Documento não encontrado');
+        }
+        
+        $filePath = storage_path('app/public/' . $document->file);
+   
+        if (!file_exists($filePath)) {
+            return abort(404, 'Arquivo não encontrado');
+        }
+
+        $mimeType = mime_content_type($filePath);
+
+    
+        return response()->file($filePath, [
+            'Content-Type' => $mimeType,
+            'Content-Disposition' => 'inline'
+        ]);
+    })->name('document-ocr.view');
 });
