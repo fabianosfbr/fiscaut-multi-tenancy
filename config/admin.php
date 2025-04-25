@@ -27,4 +27,6 @@ return [
         'fiscal' => 'Painel Fiscal',
         'ged' => 'Painel GED',
     ],
+
+    'CRON_JOB_TOKEN' => env('CRON_JOB_TOKEN'),
 ];
