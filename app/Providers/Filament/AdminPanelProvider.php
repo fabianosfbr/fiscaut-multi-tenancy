@@ -41,7 +41,7 @@ class AdminPanelProvider extends PanelProvider
 
                 Artisan::call('queue:work --stop-when-empty');
 
-                return response('Queue processed successfully');
+                return response()->json(['message' => 'Queue processed successfully']);
             });
         });
 
