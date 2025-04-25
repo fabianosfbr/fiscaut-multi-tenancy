@@ -27,7 +27,7 @@ class TenancyServiceProvider extends ServiceProvider
             Events\CreatingTenant::class => [],
             Events\TenantCreated::class => [
                 JobPipeline::make([
-                   // Jobs\CreateDatabase::class,
+                    Jobs\CreateDatabase::class,
                     Jobs\MigrateDatabase::class,
                     CreateFrameworkDirectoriesForTenant::class,
                     CreateOrganizationAndUserForTenant::class,
@@ -103,7 +103,7 @@ class TenancyServiceProvider extends ServiceProvider
 
     public function boot()
     {
-       
+
 
         $this->bootEvents();
         $this->mapRoutes();

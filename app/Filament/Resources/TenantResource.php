@@ -102,22 +102,22 @@ class TenantResource extends Resource
                             ->suffix('.' . config('app.domain')),
                     ])->columns(2),
 
-                Section::make('Configurações')
-                    ->schema([
-                        TextInput::make('tenancy_db_name')
-                            ->label('Nome do banco de dados') 
-                            ->required()                          
-                            ->columnSpan(1),
-                        TextInput::make('tenancy_db_username')
-                            ->label('Usuário do banco de dados')  
-                            ->required()                          
-                            ->columnSpan(1),
-                        TextInput::make('tenancy_db_password')
-                            ->label('Senha do banco de dados')
-                            ->required()
-                            ->password()
-                            ->columnSpan(1),                        
-                    ])
+                // Section::make('Configurações')
+                //     ->schema([
+                //         TextInput::make('tenancy_db_name')
+                //             ->label('Nome do banco de dados') 
+                //             ->required()                          
+                //             ->columnSpan(1),
+                //         TextInput::make('tenancy_db_username')
+                //             ->label('Usuário do banco de dados')  
+                //             ->required()                          
+                //             ->columnSpan(1),
+                //         TextInput::make('tenancy_db_password')
+                //             ->label('Senha do banco de dados')
+                //             ->required()
+                //             ->password()
+                //             ->columnSpan(1),                        
+                //     ])
             ]);
     }
 
