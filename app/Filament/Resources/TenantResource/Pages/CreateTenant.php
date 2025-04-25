@@ -3,6 +3,8 @@
 namespace App\Filament\Resources\TenantResource\Pages;
 
 use Illuminate\Support\Str;
+use Filament\Facades\Filament;
+use Illuminate\Database\Eloquent\Model;
 use App\Filament\Resources\TenantResource;
 use Filament\Resources\Pages\CreateRecord;
 
@@ -19,9 +21,18 @@ class CreateTenant extends CreateRecord
         return $this->data;
     }
 
-    protected function afterCreate(): void
+    protected function handleRecordCreation(array $data): Model
     {
-        $tenant = $this->getRecord();
+        $record = new ($this->getModel())($data);
+
+        if (
+            static::getResource()::isScopedToTenant() &&
+            ($tenant = Filament::getTenant())
+        ) {
+            return $this->associateRecordWithTenant($record, $tenant);
+        }
+
+        $record->save();
 
         $domain = Str::slug($this->data['domain']);
         $appDomain = config('app.domain');
@@ -29,11 +40,13 @@ class CreateTenant extends CreateRecord
         // Cria o domínio completo
         $fullDomain = $domain . '.' . $appDomain;
 
-        $tenant->domains()->create([
+        $record->domains()->create([
             'domain' => $fullDomain,
         ]);
 
+        return $record;
     }
+   
 
     protected function getRedirectUrl(): string
     {
