@@ -2,25 +2,26 @@
 
 namespace App\Filament\Resources;
 
+use Closure;
+use Filament\Tables;
+use App\Models\Domain;
+use App\Models\Tenant;
+use Filament\Forms\Set;
+use Filament\Forms\Form;
+use App\Models\PricePlan;
+use App\Models\PaymentLog;
+use Filament\Tables\Table;
+use Illuminate\Support\Str;
+use Filament\Resources\Resource;
+use Filament\Tables\Actions\Action;
+use Filament\Forms\Components\Hidden;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Section;
+use Filament\Tables\Columns\TextColumn;
+use Illuminate\Database\Eloquent\Model;
+use Filament\Forms\Components\TextInput;
 use App\Enums\Tenant\PaymentLogStatusEnum;
 use App\Filament\Resources\TenantResource\Pages;
-use App\Models\PaymentLog;
-use App\Models\PricePlan;
-use App\Models\Tenant;
-use App\Models\Domain;
-use Closure;
-use Filament\Forms\Components\Section;
-use Filament\Forms\Components\Select;
-use Filament\Forms\Components\TextInput;
-use Filament\Forms\Form;
-use Filament\Forms\Set;
-use Filament\Resources\Resource;
-use Filament\Tables;
-use Filament\Tables\Actions\Action;
-use Filament\Tables\Columns\TextColumn;
-use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Str;
 
 class TenantResource extends Resource
 {
@@ -34,13 +35,14 @@ class TenantResource extends Resource
 
     protected static ?string $pluralModelLabel = 'Empresas';
 
-  
+
     public static function form(Form $form): Form
     {
         return $form
             ->schema([
                 Section::make()
                     ->schema([
+                        
                         TextInput::make('razao_social')
                             ->label('Razão Social')
                             ->validationAttribute('Razão Social')
@@ -52,6 +54,7 @@ class TenantResource extends Resource
                             ->label('CNPJ')
                             ->required()
                             ->validationAttribute('CNPJ')
+                            ->live(onBlur: true)
                             ->unique(ignoreRecord: true)
                             ->rules([
                                 fn(): Closure => function (string $attribute, $value, Closure $fail) {
@@ -98,6 +101,23 @@ class TenantResource extends Resource
                             ->prefix('https://')
                             ->suffix('.' . config('app.domain')),
                     ])->columns(2),
+
+                Section::make('Configurações')
+                    ->schema([
+                        TextInput::make('tenancy_db_name')
+                            ->label('Nome do banco de dados') 
+                            ->required()                          
+                            ->columnSpan(1),
+                        TextInput::make('tenancy_db_username')
+                            ->label('Usuário do banco de dados')  
+                            ->required()                          
+                            ->columnSpan(1),
+                        TextInput::make('tenancy_db_password')
+                            ->label('Senha do banco de dados')
+                            ->required()
+                            ->password()
+                            ->columnSpan(1),                        
+                    ])
             ]);
     }
 

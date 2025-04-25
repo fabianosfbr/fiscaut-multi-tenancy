@@ -155,7 +155,7 @@ class NfeEntradaResource extends Resource
                     ->alignCenter()
                     ->toggleable()
                     ->showTagCode(function () {
-                        $organizationId = getOrganizationCached()->id;                        
+                        $organizationId = getOrganizationCached()->id;
                         return config_organizacao($organizationId, 'geral', null, null, 'mostrar_codigo_etiqueta', false);
 
                     }),
@@ -191,7 +191,7 @@ class NfeEntradaResource extends Resource
                             : null;
                     })
                     ->openUrlInNewTab(),
-                
+
 
             ])
             ->defaultSort('data_emissao', 'desc')
@@ -325,9 +325,9 @@ class NfeEntradaResource extends Resource
                         if ($data['value'] === null) {
                             return $query;
                         }
-                        
-                        return $data['value'] 
-                            ? $query->comDifal() 
+
+                        return $data['value']
+                            ? $query->comDifal()
                             : $query->where(function ($query) {
                                 $query->whereColumn('uf_emitente', '=', 'uf_destinatario')
                                     ->orWhereDoesntHave('itens', function ($itemQuery) {

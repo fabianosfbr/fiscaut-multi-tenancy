@@ -11,12 +11,15 @@ use Illuminate\Support\Carbon;
 use Filament\Resources\Resource;
 use Illuminate\Support\HtmlString;
 use App\Models\Tenant\Organization;
+use Filament\Forms\Components\Radio;
 use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Toggle;
 use Filament\Forms\Components\Wizard;
 use Illuminate\Support\Facades\Blade;
+use Illuminate\Support\Facades\Crypt;
 use Filament\Forms\Components\Section;
+use Filament\Forms\Components\Fieldset;
 use Filament\Tables\Columns\TextColumn;
 use Illuminate\Database\Eloquent\Model;
 use Filament\Forms\Components\TextInput;
@@ -54,6 +57,75 @@ class OrganizationResource extends Resource
                     Wizard\Step::make('Dados da empresa')
                         ->schema([
                             ...self::getOrganizationDataForm(),
+                        ]),
+
+                    Wizard\Step::make('Serviços Habilitados')
+                        ->schema([
+                            Section::make('Serviços integrados a SEFAZ')
+                                ->description('Informe os serviços que estarão habilitados para essa empresa')
+                                ->schema([
+                                    Toggle::make('is_enable_nfe_servico')
+                                        ->label('NFe')
+                                        ->inline(),
+                                    Toggle::make('is_enable_cte_servico')
+                                        ->label('CTe')
+                                        ->inline(),
+                                    Toggle::make('is_enable_nfse_servico')
+                                        ->label('NFSe')
+                                        ->inline(),
+                                    Toggle::make('is_enable_cfe_servico')
+                                        ->label('CFe')
+                                        ->inline(),
+                                    Toggle::make('is_enable_sync_sieg')
+                                        ->label('Sieg')
+                                        ->inline(),
+
+                                ])->columns(5),
+
+                            Section::make('Serviços integrados ao SIEG')
+                                ->description('Informe os serviços que estarão habilitados para essa empresa')
+                                ->schema([
+
+                                    Toggle::make('sync_sieg')
+                                        ->label('Habilitar sincronização com o SIEG')
+                                        ->inline(),
+
+                                ])->columns(1),
+
+                            Section::make('Serviços integrados ao UNECONT')
+                                ->description('Informe os serviços que estarão habilitados para essa empresa')
+                                ->schema([
+
+                                    Toggle::make('sync_unecont')
+                                        ->label('Habilitar sincronização com o Unecont')
+                                        ->live()
+                                        ->default(true)
+                                        ->columnSpan(2)
+                                        ->inline(),
+
+                                    Fieldset::make('Dados de acesso do Município')
+                                        ->schema([
+                                            TextInput::make('login_municipio')
+                                                ->label('Login do Município')
+                                                ->required(function ($get) {
+                                                    return $get('sync_unecont');
+                                                })
+                                                ->columnSpan(1),
+                                            TextInput::make('senha_municipio')
+                                                ->label('Senha do Município')
+                                                ->password()
+                                                ->required(function ($get) {
+                                                    return $get('sync_unecont');
+                                                })
+                                                ->columnSpan(1),
+                                        ])
+                                        ->visible(function ($get) {
+                                            return $get('sync_unecont');
+                                        })
+                                        ->columns(2),
+
+
+                                ])->columns(2),
                         ]),
                     Wizard\Step::make('Certificado digital')
                         ->description('Faça o upload do certificado digital A1 e informe a senha')
@@ -106,8 +178,10 @@ class OrganizationResource extends Resource
                                                 $set('validade_certificado', date('d-m-Y', $x509['validTo_time_t']));
 
                                                 // Salvar o conteúdo do certificado
-                                                $set('certificado_content', base64_encode($pfx));
-
+                                                $encoded = base64_encode($pfx);
+                                                $encrypted = Crypt::encrypt($encoded);
+                                                // $compressed = gzencode($encrypted);
+                                                $set('certificado_content', $encrypted);
                                                 Notification::make()
                                                     ->title('Certificado validado com sucesso!')
                                                     ->success()
@@ -192,7 +266,7 @@ class OrganizationResource extends Resource
                     ->label('Dias para Vencimento')
                     ->badge()
                     ->state(function (Model $record): string {
-                        
+
                         if (!$record->validade_certificado) {
                             return 'Sem certificado';
                         }
@@ -359,28 +433,14 @@ class OrganizationResource extends Resource
                             'required' => 'A Atividade é obrigatória',
                         ]),
 
+                    Radio::make('contribuinte_icms')
+                        ->label('Contribuinte ICMS?')
+                        ->boolean(trueLabel: 'Sim', falseLabel: 'Não')
+                        ->default(false)
+                        ->columnSpan(2),
+
                 ])->columns(6),
 
-            Section::make('Serviços Habilitados')
-                ->description('Informe os serviços que estarão habilitados para essa empresa')
-                ->schema([
-                    Toggle::make('is_enable_nfe_servico')
-                        ->label('NFe')
-                        ->inline(),
-                    Toggle::make('is_enable_cte_servico')
-                        ->label('CTe')
-                        ->inline(),
-                    Toggle::make('is_enable_nfse_servico')
-                        ->label('NFSe')
-                        ->inline(),
-                    Toggle::make('is_enable_cfe_servico')
-                        ->label('CFe')
-                        ->inline(),
-                    Toggle::make('is_enable_sync_sieg')
-                        ->label('Sieg')
-                        ->inline(),
-
-                ])->columns(3),
         ];
     }
 }
